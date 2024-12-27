@@ -5,7 +5,13 @@ use Moo;
 use Mojo::File;
 
 has 'frontmatter' => (
-    is => 'ro'
+    is => 'lazy',
+    default => sub($args) {
+        my $tfm = Text::FrontMatter::YAML->new(
+            document_string => $args->{body},
+        );
+        $tfm->frontmatter_hashref // {},
+    }
 );
 
 has 'body' => (
