@@ -6,6 +6,7 @@ use Mojo::File;
 use File::Temp;
 use File::Basename 'basename';
 use Text::CleanFragment;
+use POSIX 'strftime';
 
 use App::Notetaker::Document;
 use Markdown::Perl;
@@ -96,6 +97,12 @@ get '/note/*fn' => sub($c) {
     display_note( $c, $note );
 };
 
+sub save_note( $note, $fn ) {
+    $note->frontmatter->{created} //= strftime '%Y-%m-%dT%H:%M:%SZ', gmtime(time);
+    $note->frontmatter->{updated} = strftime '%Y-%m-%dT%H:%M:%SZ', gmtime(time);
+    $note->save_to( clean_filename( $fn ));
+}
+
 post '/note/*fn' => sub($c) {
     my $fn = $c->param('fn');
 
@@ -108,7 +115,7 @@ post '/note/*fn' => sub($c) {
     $body =~ s/\s+\z//sm;
 
     $note->body($body);
-    $note->save_to( clean_filename( $fn ));
+    save_note( $note, $fn );
 
     $c->redirect_to('/note/' . $fn );
 };
