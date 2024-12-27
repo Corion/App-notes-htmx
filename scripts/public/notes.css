@@ -50,11 +50,20 @@ nav ul li {
     text-decoration: inherit; /* no underline */
 }
 
+.note .title {
+    font-size: 12pt;
+    font-weight: bold;
+}
+
 .single-note {
   display: flex;
   flex-direction: column;
   width: 100%;
  }
+
+.single-note .title {
+    font-size: 24pt;
+}
 
 .xcontainer > textarea {
   /* box-sizing: border-box; /* fit parent width */
