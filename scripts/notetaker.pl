@@ -210,15 +210,15 @@ nav ul li {
 <div>Filename: <%= $note->filename %></div>
 <div class="note">
 % my $doc_url = '/note/' . $note->filename;
-<form action="<%= url_for( $doc_url ) %>" method="POST"
+<form action="<%= url_for( $doc_url ) %>" method="POST">
+<button name="save" type="submit">Save</button>
+%=include "display-text", field_name => 'title', value => $note->frontmatter->{title}, class => 'title';
+<div class="xcontainer" style="height:400px">
+<textarea name="body" id="node-body"
     hx-post="<%= url_for( $doc_url ) %>"
     hx-trigger="search, keyup delay:200ms changed"
     hx-swap="none"
 >
-<button name="save" type="submit">Save</button>
-<input type="hidden" name="filename" value="<%= $note->filename %>" />
-<div class="xcontainer">
-<textarea name="body" id="node-body">
 <%= $note->body %>
 </textarea>
 </div>
@@ -229,3 +229,39 @@ nav ul li {
 </div>
 </body>
 </html>
+
+@@display-text.html.ep
+<div id="note-<%= $field_name %>" class="<%= $class %>">
+% if( defined $value && $value ne '' ) {
+    <%= $value %>
+    <a href="<%= url_for( "/edit-$field_name/" . $note->filename ) %>"
+    hx-get="<%= url_for( "/edit-$field_name/" . $note->filename ) %>"
+    hx-target="#note-<%= $field_name %>"
+    hx-swap="innerHTML"
+    >&#x270E;</a>
+% } else {
+    <div color="#777">
+    <a href="<%= url_for( "/edit-$field_name/" . $note->filename ) %>"
+    hx-get="<%= url_for( "/edit-$field_name/" . $note->filename ) %>"
+    hx-target="#note-<%= $field_name %>"
+    hx-swap="innerHTML"
+    >Click to add <%= $field_name %></a>
+    </div>
+% }
+</div>
+
+@@edit-text.html.ep
+<form action="<%= url_for( "/edit-$field_name/" . $note->filename ) %>" method="POST"
+    hx-post="<%= url_for( "/auto-edit-$field_name/" . $note->filename ) %>"
+    hx-trigger="search, keyup delay:200ms changed"
+    hx-swap="outerHTML"
+>
+    <input type="text" name="<%= $field_name %>" id="note-input-text-<%= $field_name %>" value="<%= $value %>" />
+    <button type="submit">Save</button>
+    <a href="<%= url_for( "/note/" . $note->filename ) %>"
+       hx-get="/display-<%= $field_name %>/<%= $note->filename %>"
+       hx-target="#note-<%= $field_name %>"
+       hx-swap="innerHTML"
+       hx-trigger="blur from:#note-input-text-<%= $field_name %>"
+    >x</a>
+</form>
