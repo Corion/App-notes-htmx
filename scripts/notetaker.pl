@@ -3,6 +3,9 @@ use 5.020;
 use Mojolicious::Lite '-signatures';
 use Text::FrontMatter::YAML;
 use Mojo::File;
+use File::Temp;
+use File::Basename 'basename';
+use Text::CleanFragment;
 
 use App::Notetaker::Document;
 use Markdown::Perl;
@@ -15,6 +18,9 @@ my $document_directory = './notes';
 
 sub render_index($c) {
     my @documents = get_documents();
+
+    $_->{html} //= as_html( $_ ) for @documents;
+
     $c->stash( documents => \@documents );
     $c->render('index');
 }
@@ -36,33 +42,163 @@ sub get_documents {
         glob "$document_directory/*";
 }
 
-get '/index.html' => \&render_index;
-get '/' => \&render_index;
-get '/note/*fn' => sub($c) {
+sub clean_filename( $fn ) {
     # Sanitize filename; maybe we want Text::CleanFragment?!
-    my $fn = $c->param('fn');
     $fn =~ s![\x00-\x1f]! !g;
     $fn =~ s!\\/!!g;
-    my $note = App::Notetaker::Document->from_file( "$document_directory/$fn" );
+    return "$document_directory/$fn"
+}
+
+sub find_note( $fn ) {
+    my $filename = clean_filename( $fn );
+
+    if( -f $filename ) {
+        return App::Notetaker::Document->from_file( $filename );
+    };
+    return;
+}
+
+sub find_or_create_note( $fn ) {
+    my $filename = clean_filename( $fn );
+
+    if( -f $filename ) {
+        return App::Notetaker::Document->from_file( $filename );
+    } else {
+        return App::Notetaker::Document->new(
+            filename => basename($filename),
+        );
+    }
+}
+
+sub display_note( $c, $note ) {
     $c->stash( note => $note );
-    $c->stash( note_html => as_html( $note ));
+    my $html = as_html( $note );
+    $c->stash( note_html => $html );
+
+    $c->stash( htmx_update => $c->is_htmx_request() );
 
     $c->render('note');
 };
 
-post '/note/*fn' => sub($c) {
-    # Sanitize filename; maybe we want Text::CleanFragment?!
-    my $fn = $c->param('fn');
-    $fn =~ s![\x00-\x1f]! !g;
-    $fn =~ s!\\/!!g;
-    my $filename = "$document_directory/$fn";
-    my $note = App::Notetaker::Document->from_file( $filename );
+get '/index.html' => \&render_index;
+get '/' => \&render_index;
 
-    $note->body($c->param('body'));
-    $note->save_to( $filename );
+get  '/new' => sub( $c ) {
+    my $note = App::Notetaker::Document->new(
+        filename => undef,
+        body => undef,
+    );
+    display_note( $c, $note );
+};
+
+get '/note/*fn' => sub($c) {
+    my $note = find_note( $c->param('fn'));
+    display_note( $c, $note );
+};
+
+post '/note/*fn' => sub($c) {
+    my $fn = $c->param('fn');
+
+    $fn //= basename( File::Temp::tempnam( $document_directory, 'unnamed-XXXXXXXX.markdown' ));
+
+    my $note = find_or_create_note( $fn );
+
+    my $body = $c->param('body');
+    $body =~ s/\s+\z//sm;
+
+    $note->body($body);
+    $note->save_to( clean_filename( $fn ));
 
     $c->redirect_to('/note/' . $fn );
 };
+
+sub edit_field( $c, $note, $field_name ) {
+    $c->stash( note => $note );
+    $c->stash( field_name => $field_name );
+    $c->stash( value => $note->frontmatter->{ $field_name } );
+    $c->render('edit-text');
+}
+
+sub edit_note_title( $c ) {
+    my $fn = $c->param('fn');
+    $fn //= basename(File::Temp::tempnam( $document_directory, 'unnamed-XXXXXXXX.markdown' ));
+
+    my $note = find_or_create_note( $fn );
+    edit_field( $c, $note, 'title' );
+}
+
+sub display_field( $c, $fn, $note, $field_name, $class ) {
+    $c->stash( note => $note );
+    $c->stash( field_name => $field_name );
+    $c->stash( value => $note->frontmatter->{ $field_name } );
+    $c->stash( class => $class );
+    $c->render('display-text');
+}
+
+sub display_note_title( $c ) {
+    my $fn = $c->param('fn');
+    my $note = find_note( $fn );
+    display_field( $c, $fn, $note, 'title', 'title' );
+}
+
+sub update_note_title( $c, $autosave=0 ) {
+    my $fn = $c->param('fn');
+    my $title = $c->param('title');
+
+    my $new_fn = clean_fragment( $title ) # derive a filename from the title
+                 || 'untitled'; # we can't title a note "0", but such is life
+
+    # First, save the new information to the old, existing file
+    $fn //= $new_fn // basename( File::Temp::tempnam( $document_directory, 'unnamed-XXXXXXXX.markdown' ));
+
+    my $note = find_or_create_note( $fn );
+    my $rename = ($note->frontmatter->{title} ne $title);
+    $note->frontmatter->{title} = $title;
+    $note->save_to( clean_filename( $fn ));
+
+    # Now, check if the title changed and we want to rename the file:
+    if( $rename ) {
+        # This approach of renaming easily conflicts with the remaining parts
+        # of the page, if we don't carefully redirect to the new main page
+        # after renaming. Maybe we should have a toggle to indicate to the
+        # main page that the edit field should be the title editor (instead of
+        # the text area) ?!
+        # Also, this has horrible latency implications
+        # We need to find a way to later rename the files according to
+        # their title
+        my $newname = "$document_directory/$new_fn.markdown";
+        my $count = 0;
+        while( -f $newname ) {
+            # maybe add todays date?!
+            $newname = sprintf "%s/%s (%d).markdown", $document_directory, $new_fn, $count++;
+        }
+        if( $new_fn . ".markdown" ne $fn ) { # after counting upwards, we still are different
+            warn "We want to rename from '$fn' to '$new_fn.markdown'";
+            my $target = "$document_directory/$new_fn.markdown";
+            rename "$document_directory/$fn" => $target;
+
+            $fn = basename($target);
+            $note->filename( $fn );
+        }
+    }
+
+    if( $autosave ) {
+        warn "Redirecting to editor with (new?) name '$fn'";
+        $c->redirect_to('/edit-title/' . $fn );
+
+    } else {
+        warn "Redirecting to (new?) name '$fn'";
+        $c->redirect_to('/note/' . $fn );
+    }
+}
+
+get  '/edit-title' => \&edit_note_title; # empty note
+get  '/edit-title/*fn' => \&edit_note_title;
+post '/auto-edit-title' => sub( $c ) { update_note_title( $c, 1 ) }; # empty note
+post '/auto-edit-title/*fn' => sub( $c ) { update_note_title( $c, 1 ) };
+post '/edit-title/*fn' => \&update_note_title;
+post '/edit-title' => \&update_note_title; # empty note
+get  '/display-title/*fn' => \&display_note_title;
 
 app->start;
 
@@ -222,7 +358,7 @@ nav ul li {
 <%= $note->body %>
 </textarea>
 </div>
-<div id="preview" hx-swap-oob="true">
+<div id="preview" hx-swap-oob="<%= $htmx_update ? 'true':'false' %>">
 <%== $note_html %>
 </div>
 </form>
