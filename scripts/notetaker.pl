@@ -19,11 +19,19 @@ sub render_index($c) {
     $c->render('index');
 }
 
-sub get_documents() {
+sub get_documents {
+    my %stat;
     return
         map {
             my $fn = $_;
             -f $fn && App::Notetaker::Document->from_file( $fn )
+        }
+        sort {
+            $stat{ $b } <=> $stat{ $a }
+        }
+        map {
+            $stat{ $_ } = (stat($_))[9]; # most-recent changed;
+            $_
         }
         glob "$document_directory/*";
 }
