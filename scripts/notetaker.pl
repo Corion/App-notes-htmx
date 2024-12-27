@@ -9,6 +9,7 @@ use Markdown::Perl;
 
 app->static->with_roles('+Compressed');
 plugin 'DefaultHelpers';
+plugin 'HTMX';
 
 my $document_directory = './notes';
 
