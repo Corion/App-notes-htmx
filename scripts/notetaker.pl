@@ -104,6 +104,7 @@ post '/note/*fn' => sub($c) {
     my $note = find_or_create_note( $fn );
 
     my $body = $c->param('body');
+    $body =~ s/\A\s+//sm;
     $body =~ s/\s+\z//sm;
 
     $note->body($body);
