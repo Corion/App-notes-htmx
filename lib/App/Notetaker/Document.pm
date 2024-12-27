@@ -31,8 +31,8 @@ sub from_file( $class, $fn ) {
 
     $class->new( {
         filename => $f->basename,
-        frontmatter => $tfm->frontmatter_hashref,
-        body => $tfm->data_text,
+        (frontmatter => $tfm->frontmatter_hashref),
+        (body => $tfm->data_text),
     } );
 }
 
