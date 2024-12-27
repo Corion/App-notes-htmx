@@ -284,9 +284,16 @@ __DATA__
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
 >
-<nav>
-<a href="/">index</a>
-</nav>
+<div class="navbar">
+  <nav>
+    <ul>
+    <li><a href="/">index</a></li>
+    <!-- note color selector -->
+    <!-- delete note -->
+    </ul>
+  </nav>
+</div>
+<div>Tags: ...</div><!-- tags editor ?! -->
 <div>Filename: <%= $note->filename %></div>
 <div class="single-note">
 % my $doc_url = '/note/' . $note->filename;
