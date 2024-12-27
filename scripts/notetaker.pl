@@ -262,6 +262,7 @@ __DATA__
 % for my $doc ($documents->@*) {
     <a href="/note/<%= $doc->filename %>" class="grid-item note">
     <div class="title"><%= $doc->frontmatter->{title} %></div>
+    <-- list (some) tags -->
     <div class="content"><%== $doc->{html} %></div>
     </a>
 % }
