@@ -305,9 +305,7 @@ __DATA__
     hx-post="<%= url_for( $doc_url ) %>"
     hx-trigger="search, keyup delay:200ms changed"
     hx-swap="none"
->
-<%= $note->body %>
-</textarea>
+><%= $note->body %></textarea>
 </div>
 <div id="preview" hx-swap-oob="<%= $htmx_update ? 'true':'false' %>">
 <%== $note_html %>
