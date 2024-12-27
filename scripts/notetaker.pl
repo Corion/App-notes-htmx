@@ -75,11 +75,7 @@ sub as_html( $doc ) {
 }
 
 __DATA__
-@@ index.html.ep
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
+@@ htmx-header.html.ep
 <meta htmx.config.allowScriptTags="true">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link href="/bootstrap.5.3.3.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
@@ -89,19 +85,90 @@ __DATA__
 <script src="/loading-states.2.0.1.js"></script>
 <script type="module" src="/morphdom-esm.2.7.4.js"></script>
 
+@@ index.html.ep
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+%=include 'htmx-header'
+
+<style>
+nav {
+    display: flex;
+    align-items: center;
+}
+
+nav ul {
+    display: flex;
+    justify-content: space-between;
+}
+
+nav ul li {
+  list-style-type: none;
+}
+
+.grid-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-gap: 1px;
+    grid-auto-rows: minmax(180px, auto);
+    grid-auto-flow: dense;
+    padding: 1px;
+
+}
+
+.grid-item {
+    padding: 1rem;
+    font-size: 14px;
+    color: #000;
+    background-color: #ccc;
+    border-radius: 10px;
+}
+
+.span-2 {
+    grid-column-end: span 2;
+    grid-row-end: span 2;
+}
+
+.span-3 {
+    grid-column-end: span 3;
+    grid-row-end: span 4;
+}
+
+.note {
+    border: solid 1px black;
+    color: inherit; /* blue colors for links too */
+    text-decoration: inherit; /* no underline */
+}
+</style>
+
 <title>Notes</title>
 </head>
 <body
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
 >
-<div class="documents">
+<div class="navbar">
+  <nav>
+    <ul>
+    <li><a href="/">index</a></li>
+    <li>
+      <form id="form-filter" method="GET" action="/filter">
+        <input id="text-filter" />
+      </form>
+    </li>
+    <li>
+      <a href="/new">+</a>
+    </li>
+    </ul>
+  </nav>
+</div>
+<div class="documents grid-layout">
 % for my $doc ($documents->@*) {
-    <div class="note">
-    <a href="/note/<%= $doc->filename %>">
-    <%= $doc->frontmatter->{title} %>
+    <a href="/note/<%= $doc->filename %>" class="grid-item note">
+    <div class="title"><%= $doc->frontmatter->{title} %></div>
+    <div class="content"><%== $doc->{html} %></div>
     </a>
-    </div>
 % }
 </div>
 </body>
@@ -112,14 +179,7 @@ __DATA__
 <html>
 <head>
 <meta charset="utf-8">
-<meta htmx.config.allowScriptTags="true">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="/bootstrap.5.3.3.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-<script src="/htmx.2.0.4.min.js"></script>
-<script src="/ws.2.0.1.js"></script>
-<script src="/debug.2.0.1.js"></script>
-<script src="/loading-states.2.0.1.js"></script>
-<script type="module" src="/morphdom-esm.2.7.4.js"></script>
+%=include 'htmx-header'
 
 <style>
 .note {
