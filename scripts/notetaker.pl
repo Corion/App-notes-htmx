@@ -220,6 +220,7 @@ __DATA__
 <script src="/debug.2.0.1.js"></script>
 <script src="/loading-states.2.0.1.js"></script>
 <script type="module" src="/morphdom-esm.2.7.4.js"></script>
+<link rel="stylesheet" href="/notes.css" />
 
 @@ index.html.ep
 <!DOCTYPE html>
@@ -227,56 +228,6 @@ __DATA__
 <head>
 <meta charset="utf-8">
 %=include 'htmx-header'
-
-<style>
-nav {
-    display: flex;
-    align-items: center;
-}
-
-nav ul {
-    display: flex;
-    justify-content: space-between;
-}
-
-nav ul li {
-  list-style-type: none;
-}
-
-.grid-layout {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    grid-gap: 1px;
-    grid-auto-rows: minmax(180px, auto);
-    grid-auto-flow: dense;
-    padding: 1px;
-
-}
-
-.grid-item {
-    padding: 1rem;
-    font-size: 14px;
-    color: #000;
-    background-color: #ccc;
-    border-radius: 10px;
-}
-
-.span-2 {
-    grid-column-end: span 2;
-    grid-row-end: span 2;
-}
-
-.span-3 {
-    grid-column-end: span 3;
-    grid-row-end: span 4;
-}
-
-.note {
-    border: solid 1px black;
-    color: inherit; /* blue colors for links too */
-    text-decoration: inherit; /* no underline */
-}
-</style>
 
 <title>Notes</title>
 </head>
@@ -317,21 +268,6 @@ nav ul li {
 <meta charset="utf-8">
 %=include 'htmx-header'
 
-<style>
-.note {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
- }
-
-.xcontainer > textarea {
-  /* box-sizing: border-box; /* fit parent width */
-  flex: 1;
-  height: 100%;
-  width: 100%;
-}
-</style>
-
 <title><%= $note->frontmatter->{title} %></title>
 </head>
 <body
@@ -344,7 +280,7 @@ nav ul li {
 <a href="/">index</a>
 </nav>
 <div>Filename: <%= $note->filename %></div>
-<div class="note">
+<div class="single-note">
 % my $doc_url = '/note/' . $note->filename;
 <form action="<%= url_for( $doc_url ) %>" method="POST">
 <button name="save" type="submit">Save</button>
