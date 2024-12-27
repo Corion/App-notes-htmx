@@ -30,6 +30,10 @@ nav ul li {
     border-radius: 10px;
 }
 
+.grid-item img {
+    width: 100%;
+}
+
 .span-2 {
     grid-column-end: span 2;
     grid-row-end: span 2;
