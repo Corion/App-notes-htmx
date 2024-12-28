@@ -295,7 +295,10 @@ __DATA__
 </div>
 <div class="documents grid-layout">
 % for my $doc ($documents->@*) {
-    <a href="/note/<%= $doc->filename %>" class="grid-item note">
+    % my $bgcolor = $doc->frontmatter->{color}
+    %               ? sprintf q{ style="background-color: %s;"}, $doc->frontmatter->{color}
+    %               : '';
+    <a href="/note/<%= $doc->filename %>" class="grid-item note"<%== $bgcolor %>>
     <div class="title"><%= $doc->frontmatter->{title} %></div>
     <!-- list (some) tags -->
     <div class="content"><%== $doc->{html} %></div>
@@ -329,7 +332,10 @@ __DATA__
     </ul>
   </nav>
 </div>
-<div class="single-note">
+% my $bgcolor = $note->frontmatter->{color}
+%               ? sprintf q{ style="background-color: %s;"}, $note->frontmatter->{color}
+%               : '';
+<div class="single-note"<%== $bgcolor %>>
 <div>Tags: ...</div><!-- tags editor ?! -->
 <div>Filename: <%= $note->filename %></div>
 % my $doc_url = '/note/' . $note->filename;
