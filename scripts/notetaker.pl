@@ -40,7 +40,7 @@ sub get_documents {
             $stat{ $_ } = (stat($_))[9]; # most-recent changed;
             $_
         }
-        glob "$document_directory/*";
+        glob "$document_directory/*.markdown";
 }
 
 sub clean_filename( $fn ) {
