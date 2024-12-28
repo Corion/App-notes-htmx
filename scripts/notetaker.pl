@@ -208,6 +208,29 @@ sub update_note_title( $c, $autosave=0 ) {
     }
 }
 
+sub capture_image( $c ) {
+    my $note = find_note( $c->param('fn') );
+    $c->stash( field_name => 'image' );
+    $c->stash( note => $note );
+    $c->render('attach-image');
+}
+
+# XXX create note subdirectory
+# XXX save image to attachments/ subdirectory
+# XXX create thumbnail for image / reduce resolution/quality
+# XXX convert image to jpeg in the process, or webp or whatever
+sub attach_image( $c ) {
+    my $note = find_note( $c->param('fn') );
+    my $image = $c->param('image');
+    my $filename = "attachments/" . clean_fragment( $image->filename );
+    # Check that we have some kind of image file according to the name
+    return if $filename !~ /\.(jpg|jpeg|png|webp|dng|heic)\z/i;
+    $image->move_to("$document_directory/$filename");
+    $note->body( $note->body . "\n![$filename]($filename)\n" );
+    $note->save_to( "$document_directory/" . $note->filename );
+    $c->redirect_to('/note/' . $note->filename );
+}
+
 get  '/edit-title' => \&edit_note_title; # empty note
 get  '/edit-title/*fn' => \&edit_note_title;
 post '/auto-edit-title' => sub( $c ) { update_note_title( $c, 1 ) }; # empty note
@@ -215,9 +238,13 @@ post '/auto-edit-title/*fn' => sub( $c ) { update_note_title( $c, 1 ) };
 post '/edit-title/*fn' => \&update_note_title;
 post '/edit-title' => \&update_note_title; # empty note
 get  '/display-title/*fn' => \&display_note_title;
+get  '/attach-image/*fn' => \&capture_image;
+post '/upload-image/*fn' => \&attach_image;
 
 app->start;
 
+# Make relative links actually relative to /note/ so that we can also
+# properly serve attachments
 sub as_html( $doc ) {
     my $renderer = Markdown::Perl->new(
         mode => 'github',
@@ -321,6 +348,14 @@ __DATA__
 </div>
 </form>
 </div>
+<div id="actionbar">
+<div id="action-attach">
+    <a href="<%= url_for( "/attach-image/" . $note->filename ) %>"
+        hx-get="<%= url_for( "/attach-image/" . $note->filename ) %>"
+        hx-swap="outerHTML"
+    >Add Image</a>
+</div>
+</div>
 </body>
 </html>
 
@@ -355,6 +390,24 @@ __DATA__
     <a href="<%= url_for( "/note/" . $note->filename ) %>"
        hx-get="/display-<%= $field_name %>/<%= $note->filename %>"
        hx-target="#note-<%= $field_name %>"
+       hx-swap="innerHTML"
+       --hx-trigger="blur from:#note-input-text-<%= $field_name %>"
+    >x</a>
+</form>
+
+@@attach-image.html.ep
+<form action="<%= url_for( "/upload-$field_name/" . $note->filename ) %>" method="POST"
+    enctype='multipart/form-data'
+    hx-encoding='multipart/form-data'
+    hx-post="<%= url_for( "/upload-$field_name/" . $note->filename ) %>"
+    hx-swap="outerHTML"
+>
+    <label for="upload-<%=$field_name%>">Upload image</label>
+    <input id="upload-<%=$field_name%>" type="file" accept="image/*" name="<%= $field_name %>" id="capture-image-<%= $field_name %>" capture="environment" />
+    <button type="submit">Save</button>
+    <a href="<%= url_for( "/note/" . $note->filename ) %>"
+       hx-get="xxx-display-actions"
+       hx-target="xxx"
        hx-swap="innerHTML"
        hx-trigger="blur from:#note-input-text-<%= $field_name %>"
     >x</a>
