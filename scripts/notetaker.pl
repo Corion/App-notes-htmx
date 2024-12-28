@@ -347,13 +347,33 @@ __DATA__
         />
       </form>
     </li>
-    <li>
-      <a href="/new">+</a>
-    </li>
     </ul>
   </nav>
 </div>
 %=include "documents", documents => $documents
+
+<div class="dropup position-fixed bottom-0 end-0 rounded-circle m-5">
+  <div class="btn-group">
+    <button type="button" class="btn btn-success btn-lg"
+      ><i class="fa-solid fa-plus">
+       <a href="/new">+</a>
+       </i>
+    </button>
+    <button type="button" class="btn btn-secondary btn-lg dropdown-toggle dropdown-toggle-split hide-toggle"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            aria-haspopup="true"
+      ><span class="visually-hidden">Add Category</span>
+    </button>
+    <ul class="dropdown-menu">
+      <li>
+        <a class="dropdown-item" href="#">template 1</a>
+        <a class="dropdown-item" href="#">template 2</a>
+      </li>
+    </ul>
+  </div>
+</div>
+
 </body>
 </html>
 
