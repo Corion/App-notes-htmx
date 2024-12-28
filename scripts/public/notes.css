@@ -65,6 +65,10 @@ nav ul li {
     font-size: 24pt;
 }
 
+.single-note img {
+    max-width: 100%;
+}
+
 .xcontainer > textarea {
   /* box-sizing: border-box; /* fit parent width */
   flex: 1;
