@@ -426,9 +426,9 @@ __DATA__
 <button name="save" type="submit">Save</button>
 %=include "display-text", field_name => 'title', value => $note->frontmatter->{title}, class => 'title';
 <div class="xcontainer" style="height:400px">
-<textarea name="body" id="node-body"
+<textarea name="body" id="note-textarea"
     hx-post="<%= url_for( $doc_url ) %>"
-    hx-trigger="search, keyup delay:200ms change"
+    hx-trigger="note-textarea, keyup delay:200ms changed"
     hx-swap="none"
 ><%= $note->body %></textarea>
 </div>
