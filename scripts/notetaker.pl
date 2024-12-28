@@ -452,6 +452,18 @@ __DATA__
             hx-swap="outerHTML"
         >Set color</a>
     </div>
+    <div id="action-archive">
+        <a href="#"
+            hx-get="#"
+            hx-swap="outerHTML"
+        >Archive note</a>
+    </div>
+    <div id="action-delete">
+        <a href="#"
+            hx-get="#"
+            hx-swap="outerHTML"
+        >Delete note</a>
+    </div>
 </div>
 </body>
 </html>
