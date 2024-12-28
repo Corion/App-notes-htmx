@@ -18,17 +18,36 @@ plugin 'HTMX';
 my $document_directory = Mojo::File->new( './notes' )->to_abs();
 
 sub render_index($c) {
-    my @documents = get_documents();
+    my $filter = $c->param('q');
+    my @documents = get_documents($filter);
 
     $_->{html} //= as_html( $_ ) for @documents;
 
     $c->stash( documents => \@documents );
+    $c->stash( filter => $filter );
     $c->render('index');
 }
 
-sub get_documents {
+sub render_filter($c) {
+    my $filter = $c->param('q');
+    my @documents = get_documents($filter);
+
+    $_->{html} //= as_html( $_ ) for @documents;
+
+    $c->stash( documents => \@documents );
+    $c->stash( filter => $filter );
+    $c->render('documents');
+}
+
+sub get_documents($filter="") {
     my %stat;
     return
+        grep {
+            $filter
+                ?    $_->body =~ /\Q$filter\E/i
+                  || $_->frontmatter->{title} =~ /\Q$filter\E/i
+                : 1
+        }
         map {
             my $fn = $_;
             -f $fn && App::Notetaker::Document->from_file( $fn )
@@ -89,6 +108,7 @@ sub serve_attachment( $c ) {
 
 get '/index.html' => \&render_index;
 get '/' => \&render_index;
+get '/filter' => \&render_filter;
 
 get  '/new' => sub( $c ) {
     my $note = App::Notetaker::Document->new(
@@ -316,8 +336,14 @@ __DATA__
     <ul>
     <li><a href="/">index</a></li>
     <li>
-      <form id="form-filter" method="GET" action="/filter">
-        <input id="text-filter" />
+      <form id="form-filter" method="GET" action="/">
+        <input id="text-filter" name="q" value="<%= $filter %>"
+            placeholder="Filter"
+            hx-get="<%= url_for( "/filter" ) %>"
+            hx-trigger="input delay:200ms changed, keyup[key=='Enter'], load"
+            hx-target="#documents"
+            hx-swap="outerHTML"
+        />
       </form>
     </li>
     <li>
@@ -326,7 +352,12 @@ __DATA__
     </ul>
   </nav>
 </div>
-<div class="documents grid-layout">
+%=include "documents", documents => $documents
+</body>
+</html>
+
+@@documents.html.ep
+<div id="documents" class="documents grid-layout">
 % for my $doc ($documents->@*) {
     % my $bgcolor = $doc->frontmatter->{color}
     %               ? sprintf q{ style="background-color: %s;"}, $doc->frontmatter->{color}
@@ -338,8 +369,6 @@ __DATA__
     </a>
 % }
 </div>
-</body>
-</html>
 
 @@ note.html.ep
 <!DOCTYPE html>
