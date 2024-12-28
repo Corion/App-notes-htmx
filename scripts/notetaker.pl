@@ -331,7 +331,7 @@ __DATA__
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
 >
-<div class="navbar">
+<div class="navbar navbar-expand-lg sticky-top navbar-light bg-light">
   <nav>
     <ul>
     <li><a href="/">index</a></li>
@@ -385,7 +385,7 @@ __DATA__
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
 >
-<div class="navbar">
+<div class="navbar navbar-expand-lg fixed-top bg-light">
   <nav>
     <ul>
     <li><a href="/">index</a></li>
@@ -416,19 +416,19 @@ __DATA__
 </div>
 </form>
 </div>
-<div id="actionbar">
-<div id="action-attach">
-    <a href="<%= url_for( "/attach-image/" . $note->filename ) %>"
-        hx-get="<%= url_for( "/attach-image/" . $note->filename ) %>"
-        hx-swap="outerHTML"
-    >Add Image</a>
-</div>
-<div id="action-color">
-    <a href="<%= url_for( "/edit-color/" . $note->filename ) %>"
-        hx-get="<%= url_for( "/edit-color/" . $note->filename ) %>"
-        hx-swap="outerHTML"
-    >Set color</a>
-</div>
+<div id="actionbar" class="footer mt-auto fixed-bottom navbar-light bg-light">
+    <div id="action-attach">
+        <a href="<%= url_for( "/attach-image/" . $note->filename ) %>"
+            hx-get="<%= url_for( "/attach-image/" . $note->filename ) %>"
+            hx-swap="outerHTML"
+        >Add Image</a>
+    </div>
+    <div id="action-color">
+        <a href="<%= url_for( "/edit-color/" . $note->filename ) %>"
+            hx-get="<%= url_for( "/edit-color/" . $note->filename ) %>"
+            hx-swap="outerHTML"
+        >Set color</a>
+    </div>
 </div>
 </body>
 </html>
