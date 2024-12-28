@@ -404,7 +404,7 @@ __DATA__
 >
     <label for="upload-<%=$field_name%>">Upload image</label>
     <input id="upload-<%=$field_name%>" type="file" accept="image/*" name="<%= $field_name %>" id="capture-image-<%= $field_name %>" capture="environment" />
-    <button type="submit">Save</button>
+    <button type="submit">Upload</button>
     <a href="<%= url_for( "/note/" . $note->filename ) %>"
        hx-get="xxx-display-actions"
        hx-target="xxx"
