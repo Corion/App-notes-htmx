@@ -135,12 +135,43 @@ sub edit_field( $c, $note, $field_name ) {
     $c->render('edit-text');
 }
 
+sub edit_color_field( $c, $note, $field_name ) {
+    $c->stash( note => $note );
+    $c->stash( field_name => $field_name );
+    $c->stash( value => $note->frontmatter->{ $field_name } );
+    $c->render('edit-color');
+}
+
 sub edit_note_title( $c ) {
     my $fn = $c->param('fn');
     $fn //= basename(File::Temp::tempnam( $document_directory, 'unnamed-XXXXXXXX.markdown' ));
 
     my $note = find_or_create_note( $fn );
     edit_field( $c, $note, 'title' );
+}
+
+sub edit_note_color( $c ) {
+    my $fn = $c->param('fn');
+    $fn //= basename(File::Temp::tempnam( $document_directory, 'unnamed-XXXXXXXX.markdown' ));
+
+    my $note = find_or_create_note( $fn );
+    edit_color_field( $c, $note, 'color' );
+}
+
+sub update_note_color( $c, $autosave=0 ) {
+    my $fn = $c->param('fn');
+    my $color = $c->param('color');
+
+    my $note = find_or_create_note( $fn );
+    $note->frontmatter->{color} = $color;
+    $note->save_to( clean_filename( $fn ));
+
+    if( $autosave ) {
+        $c->redirect_to('/edit-color/' . $fn );
+
+    } else {
+        $c->redirect_to('/note/' . $fn );
+    }
 }
 
 sub display_field( $c, $fn, $note, $field_name, $class ) {
@@ -240,6 +271,8 @@ post '/edit-title' => \&update_note_title; # empty note
 get  '/display-title/*fn' => \&display_note_title;
 get  '/attach-image/*fn' => \&capture_image;
 post '/upload-image/*fn' => \&attach_image;
+get  '/edit-color/*fn' => \&edit_note_color;
+post '/edit-color/*fn' => \&update_note_color;
 
 app->start;
 
@@ -345,7 +378,7 @@ __DATA__
 <div class="xcontainer" style="height:400px">
 <textarea name="body" id="node-body"
     hx-post="<%= url_for( $doc_url ) %>"
-    hx-trigger="search, keyup delay:200ms changed"
+    hx-trigger="search, keyup delay:200ms change"
     hx-swap="none"
 ><%= $note->body %></textarea>
 </div>
@@ -360,6 +393,12 @@ __DATA__
         hx-get="<%= url_for( "/attach-image/" . $note->filename ) %>"
         hx-swap="outerHTML"
     >Add Image</a>
+</div>
+<div id="action-color">
+    <a href="<%= url_for( "/edit-color/" . $note->filename ) %>"
+        hx-get="<%= url_for( "/edit-color/" . $note->filename ) %>"
+        hx-swap="outerHTML"
+    >Set color</a>
 </div>
 </div>
 </body>
@@ -388,7 +427,7 @@ __DATA__
 @@edit-text.html.ep
 <form action="<%= url_for( "/edit-$field_name/" . $note->filename ) %>" method="POST"
     hx-post="<%= url_for( "/auto-edit-$field_name/" . $note->filename ) %>"
-    hx-trigger="search, keyup delay:200ms changed"
+    hx-trigger="search, keyup delay:200ms change"
     hx-swap="outerHTML"
 >
     <input type="text" name="<%= $field_name %>" id="note-input-text-<%= $field_name %>" value="<%= $value %>" />
@@ -417,4 +456,24 @@ __DATA__
        hx-swap="innerHTML"
        hx-trigger="blur from:#note-input-text-<%= $field_name %>"
     >x</a>
+</form>
+
+@@edit-color.html.ep
+<form action="<%= url_for( "/edit-color/" . $note->filename ) %>" method="POST"
+    hx-post="<%= url_for( "/auto-edit-$field_name/" . $note->filename ) %>"
+    hx-trigger="#edit-<%= $field_name %>, keyup delay:200ms change"
+    hx-swap="outerHTML"
+>
+  <input type="color" list="presetColors" value="<%= $value %>" name="color" id="edit-<%= $field_name %>"
+    hx-post="<%= url_for( "/edit-color/" . $note->filename ) %>"
+    hx-trigger="change"
+    hx-swap="outerHTML"
+    hx-target="body"
+  >
+  <datalist id="presetColors">
+    <option>#ff0000</option>
+    <option>#00ff00</option>
+    <option>#0000ff</option>
+  </datalist>
+  <button type="submit">Set</button>
 </form>
