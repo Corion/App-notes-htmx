@@ -284,8 +284,6 @@ sub attach_image( $c ) {
 
 get  '/edit-title' => \&edit_note_title; # empty note
 get  '/edit-title/*fn' => \&edit_note_title;
-post '/auto-edit-title' => sub( $c ) { update_note_title( $c, 1 ) }; # empty note
-post '/auto-edit-title/*fn' => sub( $c ) { update_note_title( $c, 1 ) };
 post '/edit-title/*fn' => \&update_note_title;
 post '/edit-title' => \&update_note_title; # empty note
 get  '/display-title/*fn' => \&display_note_title;
@@ -490,8 +488,6 @@ __DATA__
 
 @@edit-text.html.ep
 <form action="<%= url_for( "/edit-$field_name/" . $note->filename ) %>" method="POST"
-    hx-post="<%= url_for( "/auto-edit-$field_name/" . $note->filename ) %>"
-    hx-trigger="search, keyup delay:200ms change"
     hx-swap="outerHTML"
 >
     <input type="text" name="<%= $field_name %>" id="note-input-text-<%= $field_name %>" value="<%= $value %>" />
