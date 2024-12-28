@@ -521,12 +521,12 @@ __DATA__
 @@edit-color.html.ep
 <form action="<%= url_for( "/edit-color/" . $note->filename ) %>" method="POST"
     hx-post="<%= url_for( "/auto-edit-$field_name/" . $note->filename ) %>"
-    hx-trigger="#edit-<%= $field_name %>, keyup delay:200ms change"
+    hx-trigger="#edit-<%= $field_name %>, keyup delay:200ms changed"
     hx-swap="outerHTML"
 >
   <input type="color" list="presetColors" value="<%= $value %>" name="color" id="edit-<%= $field_name %>"
     hx-post="<%= url_for( "/edit-color/" . $note->filename ) %>"
-    hx-trigger="change"
+    hx-trigger="edit-<%= $field_name %> changed"
     hx-swap="outerHTML"
     hx-target="body"
   >
