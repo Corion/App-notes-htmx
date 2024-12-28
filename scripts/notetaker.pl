@@ -329,6 +329,8 @@ __DATA__
 <title>Notes</title>
 </head>
 <body
+    hx-boost="true"
+    id="body"
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
 >
