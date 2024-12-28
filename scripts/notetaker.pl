@@ -329,9 +329,9 @@ __DATA__
     </ul>
   </nav>
 </div>
+<div class="single-note">
 <div>Tags: ...</div><!-- tags editor ?! -->
 <div>Filename: <%= $note->filename %></div>
-<div class="single-note">
 % my $doc_url = '/note/' . $note->filename;
 <form action="<%= url_for( $doc_url ) %>" method="POST">
 <button name="save" type="submit">Save</button>
