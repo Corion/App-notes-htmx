@@ -15,7 +15,7 @@ app->static->with_roles('+Compressed');
 plugin 'DefaultHelpers';
 plugin 'HTMX';
 
-my $document_directory = './notes';
+my $document_directory = Mojo::File->new( './notes' )->to_abs();
 
 sub render_index($c) {
     my @documents = get_documents();
