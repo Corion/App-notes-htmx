@@ -310,13 +310,14 @@ __DATA__
 @@ htmx-header.html.ep
 <meta htmx.config.allowScriptTags="true">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/bootstrap.5.3.3.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+<link rel="stylesheet" href="/notes.css" />
 <script src="/bootstrap.5.3.3.min.js"></script>
 <script src="/htmx.2.0.4.min.js"></script>
 <script src="/ws.2.0.1.js"></script>
 <script src="/debug.2.0.1.js"></script>
 <script src="/loading-states.2.0.1.js"></script>
 <script type="module" src="/morphdom-esm.2.7.4.js"></script>
-<link rel="stylesheet" href="/notes.css" />
 
 @@ index.html.ep
 <!DOCTYPE html>
