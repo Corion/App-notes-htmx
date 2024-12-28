@@ -81,6 +81,12 @@ sub display_note( $c, $note ) {
     $c->render('note');
 };
 
+sub serve_attachment( $c ) {
+    my $fn = $c->param('fn');
+    $fn =~ s![\x00-\x1f\\/]!!g;
+    $c->reply->file( "$document_directory/attachments/$fn" );
+}
+
 get '/index.html' => \&render_index;
 get '/' => \&render_index;
 
@@ -91,6 +97,8 @@ get  '/new' => sub( $c ) {
     );
     display_note( $c, $note );
 };
+
+get  '/note/attachments/*fn' => \&serve_attachment;
 
 get '/note/*fn' => sub($c) {
     my $note = find_note( $c->param('fn'));
