@@ -369,7 +369,6 @@ sub as_html( $doc, %options ) {
 
     my $base = app->url_for('/note/');
     $html =~ s!<img src="\K(?=attachments/)!$base!g;
-    warn $html;
 
     return $html
 }
