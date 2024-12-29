@@ -462,6 +462,7 @@ __DATA__
 <%== $note_html %>
 </div>
 </form>
+    <div class="edited-date"><%= $note->frontmatter->{updated} %></div>
 </div>
 <div id="actionbar" class="footer mt-auto fixed-bottom navbar-light bg-light">
     <div id="action-attach">
