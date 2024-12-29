@@ -21,7 +21,7 @@ sub render_index($c) {
     my $filter = $c->param('q');
     my @documents = get_documents($filter);
 
-    $_->{html} //= as_html( $_, strip_links => 1 ) for @documents;
+    $_->{html} //= as_html( $_ ) for @documents;
 
     $c->stash( documents => \@documents );
     $c->stash( filter => $filter );
@@ -32,7 +32,7 @@ sub render_filter($c) {
     my $filter = $c->param('q');
     my @documents = get_documents($filter);
 
-    $_->{html} //= as_html( $_, strip_links => 1 ) for @documents;
+    $_->{html} //= as_html( $_ ) for @documents;
 
     $c->stash( documents => \@documents );
     $c->stash( filter => $filter );
@@ -296,19 +296,12 @@ app->start;
 
 # Make relative links actually relative to /note/ so that we can also
 # properly serve attachments
-sub as_html( $doc, %options ) {
+sub as_html( $doc ) {
     my $renderer = Markdown::Perl->new(
         mode => 'github',
-        disallowed_html_tags => ['script','a','object'],
+        disallowed_html_tags => ['script','a','object']
     );
-    my $html = $renderer->convert( $doc->body );
-
-    if( $options{ strip_links } ) {
-        $html =~ s/<a\s+href=[^>]*?>//gsi;
-        $html =~ s!</a>!!gsi;
-    }
-
-    return $html
+    $renderer->convert( $doc->body );
 }
 
 __DATA__
@@ -417,7 +410,6 @@ __DATA__
   <nav>
     <ul>
     <li><a href="/">index</a></li>
-    <!-- note color selector -->
     <!-- delete note -->
     </ul>
   </nav>
