@@ -554,13 +554,12 @@ __DATA__
     hx-swap="innerHTML"
     >&#x270E;</a>
 % } else {
-    <div color="#777">
-    <a href="<%= url_for( "/edit-$field_name/" . $note->filename ) %>"
-    hx-get="<%= url_for( "/edit-$field_name/" . $note->filename ) %>"
-    hx-target="#note-<%= $field_name %>"
-    hx-swap="innerHTML"
-    >Click to add <%= $field_name %></a>
-    </div>
+    <a class="editable"
+       href="<%= url_for( "/edit-$field_name/" . $note->filename ) %>"
+       hx-get="<%= url_for( "/edit-$field_name/" . $note->filename ) %>"
+       hx-target="#note-<%= $field_name %>"
+       hx-swap="innerHTML"
+    ><%= $field_name %></a>
 % }
 </div>
 

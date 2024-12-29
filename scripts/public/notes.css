@@ -69,6 +69,11 @@ nav ul li {
     max-width: 100%;
 }
 
+a.editable {
+    color: #bbb;
+    text-decoration: none;
+}
+
 .xcontainer > textarea {
   /* box-sizing: border-box; /* fit parent width */
   flex: 1;
