@@ -106,6 +106,8 @@ sub display_note( $c, $note ) {
     my $html = as_html( $note );
     $c->stash( note_html => $html );
 
+    # Meh - we only want to set this to true if a request is coming from
+    # this page during a field edit, not during generic page navigation
     $c->stash( htmx_update => $c->is_htmx_request() );
 
     $c->render('note');
@@ -337,6 +339,29 @@ sub update_labels( $c, $autosave=0 ) {
     $c->redirect_to('/note/' . $fn );
 }
 
+sub create_label( $c ) {
+    my $note = find_note( $c->param('fn') );
+    $c->stash( note => $note );
+    $c->render('create-label' );
+}
+
+sub add_label( $c ) {
+    my $fn = $c->param('fn');
+    my %labels;
+    my $label = $c->param('new-label');
+    $labels{ $label } = 1;
+
+    my $note = find_or_create_note( $fn );
+    my $l = $note->frontmatter->{labels} // [];
+    @labels{ $l->@* } = (1) x $l->@*;
+    $note->frontmatter->{labels} = [sort keys %labels];
+    $note->save_to( clean_filename( $fn ));
+
+    $c->stash(prev_label => $label );
+    $c->stash(note => $note);
+
+    $c->render('display-create-label');
+}
 
 get  '/edit-title' => \&edit_note_title; # empty note
 get  '/edit-title/*fn' => \&edit_note_title;
@@ -350,6 +375,8 @@ post '/edit-color/*fn' => \&update_note_color;
 
 get  '/edit-labels/*fn' => \&edit_labels;
 post '/update-labels/*fn' => \&update_labels;
+get  '/create-label/*fn' => \&create_label;
+post '/add-label/*fn' => \&add_label;
 
 app->start;
 
@@ -480,7 +507,10 @@ __DATA__
 <div class="navbar navbar-expand-lg sticky-top navbar-light bg-light">
   <nav>
     <ul>
-    <li><a href="/">index</a></li>
+    <li><a href="/"
+            hx-trigger="keyup[key=='Escape']"
+            hx-target="#note-textarea"
+        >index</a></li>
     <!-- delete note -->
     </ul>
   </nav>
@@ -623,10 +653,10 @@ __DATA__
 % }
 
 @@edit-labels.html.ep
-[ Add new label ]
 <form action="<%= url_for( "/update-labels/" . $note->filename ) %>" method="POST"
 >
   <button type="submit">Set</button>
+%=include 'display-create-label', prev_label => ''
 % my $idx=1;
 % for my $label (sort keys $labels->%*) {
 %   my $name = "label-" . $idx++;
@@ -636,4 +666,30 @@ __DATA__
     </span>
 %   $idx++;
 % }
+</form>
+
+@@display-create-label.html.ep
+  <!-- Here, we also need a non-JS solution ... -->
+<a id="create-label" href="<%= url_for("/create-label/" . $note->filename ) %>"
+   hx-get="<%= url_for("/create-label/" . $note->filename ) %>"
+   hx-swap="outerHTML"
+>[ Add new label ]</a>
+% if( $prev_label ) {
+%# This gets prepended to the label form and when that saves, we actually update the labels
+    <span class="label">
+    <input type="checkbox" name="label-<%= $prev_label %>" id="label-<%= $prev_label %>" value="<%= $prev_label %>" <%== $prev_label ? 'checked' : ''%>/>
+    <label for="label-<%= $prev_label %>"><%= $prev_label %></label>
+    </span>
+% }
+
+@@create-label.html.ep
+<form id="create-label" action="<%= url_for( "/add-label/" . $note->filename ) %>" method="POST"
+    hx-post="<%= url_for( "/add-label/" . $note->filename ) %>"
+    hx-swap="outerHTML"
+>
+  <button type="submit">Set</button>
+    <span class="label">
+    <input type="checkbox" name="really" id="really" checked />
+    <input type="text" name="new-label" id="new-label" value="" placeholder="New label" />
+    </span>
 </form>
