@@ -330,7 +330,7 @@ sub update_labels( $c, $autosave=0 ) {
     my $fn = $c->param('fn');
     my %labels = $c->req->params->to_hash->%*;
 
-    my @labels = sort values %labels;
+    my @labels = sort { fc($a) cmp fc($b) } values %labels;
 
     my $note = find_or_create_note( $fn );
     $note->frontmatter->{labels} = \@labels;
@@ -354,7 +354,7 @@ sub add_label( $c ) {
     my $note = find_or_create_note( $fn );
     my $l = $note->frontmatter->{labels} // [];
     @labels{ $l->@* } = (1) x $l->@*;
-    $note->frontmatter->{labels} = [sort keys %labels];
+    $note->frontmatter->{labels} = [sort { fc($a) cmp fc($b) } keys %labels];
     $note->save_to( clean_filename( $fn ));
 
     $c->stash(prev_label => $label );
@@ -658,7 +658,7 @@ __DATA__
   <button type="submit">Set</button>
 %=include 'display-create-label', prev_label => ''
 % my $idx=1;
-% for my $label (sort keys $labels->%*) {
+% for my $label (sort { fc($a) cmp fc($b) } keys $labels->%*) {
 %   my $name = "label-" . $idx++;
     <span class="label">
     <input type="checkbox" name="<%= $name %>" id="<%= $name %>" value="<%= $label %>" <%== $labels->{$label} ? 'checked' : ''%>/>
