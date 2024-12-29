@@ -24,7 +24,7 @@ has 'filename' => (
 
 sub from_file( $class, $fn ) {
     my $f = Mojo::File->new($fn);
-    my $body = $f->slurp;
+    my $body = $f->slurp('UTF-8');
     my $tfm = Text::FrontMatter::YAML->new(
         document_string => $body,
     );
@@ -43,7 +43,7 @@ sub save_to( $self, $fn ) {
         frontmatter_hashref => $self->frontmatter,
     );
 
-    $f->spew( $tfm->document_string );
+    $f->spew( $tfm->document_string, 'UTF-8' );
 }
 
 1;
