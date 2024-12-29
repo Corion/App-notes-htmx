@@ -21,7 +21,7 @@ sub render_index($c) {
     my $filter = $c->param('q');
     my @documents = get_documents($filter);
 
-    $_->{html} //= as_html( $_ ) for @documents;
+    $_->{html} //= as_html( $_, strip_links => 1 ) for @documents;
 
     $c->stash( documents => \@documents );
     $c->stash( filter => $filter );
@@ -32,7 +32,7 @@ sub render_filter($c) {
     my $filter = $c->param('q');
     my @documents = get_documents($filter);
 
-    $_->{html} //= as_html( $_ ) for @documents;
+    $_->{html} //= as_html( $_, strip_links => 1 ) for @documents;
 
     $c->stash( documents => \@documents );
     $c->stash( filter => $filter );
@@ -296,12 +296,19 @@ app->start;
 
 # Make relative links actually relative to /note/ so that we can also
 # properly serve attachments
-sub as_html( $doc ) {
+sub as_html( $doc, %options ) {
     my $renderer = Markdown::Perl->new(
         mode => 'github',
-        disallowed_html_tags => ['script','a','object']
+        disallowed_html_tags => ['script','a','object'],
     );
-    $renderer->convert( $doc->body );
+    my $html = $renderer->convert( $doc->body );
+
+    if( $options{ strip_links } ) {
+        $html =~ s/<a\s+href=[^>]*?>//gsi;
+        $html =~ s!</a>!!gsi;
+    }
+
+    return $html
 }
 
 __DATA__
