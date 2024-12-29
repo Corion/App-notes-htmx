@@ -425,16 +425,16 @@ __DATA__
 %               ? sprintf q{ style="background-color: %s;"}, $note->frontmatter->{color}
 %               : '';
 <div class="single-note"<%== $bgcolor %>>
-<div>Labels: ...</div><!-- tags editor ?! -->
+%=include 'display-labels', labels => $note->frontmatter->{labels}
 <div>Filename: <%= $note->filename %></div>
 % my $doc_url = '/note/' . $note->filename;
 <form action="<%= url_for( $doc_url ) %>" method="POST">
-<button name="save" type="submit">Save</button>
+<button name="save" type="submit">Close</button>
 %=include "display-text", field_name => 'title', value => $note->frontmatter->{title}, class => 'title';
 <div class="xcontainer" style="height:400px">
 <textarea name="body" id="note-textarea"
     hx-post="<%= url_for( $doc_url ) %>"
-    hx-trigger="note-textarea, keyup delay:200ms changed"
+    hx-trigger="#note-textarea, keyup delay:200ms changed"
     hx-swap="none"
 ><%= $note->body %></textarea>
 </div>
