@@ -111,11 +111,8 @@ get '/' => \&render_index;
 get '/filter' => \&render_filter;
 
 get  '/new' => sub( $c ) {
-    my $note = App::Notetaker::Document->new(
-        filename => undef,
-        body => undef,
-    );
-    display_note( $c, $note );
+    my $fn = tempnote();
+    $c->redirect_to( $c->url_for("/note/$fn"));
 };
 
 get  '/note/attachments/*fn' => \&serve_attachment;
@@ -131,10 +128,19 @@ sub save_note( $note, $fn ) {
     $note->save_to( clean_filename( $fn ));
 }
 
-post '/note/*fn' => sub($c) {
+sub tempnote() {
+    my($fh,$fn) = File::Temp::tempfile( "unnamedXXXXXXXX", DIR => "$document_directory", SUFFIX => '.markdown' );
+    close $fh;
+    return basename($fn)
+}
+
+sub save_note_body( $c ) {
     my $fn = $c->param('fn');
 
-    $fn //= basename( File::Temp::tempnam( $document_directory, 'unnamed-XXXXXXXX.markdown' ));
+    if( ! $fn) {
+        $fn = tempnote();
+        $c->htmx->res->replace_url($c->url_for("/note/$fn"));
+    }
 
     my $note = find_or_create_note( $fn );
 
@@ -147,6 +153,8 @@ post '/note/*fn' => sub($c) {
 
     $c->redirect_to('/note/' . $fn );
 };
+post '/note/*fn' => \&save_note_body;
+post '/note/' => \&save_note_body; # we make up a filename then
 
 sub edit_field( $c, $note, $field_name ) {
     $c->stash( note => $note );
@@ -164,7 +172,10 @@ sub edit_color_field( $c, $note, $field_name ) {
 
 sub edit_note_title( $c ) {
     my $fn = $c->param('fn');
-    $fn //= basename(File::Temp::tempnam( $document_directory, 'unnamed-XXXXXXXX.markdown' ));
+    if( ! $fn) {
+        $fn = tempnote();
+        $c->htmx->res->replace_url($c->url_for("/note/$fn"));
+    }
 
     my $note = find_or_create_note( $fn );
     edit_field( $c, $note, 'title' );
@@ -172,7 +183,10 @@ sub edit_note_title( $c ) {
 
 sub edit_note_color( $c ) {
     my $fn = $c->param('fn');
-    $fn //= basename(File::Temp::tempnam( $document_directory, 'unnamed-XXXXXXXX.markdown' ));
+    if( ! $fn) {
+        $fn = tempnote();
+        $c->htmx->res->replace_url($c->url_for("/note/$fn"));
+    }
 
     my $note = find_or_create_note( $fn );
     edit_color_field( $c, $note, 'color' );
@@ -216,7 +230,11 @@ sub update_note_title( $c, $autosave=0 ) {
                  || 'untitled'; # we can't title a note "0", but such is life
 
     # First, save the new information to the old, existing file
-    $fn //= $new_fn // basename( File::Temp::tempnam( $document_directory, 'unnamed-XXXXXXXX.markdown' ));
+    $fn //= $new_fn;
+    if( ! $fn) {
+        $fn = tempnote();
+        $c->htmx->res->replace_url($c->url_for("/note/$fn"));
+    }
 
     my $note = find_or_create_note( $fn );
     my $rename = ($note->frontmatter->{title} ne $title);
