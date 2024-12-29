@@ -424,8 +424,8 @@ __DATA__
 % my $bgcolor = $note->frontmatter->{color}
 %               ? sprintf q{ style="background-color: %s;"}, $note->frontmatter->{color}
 %               : '';
-<div class="single-note"<%== $bgcolor %>>
 %=include 'display-labels', labels => $note->frontmatter->{labels}
+<div class="single-note"<%== $bgcolor %>>
 <div>Filename: <%= $note->filename %></div>
 % my $doc_url = '/note/' . $note->filename;
 <form action="<%= url_for( $doc_url ) %>" method="POST">
@@ -551,8 +551,7 @@ __DATA__
 @@display-labels.html.ep
 % $labels //= [];
 % if( $labels->@* ) {
-    Labels:
 %     for my $label ($labels->@*) {
-    <span class="badge-light"><%= $label %></span>
+    <span class="badge rounded-pill bg-secondary"><%= $label %></span>
 %     }
 % }
