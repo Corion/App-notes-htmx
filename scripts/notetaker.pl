@@ -393,7 +393,7 @@ __DATA__
     <a href="/note/<%= $doc->filename %>" class="grid-item note"<%== $bgcolor %>>
     <div class="title"><%= $doc->frontmatter->{title} %></div>
     <!-- list (some) tags -->
-    <div class="content"><%== $doc->{html} %></div>
+    <div class="content" hx-disable="true"><%== $doc->{html} %></div>
     </a>
 % }
 </div>
@@ -438,7 +438,7 @@ __DATA__
     hx-swap="none"
 ><%= $note->body %></textarea>
 </div>
-<div id="preview" hx-swap-oob="<%= $htmx_update ? 'true':'false' %>">
+<div id="preview" hx-swap-oob="<%= $htmx_update ? 'true':'false' %>" hx-disable="true">
 <%== $note_html %>
 </div>
 </form>
