@@ -339,7 +339,7 @@ __DATA__
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
 >
-<div class="navbar navbar-expand-lg sticky-top navbar-light bg-light">
+<div class="navbar navbar-expand-lg fixed-top navbar-light bg-light">
   <nav>
     <ul>
     <li><a href="/">index</a></li>
@@ -413,7 +413,7 @@ __DATA__
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
 >
-<div class="navbar navbar-expand-lg fixed-top bg-light">
+<div class="navbar navbar-expand-lg fixed-top navbar-light bg-light">
   <nav>
     <ul>
     <li><a href="/">index</a></li>
