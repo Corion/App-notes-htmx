@@ -409,7 +409,7 @@ __DATA__
     <li>
       <form id="form-filter" method="GET" action="/">
         <input id="text-filter" name="q" value="<%= $filter %>"
-            placeholder="Filter"
+            placeholder="Search notes"
             hx-get="<%= url_for( "/filter" ) %>"
             hx-trigger="input delay:200ms changed, keyup[key=='Enter'], load"
             hx-target="#documents"
