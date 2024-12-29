@@ -526,7 +526,6 @@ __DATA__
 
 @@edit-color.html.ep
 <form action="<%= url_for( "/edit-color/" . $note->filename ) %>" method="POST"
-    hx-post="<%= url_for( "/auto-edit-$field_name/" . $note->filename ) %>"
     hx-swap="outerHTML"
     hx-target="#body"
 >
