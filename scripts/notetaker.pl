@@ -39,6 +39,8 @@ sub render_filter($c) {
     $c->render('documents');
 }
 
+our %all_labels;
+
 sub get_documents($filter="") {
     my %stat;
     return
@@ -50,9 +52,18 @@ sub get_documents($filter="") {
         }
         map {
             my $fn = $_;
-            -f $fn && App::Notetaker::Document->from_file( $fn )
+            my $n;
+            $n = App::Notetaker::Document->from_file( $fn )
+                if -f $fn;
+
+            # While we're at it, also read in all labels
+            $all_labels{ $_ } = 1 for $n->frontmatter->{labels}->@*;
+
+            $n ? $n : ()
         }
         sort {
+            # Some day we want to sort by pinned-first, and maybe even
+            # other criteria
             $stat{ $b } <=> $stat{ $a }
         }
         map {
@@ -300,6 +311,33 @@ sub attach_image( $c ) {
     $c->redirect_to('/note/' . $note->filename );
 }
 
+sub edit_labels( $c ) {
+    my $note = find_note( $c->param('fn') );
+
+    my %labels;
+    @labels{ keys %all_labels } = (undef) x keys %all_labels;
+    $labels{ $_ } = 1 for ($note->frontmatter->{labels} // [])->@*;
+
+    $c->stash( labels => \%labels );
+    $c->stash( note => $note );
+
+    $c->render('edit-labels');
+}
+
+sub update_labels( $c, $autosave=0 ) {
+    my $fn = $c->param('fn');
+    my %labels = $c->req->params->to_hash->%*;
+
+    my @labels = sort values %labels;
+
+    my $note = find_or_create_note( $fn );
+    $note->frontmatter->{labels} = \@labels;
+    $note->save_to( clean_filename( $fn ));
+
+    $c->redirect_to('/note/' . $fn );
+}
+
+
 get  '/edit-title' => \&edit_note_title; # empty note
 get  '/edit-title/*fn' => \&edit_note_title;
 post '/edit-title/*fn' => \&update_note_title;
@@ -309,6 +347,9 @@ get  '/attach-image/*fn' => \&capture_image;
 post '/upload-image/*fn' => \&attach_image;
 get  '/edit-color/*fn' => \&edit_note_color;
 post '/edit-color/*fn' => \&update_note_color;
+
+get  '/edit-labels/*fn' => \&edit_labels;
+post '/update-labels/*fn' => \&update_labels;
 
 app->start;
 
@@ -582,3 +623,19 @@ __DATA__
     <span class="badge rounded-pill bg-secondary"><%= $label %></span>
 %     }
 % }
+
+@@edit-labels.html.ep
+[ Add new label ]
+<form action="<%= url_for( "/update-labels/" . $note->filename ) %>" method="POST"
+>
+  <button type="submit">Set</button>
+% my $idx=1;
+% for my $label (sort keys $labels->%*) {
+%   my $name = "label-" . $idx++;
+    <span class="label">
+    <input type="checkbox" name="<%= $name %>" id="<%= $name %>" value="<%= $label %>" <%== $labels->{$label} ? 'checked' : ''%>/>
+    <label for="<%= $name %>"><%= $label %></label>
+    </span>
+%   $idx++;
+% }
+</form>
