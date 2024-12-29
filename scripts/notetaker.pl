@@ -450,6 +450,12 @@ __DATA__
             hx-swap="outerHTML"
         >Add Image</a>
     </div>
+    <div id="action-labels">
+        <a href="<%= url_for( "/edit-labels/" . $note->filename ) %>"
+            hx-get="<%= url_for( "/edit-labels/" . $note->filename ) %>"
+            hx-swap="outerHTML"
+        >Labels</a>
+    </div>
     <div id="action-color">
         <a href="<%= url_for( "/edit-color/" . $note->filename ) %>"
             hx-get="<%= url_for( "/edit-color/" . $note->filename ) %>"
@@ -541,3 +547,12 @@ __DATA__
   </datalist>
   <button type="submit">Set</button>
 </form>
+
+@@display-labels.html.ep
+% $labels //= [];
+% if( $labels->@* ) {
+    Labels:
+%     for my $label ($labels->@*) {
+    <span class="badge-light"><%= $label %></span>
+%     }
+% }
