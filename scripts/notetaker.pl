@@ -369,6 +369,7 @@ __DATA__
             hx-trigger="input delay:200ms changed, keyup[key=='Enter'], load"
             hx-target="#documents"
             hx-swap="outerHTML"
+            autofocus
         />
       </form>
     </li>
@@ -451,7 +452,7 @@ __DATA__
 <button name="save" type="submit">Close</button>
 %=include "display-text", field_name => 'title', value => $note->frontmatter->{title}, class => 'title';
 <div class="xcontainer" style="height:400px">
-<textarea name="body" id="note-textarea"
+<textarea name="body" id="note-textarea" autofocus
     hx-post="<%= url_for( $doc_url ) %>"
     hx-trigger="#note-textarea, keyup delay:200ms changed"
     hx-swap="none"
@@ -521,7 +522,9 @@ __DATA__
 <form action="<%= url_for( "/edit-$field_name/" . $note->filename ) %>" method="POST"
     hx-swap="outerHTML"
 >
-    <input type="text" name="<%= $field_name %>" id="note-input-text-<%= $field_name %>" value="<%= $value %>" />
+    <input type="text" name="<%= $field_name %>" id="note-input-text-<%= $field_name %>" value="<%= $value %>"
+        autofocus
+    />
     <button type="submit">Save</button>
     <a href="<%= url_for( "/note/" . $note->filename ) %>"
        hx-get="/display-<%= $field_name %>/<%= $note->filename %>"
