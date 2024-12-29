@@ -418,7 +418,7 @@ __DATA__
 %               ? sprintf q{ style="background-color: %s;"}, $note->frontmatter->{color}
 %               : '';
 <div class="single-note"<%== $bgcolor %>>
-<div>Tags: ...</div><!-- tags editor ?! -->
+<div>Labels: ...</div><!-- tags editor ?! -->
 <div>Filename: <%= $note->filename %></div>
 % my $doc_url = '/note/' . $note->filename;
 <form action="<%= url_for( $doc_url ) %>" method="POST">
