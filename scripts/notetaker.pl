@@ -690,6 +690,6 @@ __DATA__
   <button type="submit">Set</button>
     <span class="label">
     <input type="checkbox" name="really" id="really" checked />
-    <input type="text" name="new-label" id="new-label" value="" placeholder="New label" />
+    <input type="text" name="new-label" id="new-label" value="" placeholder="New label" autofocus />
     </span>
 </form>
