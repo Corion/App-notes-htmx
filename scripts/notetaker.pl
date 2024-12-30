@@ -79,7 +79,7 @@ sub get_documents($filter={}) {
             }
 
             # While we're at it, also read in all used colors
-            $all_labels{ $n->frontmatter->{color} } = 1
+            $all_colors{ $n->frontmatter->{color} } = 1
                 if $n->frontmatter->{color};
 
             $n ? $n : ()
