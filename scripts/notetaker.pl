@@ -42,6 +42,9 @@ sub render_filter($c) {
 our %all_labels;
 our %all_colors;
 
+# Initialize all labels & colours
+get_documents();
+
 sub get_documents($filter="") {
     my %stat;
     return
@@ -63,7 +66,7 @@ sub get_documents($filter="") {
             }
 
             # While we're at it, also read in all used colors
-            $all_labels{ $n->frontmatter->{color} }
+            $all_labels{ $n->frontmatter->{color} } = 1
                 if $n->frontmatter->{color};
 
             $n ? $n : ()
