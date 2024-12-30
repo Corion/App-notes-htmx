@@ -17,6 +17,7 @@ plugin 'DefaultHelpers';
 plugin 'HTMX';
 
 my $document_directory = Mojo::File->new( './notes' )->to_abs();
+mkdir "$document_directory/deleted"; # so we can always (un)delete notes
 
 sub fetch_filter( $c ) {
     my $filter = {
@@ -198,6 +199,24 @@ sub save_note_body( $c ) {
 
     $c->redirect_to('/note/' . $fn );
 };
+
+sub delete_note( $c ) {
+    my $fn = $c->param('fn');
+    my $note = find_note( $fn );
+
+    if( $note ) {
+        # Save undo data?!
+        $c->stash( undo => '/undelete/' . $note->filename );
+        $note->frontmatter->{deleted} = strftime '%Y-%m-%dT%H:%M:%SZ', gmtime(time);
+        save_note( $note, $fn );
+        move_note( "$document_directory/" . $note->filename  => "$document_directory/deleted/" . $note->filename );
+    }
+
+    # Can we keep track of current filters and restore them here?
+
+    $c->redirect_to('/');
+}
+
 sub move_note( $source_name, $target_name ) {
     my $count = 0;
     my $tn = Mojo::File->new( $target_name );
@@ -218,6 +237,7 @@ sub move_note( $source_name, $target_name ) {
 
 post '/note/*fn' => \&save_note_body;
 post '/note/' => \&save_note_body; # we make up a filename then
+post '/delete/*fn' => \&delete_note;
 
 sub edit_field( $c, $note, $field_name ) {
     $c->stash( note => $note );
@@ -624,10 +644,9 @@ __DATA__
         >Archive note</a>
     </div>
     <div id="action-delete">
-        <a href="#"
-            hx-get="#"
-            hx-swap="outerHTML"
-        >Delete note</a>
+        <form action="<%= url_for('/delete/' . $note->filename ) %>" method="POST"
+        ><button type="submit">Delete</button>
+        </form>
     </div>
 </div>
 </body>
