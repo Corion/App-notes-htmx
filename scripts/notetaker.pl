@@ -158,6 +158,22 @@ get '/filter' => \&render_filter;
 
 get  '/new' => sub( $c ) {
     my $fn = tempnote();
+
+    # We'll create a file here, no matter whether there is content or not
+    my $note;
+    if( my $c = $c->param('color')) {
+        $note //= find_note( $fn );
+        $note->frontmatter->{color} = $c;
+    }
+    if( my $c = $c->param('label')) {
+        $note //= find_note( $fn );
+        $note->frontmatter->{labels} //= [];
+        push $note->frontmatter->{labels}->@*, $c;
+    }
+    if( $note ) {
+        save_note( $note, $fn );
+    }
+
     $c->redirect_to( $c->url_for("/note/$fn"));
 };
 
@@ -533,7 +549,7 @@ __DATA__
   <div class="btn-group">
     <button type="button" class="btn btn-success btn-lg"
       ><i class="fa-solid fa-plus">
-       <a href="/new">+</a>
+       <a href="<%= url_with('/new' ) %>">+</a>
        </i>
     </button>
     <button type="button" class="btn btn-secondary btn-lg dropdown-toggle dropdown-toggle-split hide-toggle"
