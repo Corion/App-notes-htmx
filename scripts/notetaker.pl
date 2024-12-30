@@ -60,12 +60,21 @@ sub match_text( $filter, $note ) {
     || $note->frontmatter->{title} =~ /\Q$filter\E/i
 }
 
+sub match_color( $filter, $note ) {
+    ($note->frontmatter->{color} // '') eq $filter
+}
+
+sub match_label( $filter, $note ) {
+    grep { $_ eq $filter } ($note->frontmatter->{labels} // [])->@*
+}
+
 sub get_documents($filter={}) {
     my %stat;
     return
         grep {
-            $filter->{text} ? match_text( $filter->{text}, $_ )
-                            : 1
+               ($filter->{text}  ? match_text( $filter->{text}, $_ )   : 1)
+            && ($filter->{color} ? match_color( $filter->{color}, $_ ) : 1)
+            && ($filter->{label} ? match_label( $filter->{label}, $_ ) : 1)
         }
         map {
             my $fn = $_;
@@ -386,6 +395,15 @@ sub add_label( $c ) {
     $c->render('display-create-label');
 }
 
+sub select_filter( $c ) {
+    my $filter = fetch_filter($c);
+    $c->stash( filter => $filter );
+    $c->stash( labels => [sort { fc($a) cmp fc($b) } keys %all_labels] );
+    $c->stash( types  => [] );
+    $c->stash( colors => [sort { fc($a) cmp fc($b) } keys %all_colors] );
+    $c->render('select-filter' );
+}
+
 get  '/edit-title' => \&edit_note_title; # empty note
 get  '/edit-title/*fn' => \&edit_note_title;
 post '/edit-title/*fn' => \&update_note_title;
@@ -400,6 +418,7 @@ get  '/edit-labels/*fn' => \&edit_labels;
 post '/update-labels/*fn' => \&update_labels;
 get  '/create-label/*fn' => \&create_label;
 post '/add-label/*fn' => \&add_label;
+get  '/select-filter' => \&select_filter;
 
 app->start;
 
@@ -456,10 +475,20 @@ __DATA__
     <ul>
     <li><a href="/">index</a></li>
     <li>
+      <form id="form-filter-instant" method="GET" action="/">
+        <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
+            placeholder="Search"
+            hx-get="<%= url_with( "/select-filter" ) %>"
+            hx-trigger="focus"
+            hx-swap="outerHTML"
+        />
+      </form>
+    </li>
+    <li>
       <form id="form-filter" method="GET" action="/">
         <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
             placeholder="Search notes"
-            hx-get="<%= url_for( "/filter" ) %>"
+            hx-get="<%= url_with( "/filter" ) %>"
             hx-trigger="input delay:200ms changed, keyup[key=='Enter'], load"
             hx-target="#documents"
             hx-swap="outerHTML"
@@ -716,3 +745,39 @@ __DATA__
     <input type="text" name="new-label" id="new-label" value="" placeholder="New label" autofocus />
     </span>
 </form>
+
+@@select-filter.html.ep
+      <form id="form-filter-instant" method="GET" action="/">
+        <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
+            placeholder="Search"
+            hx-get="<%= url_with( "/select-filter" ) %>"
+            hx-trigger="focus"
+            hx-swap="outerHTML"
+        />
+      </form>
+<!-- (note) types (images, lists, ...) -->
+% if( $types->@* ) {
+<div>
+<h2>Types</h2>
+%    for my $t ($types->@*) {
+    <a href="<%= url_with('/')->query( type => $t ) %>"><%= $t %></a>
+%    }
+</div>
+%}
+% if( $labels->@* ) {
+<div>
+<h2>Labels</h2>
+%    for my $l ($labels->@*) {
+    <a href="<%= url_with('/')->query( label => $l ) %>"><%= $l %></a>
+%    }
+</div>
+%}
+<!-- things -->
+% if( $labels->@* ) {
+<div>
+<h2>Colors</h2>
+%    for my $l ($colors->@*) {
+    <a href="<%= url_with('/')->query( color => $l ) %>"><span class="color-circle" style="background-color:<%== $l %>;">&nbsp;</span></a>
+%    }
+</div>
+%}
