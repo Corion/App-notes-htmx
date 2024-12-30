@@ -18,12 +18,17 @@ plugin 'HTMX';
 
 my $document_directory = Mojo::File->new( './notes' )->to_abs();
 
-sub render_index($c) {
+sub fetch_filter( $c ) {
     my $filter = {
         maybe text  => $c->param('q'),
         maybe label => $c->param('label'),
         maybe color => $c->param('color'),
     };
+    return $filter
+}
+
+sub render_index($c) {
+    my $filter = fetch_filter($c);
     my @documents = get_documents($filter);
 
     $_->{html} //= as_html( $_, strip_links => 1 ) for @documents;
@@ -34,11 +39,7 @@ sub render_index($c) {
 }
 
 sub render_filter($c) {
-    my $filter = {
-        maybe text  => $c->param('q'),
-        maybe label => $c->param('label'),
-        maybe color => $c->param('color'),
-    };
+    my $filter = fetch_filter($c);
     my @documents = get_documents($filter);
 
     $_->{html} //= as_html( $_, strip_links => 1 ) for @documents;
