@@ -198,6 +198,24 @@ sub save_note_body( $c ) {
 
     $c->redirect_to('/note/' . $fn );
 };
+sub move_note( $source_name, $target_name ) {
+    my $count = 0;
+    my $tn = Mojo::File->new( $target_name );
+    my $target_directory = $tn->dirname;
+    my $base_name = $tn->basename;
+    $base_name =~ s/\.markdown\z//;
+
+    while( -f $target_name ) {
+        # maybe add todays date or something to prevent endless collisions?!
+        $target_name = sprintf "%s/%s (%d).markdown", $target_directory, $target_name, $count++;
+    }
+
+    warn "We want to rename from '$source_name' to '$target_name'";
+    rename $source_name => $target_name;
+
+    return $target_name
+}
+
 post '/note/*fn' => \&save_note_body;
 post '/note/' => \&save_note_body; # we make up a filename then
 
@@ -296,20 +314,10 @@ sub update_note_title( $c, $autosave=0 ) {
         # Also, this has horrible latency implications
         # We need to find a way to later rename the files according to
         # their title
-        my $newname = "$document_directory/$new_fn.markdown";
-        my $count = 0;
-        while( -f $newname ) {
-            # maybe add todays date?!
-            $newname = sprintf "%s/%s (%d).markdown", $document_directory, $new_fn, $count++;
-        }
-        if( $new_fn . ".markdown" ne $fn ) { # after counting upwards, we still are different
-            warn "We want to rename from '$fn' to '$new_fn.markdown'";
-            my $target = "$document_directory/$new_fn.markdown";
-            rename "$document_directory/$fn" => $target;
 
-            $fn = basename($target);
-            $note->filename( $fn );
-        }
+        my $final_name = move_note( clean_filename( $fn ) => "$document_directory/$new_fn.markdown");
+        $fn = basename($final_name);
+        $note->filename( $fn );
     }
 
     if( $autosave ) {
