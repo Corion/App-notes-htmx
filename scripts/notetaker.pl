@@ -40,6 +40,7 @@ sub render_filter($c) {
 }
 
 our %all_labels;
+our %all_colors;
 
 sub get_documents($filter="") {
     my %stat;
@@ -57,7 +58,13 @@ sub get_documents($filter="") {
                 if -f $fn;
 
             # While we're at it, also read in all labels
-            $all_labels{ $_ } = 1 for $n->frontmatter->{labels}->@*;
+            if( $n->frontmatter->{labels}) {
+                $all_labels{ $_ } = 1 for $n->frontmatter->{labels}->@*;
+            }
+
+            # While we're at it, also read in all used colors
+            $all_labels{ $n->frontmatter->{color} }
+                if $n->frontmatter->{color};
 
             $n ? $n : ()
         }
