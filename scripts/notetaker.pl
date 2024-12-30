@@ -7,6 +7,7 @@ use File::Temp;
 use File::Basename 'basename';
 use Text::CleanFragment;
 use POSIX 'strftime';
+use PerlX::Maybe;
 
 use App::Notetaker::Document;
 use Markdown::Perl;
@@ -18,7 +19,11 @@ plugin 'HTMX';
 my $document_directory = Mojo::File->new( './notes' )->to_abs();
 
 sub render_index($c) {
-    my $filter = $c->param('q');
+    my $filter = {
+        maybe text  => $c->param('q'),
+        maybe label => $c->param('label'),
+        maybe color => $c->param('color'),
+    };
     my @documents = get_documents($filter);
 
     $_->{html} //= as_html( $_, strip_links => 1 ) for @documents;
@@ -29,7 +34,11 @@ sub render_index($c) {
 }
 
 sub render_filter($c) {
-    my $filter = $c->param('q');
+    my $filter = {
+        maybe text  => $c->param('q'),
+        maybe label => $c->param('label'),
+        maybe color => $c->param('color'),
+    };
     my @documents = get_documents($filter);
 
     $_->{html} //= as_html( $_, strip_links => 1 ) for @documents;
@@ -45,14 +54,17 @@ our %all_colors;
 # Initialize all labels & colours
 get_documents();
 
-sub get_documents($filter="") {
+sub match_text( $filter, $note ) {
+       $note->body =~ /\Q$filter\E/i
+    || $note->frontmatter->{title} =~ /\Q$filter\E/i
+}
+
+sub get_documents($filter={}) {
     my %stat;
     return
         grep {
-            $filter
-                ?    $_->body =~ /\Q$filter\E/i
-                  || $_->frontmatter->{title} =~ /\Q$filter\E/i
-                : 1
+            $filter->{text} ? match_text( $filter->{text}, $_ )
+                            : 1
         }
         map {
             my $fn = $_;
@@ -444,7 +456,7 @@ __DATA__
     <li><a href="/">index</a></li>
     <li>
       <form id="form-filter" method="GET" action="/">
-        <input id="text-filter" name="q" value="<%= $filter %>"
+        <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
             placeholder="Search notes"
             hx-get="<%= url_for( "/filter" ) %>"
             hx-trigger="input delay:200ms changed, keyup[key=='Enter'], load"
