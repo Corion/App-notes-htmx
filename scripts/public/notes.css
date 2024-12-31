@@ -14,10 +14,14 @@ nav ul li {
 
 .grid-layout {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    /* 480px looks good on desktop, maybe 240px for mobile?! */
+    grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+    grid-template-rows: masonry; /* Still experimental on FF */
     grid-gap: 1px;
+    /*
     grid-auto-rows: minmax(180px, auto);
     grid-auto-flow: dense;
+    */
     padding: 1px;
 
 }
