@@ -637,7 +637,7 @@ __DATA__
 <meta charset="utf-8">
 %=include 'htmx-header'
 
-<title><%= $note->frontmatter->{title} %></title>
+<title><%= $note->frontmatter->{title} %> - notekeeper</title>
 </head>
 <body
     hx-boost="true"
