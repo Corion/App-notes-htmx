@@ -619,7 +619,9 @@ __DATA__
     % my $bgcolor = $doc->frontmatter->{color}
     %               ? sprintf q{ style="background-color: %s;"}, $doc->frontmatter->{color}
     %               : '';
-    <a href="/note/<%= $doc->filename %>" class="grid-item note"<%== $bgcolor %>>
+    <a href="/note/<%= $doc->filename %>"
+       id="<%= $doc->filename %>"
+       class="grid-item note"<%== $bgcolor %>>
     <div class="title"><%= $doc->frontmatter->{title} %></div>
     <!-- list (some) tags -->
     <div class="content" hx-disable="true"><%== $doc->{html} %></div>
