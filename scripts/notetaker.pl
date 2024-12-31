@@ -170,6 +170,10 @@ get  '/new' => sub( $c ) {
         $note->frontmatter->{labels} //= [];
         push $note->frontmatter->{labels}->@*, $c;
     }
+    if( my $body = $c->param('body')) {
+        $note //= find_note( $fn );
+        $note->body( $body );
+    }
     if( $note ) {
         save_note( $note, $fn );
     }
