@@ -649,8 +649,7 @@ __DATA__
   <nav>
     <ul>
     <li><a href="/"
-            hx-trigger="keyup[key=='Escape']"
-            hx-target="#note-textarea"
+            hx-trigger="click, keyup[key=='Escape'] from:body"
         >index</a></li>
     <!-- delete note -->
     </ul>
