@@ -32,9 +32,14 @@ sub render_index($c) {
     my $filter = fetch_filter($c);
     my @documents = get_documents($filter);
 
+    my @templates = get_templates();
+
     $_->{html} //= as_html( $_, strip_links => 1 ) for @documents;
 
     $c->stash( documents => \@documents );
+
+    # How do we sort the templates? By name?!
+    $c->stash( templates => \@templates );
     $c->stash( filter => $filter );
     $c->render('index');
 }
@@ -69,6 +74,7 @@ sub match_label( $filter, $note ) {
     grep { $_ eq $filter } ($note->frontmatter->{labels} // [])->@*
 }
 
+# If we had a real database, this would be the interface ...
 sub get_documents($filter={}) {
     my %stat;
     return
@@ -106,6 +112,11 @@ sub get_documents($filter={}) {
         glob "$document_directory/*.markdown";
 }
 
+# Ugh - we are conflating display and data...
+sub get_templates {
+    get_documents( { label => 'Template' } )
+}
+
 sub clean_filename( $fn ) {
     # Sanitize filename; maybe we want Text::CleanFragment?!
     $fn =~ s![\x00-\x1f]! !g;
@@ -136,6 +147,7 @@ sub find_or_create_note( $fn ) {
 
 sub display_note( $c, $note ) {
     $c->stash( note => $note );
+
     my $html = as_html( $note );
     $c->stash( note_html => $html );
 
@@ -161,6 +173,26 @@ get  '/new' => sub( $c ) {
 
     # We'll create a file here, no matter whether there is content or not
     my $note;
+
+    if( my $t = $c->param('template')) {
+        my $template = find_note($t);
+        # Copy over the (relevant) attributes, or everything?!
+        $note //= find_note( $fn );
+        $note->{body} = $template->{body};
+
+        my $f = $template->{frontmatter};
+        for my $k (keys $f->%*) {
+            if( $k eq 'labels' ) {
+                # Strip 'template' designation
+                $note->frontmatter->{labels} = [ grep { $_ ne 'Template' } $f->{labels}->@* ];
+
+            } elsif(     $k ne 'created'
+                and $k ne 'updated') {
+                $note->frontmatter->{$k} = $f->{$k};
+            }
+        }
+    }
+
     if( my $c = $c->param('color')) {
         $note //= find_note( $fn );
         $note->frontmatter->{color} = $c;
@@ -564,9 +596,16 @@ __DATA__
     </button>
     <ul class="dropdown-menu">
       <li>
-        <a class="dropdown-item" href="#">template 1</a>
-        <a class="dropdown-item" href="#">template 2</a>
+          <a class="dropdown-item" href="/new?label=Template&body=Alternatively+just+add+the+'Template+tag+to+a+note">+ Create a new template</a>
       </li>
+% for my $template ($templates->@*) {
+%     my $title = $template->frontmatter->{title} || '(untitled)';
+      <li>
+        <a class="dropdown-item"
+            href="<%= url_with( '/new' )->query( template => $template->filename ) %>"
+        ><%= $title %></a>
+      </li>
+% }
     </ul>
   </div>
 </div>
