@@ -91,3 +91,8 @@ a.editable {
     height: 24px;
     border-radius: 50%;
 }
+
+.pinned {
+    transform: rotate(-45deg);
+    font-weight: bold;
+}

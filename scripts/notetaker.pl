@@ -8,6 +8,7 @@ use File::Basename 'basename';
 use Text::CleanFragment;
 use POSIX 'strftime';
 use PerlX::Maybe;
+use charnames ':full';
 
 use App::Notetaker::Document;
 use Markdown::Perl;
@@ -84,10 +85,7 @@ sub get_documents($filter={}) {
             && ($filter->{label} ? match_label( $filter->{label}, $_ ) : 1)
         }
         map {
-            my $fn = $_;
-            my $n;
-            $n = App::Notetaker::Document->from_file( $fn )
-                if -f $fn;
+            my $n = $_;
 
             # While we're at it, also read in all labels
             if( $n->frontmatter->{labels}) {
@@ -101,13 +99,16 @@ sub get_documents($filter={}) {
             $n ? $n : ()
         }
         sort {
-            # Some day we want to sort by pinned-first, and maybe even
+            # we want to sort by pinned-first, and maybe even
             # other criteria
+            (($b->frontmatter->{ pinned } // 0 ) - ($a->frontmatter->{ pinned } // 0))
+            ||
             $stat{ $b } <=> $stat{ $a }
         }
         map {
-            $stat{ $_ } = (stat($_))[9]; # most-recent changed;
-            $_
+            my $note = App::Notetaker::Document->from_file( $_ );
+            $stat{ $note } = (stat($_))[9]; # most-recent changed;
+            $note
         }
         glob "$document_directory/*.markdown";
 }
@@ -484,6 +485,26 @@ sub select_filter( $c ) {
     $c->render('select-filter' );
 }
 
+sub update_pinned( $c, $pinned, $inline ) {
+    my $fn = $c->param('fn');
+    my $note = find_or_create_note( $fn );
+
+    $note->frontmatter->{pinned} = $pinned;
+    $note->save_to( clean_filename( $fn ));
+
+    if( $inline ) {
+        $c->stash( note => $note );
+        $c->render('note-pinned');
+
+    } else {
+        # Simply reload the last URL ... except that we need this to be
+        # passed in by the client ...
+        warn $c->htmx->req->current_url;
+        $c->redirect_to( $c->htmx->req->current_url );
+    }
+}
+
+
 get  '/edit-title' => \&edit_note_title; # empty note
 get  '/edit-title/*fn' => \&edit_note_title;
 post '/edit-title/*fn' => \&update_note_title;
@@ -499,6 +520,11 @@ post '/update-labels/*fn' => \&update_labels;
 get  '/create-label/*fn' => \&create_label;
 post '/add-label/*fn' => \&add_label;
 get  '/select-filter' => \&select_filter;
+
+post '/pin/*fn'   => sub($c) { \&update_pinned( $c, 1, 0 ) };
+post '/unpin/*fn' => sub($c) { \&update_pinned( $c, 0, 0 ) };
+post '/htmx-pin/*fn'   => sub($c) { \&update_pinned( $c, 1, 1 ) };
+post '/htmx-unpin/*fn' => sub($c) { \&update_pinned( $c, 0, 1 ) };
 
 app->start;
 
@@ -621,16 +647,34 @@ __DATA__
     % my $bgcolor = $doc->frontmatter->{color}
     %               ? sprintf q{ style="background-color: %s;"}, $doc->frontmatter->{color}
     %               : '';
-    <a href="/note/<%= $doc->filename %>"
-       id="<%= $doc->filename %>"
-       class="grid-item note"<%== $bgcolor %>>
+<div class="grid-item note position-relative"<%== $bgcolor %>
+       id="<%= $doc->filename %>">
+%=include 'note-pinned', note => $doc
+    <a href="/note/<%= $doc->filename %>">
     <div class="title"><%= $doc->frontmatter->{title} %></div>
     <!-- list (some) tags -->
     <div class="content" hx-disable="true"><%== $doc->{html} %></div>
 %=include 'display-labels', labels => $doc->frontmatter->{labels}
     </a>
+</div>
 % }
 </div>
+
+@@note-pinned.html.ep
+% my $id = 'pin-' . $note->filename;
+    <div class="pin-location position-absolute top-0 end-0" id="<%= $id %>">
+% if( $note->frontmatter->{pinned} ) {
+    <form method="POST" action="<%= url_with('/unpin/'.$note->filename) %>"
+        hx-post="<%= url_with('/htmx-unpin/'.$note->filename) %>"
+        hx-swap="#<%= $id %>"
+    ><button type="submit" class="pinned"><%= "\N{PUSHPIN}" %></bold></button></form>
+% } else {
+    <form method="POST" action="<%= url_with('/pin/'.$note->filename) %>"
+        hx-post="<%= url_with('/htmx-pin/'.$note->filename) %>"
+        hx-swap="#<%= $id %>"
+    ><button type="submit" class="unpinned"><%= "\N{PUSHPIN}" %>&#xfe0e;</button></form>
+% }
+    </div>
 
 @@ note.html.ep
 <!DOCTYPE html>
