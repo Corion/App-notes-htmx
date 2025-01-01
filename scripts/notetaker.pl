@@ -555,6 +555,7 @@ __DATA__
     <ul>
     <li><a href="/">index</a></li>
     <li>
+      <div id="form-filter-2">
       <form id="form-filter-instant" method="GET" action="/">
         <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
             placeholder="Search"
@@ -563,6 +564,7 @@ __DATA__
             hx-swap="outerHTML"
         />
       </form>
+      </div>
     </li>
     <li>
       <form id="form-filter" method="GET" action="/">
@@ -834,12 +836,13 @@ __DATA__
 </form>
 
 @@select-filter.html.ep
+<div id="form-filter-2">
       <form id="form-filter-instant" method="GET" action="/">
         <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
             placeholder="Search"
             hx-get="<%= url_with( "/select-filter" ) %>"
             hx-trigger="focus"
-            hx-swap="outerHTML"
+            hx-swap="#form-filter-2"
         />
       </form>
 <!-- (note) types (images, lists, ...) -->
@@ -868,3 +871,4 @@ __DATA__
 %    }
 </div>
 %}
+</div>
