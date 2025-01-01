@@ -654,8 +654,8 @@ __DATA__
     <div class="title"><%= $doc->frontmatter->{title} %></div>
     <!-- list (some) tags -->
     <div class="content" hx-disable="true"><%== $doc->{html} %></div>
-%=include 'display-labels', labels => $doc->frontmatter->{labels}
     </a>
+%=include 'display-labels', labels => $doc->frontmatter->{labels}
 </div>
 % }
 </div>
@@ -833,7 +833,7 @@ __DATA__
 % $labels //= [];
 % if( $labels->@* ) {
 %     for my $label ($labels->@*) {
-    <span class="badge rounded-pill bg-secondary"><%= $label %></span>
+    <div class="badge rounded-pill bg-secondary"><%= $label %></div>
 %     }
 % }
 
