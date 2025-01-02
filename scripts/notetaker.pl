@@ -650,7 +650,7 @@ htmx.onLoad(function(elt){
             data-bs-toggle="dropdown"
             aria-expanded="false"
             aria-haspopup="true"
-      ><span class="visually-hidden">Add Category</span>
+      ><span class="visually-hidden">New from template</span>
     </button>
     <ul class="dropdown-menu">
       <li>
