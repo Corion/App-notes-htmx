@@ -96,3 +96,7 @@ a.editable {
     transform: rotate(-45deg);
     font-weight: bold;
 }
+
+.label:not(:hover) .delete-label {
+    visibility: hidden;
+}

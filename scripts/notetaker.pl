@@ -476,6 +476,29 @@ sub add_label( $c ) {
     $c->render('display-create-label');
 }
 
+sub delete_label( $c, $inline ) {
+    my $fn = $c->param('fn');
+    my $note = find_or_create_note( $fn );
+    my $remove = $c->param('delete');
+
+    if( my $l = $note->frontmatter->{labels} ) {
+        $l->@* = grep { $_ ne $remove } $l->@*;
+        $note->save_to( clean_filename( $fn ));
+    }
+
+    if( $inline ) {
+        $c->stash( labels => $note->frontmatter->{labels} );
+        $c->stash( note => $note );
+        $c->render('display-labels');
+
+    } else {
+        # Simply reload the last URL ... except that we need this to be
+        # passed in by the client ...
+        warn $c->htmx->req->current_url;
+        $c->redirect_to( $c->htmx->req->current_url );
+    }
+}
+
 sub select_filter( $c ) {
     my $filter = fetch_filter($c);
     $c->stash( filter => $filter );
@@ -519,6 +542,8 @@ get  '/edit-labels/*fn' => \&edit_labels;
 post '/update-labels/*fn' => \&update_labels;
 get  '/create-label/*fn' => \&create_label;
 post '/add-label/*fn' => \&add_label;
+get  '/delete-label/*fn' => sub( $c ) { delete_label( $c, 0 ); };
+get  '/htmx-delete-label/*fn' => sub( $c ) { delete_label( $c, 1 ); };
 get  '/select-filter' => \&select_filter;
 
 post '/pin/*fn'   => sub($c) { \&update_pinned( $c, 1, 0 ) };
@@ -655,7 +680,7 @@ __DATA__
     <!-- list (some) tags -->
     <div class="content" hx-disable="true"><%== $doc->{html} %></div>
     </a>
-%=include 'display-labels', labels => $doc->frontmatter->{labels}
+%=include 'display-labels', labels => $doc->frontmatter->{labels}, note => $doc
 </div>
 % }
 </div>
@@ -704,7 +729,7 @@ __DATA__
 % my $bgcolor = $note->frontmatter->{color}
 %               ? sprintf q{ style="background-color: %s;"}, $note->frontmatter->{color}
 %               : '';
-%=include 'display-labels', labels => $note->frontmatter->{labels}
+%=include 'display-labels', labels => $note->frontmatter->{labels}, note => $note
 <div class="single-note"<%== $bgcolor %>>
 <div>Filename: <%= $note->filename %></div>
 % my $doc_url = '/note/' . $note->filename;
@@ -832,9 +857,25 @@ __DATA__
 @@display-labels.html.ep
 % $labels //= [];
 % if( $labels->@* ) {
+%     my $id = 'labels-'. $note->filename;
+%     $id =~ s![.]!_!g;
+    <div class="labels"
+        id="<%= $id %>"
+        hx-target="#<%= $id %>"
+        hx-swap="outerHTML"
+    >
 %     for my $label ($labels->@*) {
-    <div class="badge rounded-pill bg-secondary"><%= $label %></div>
+    <div class="label badge rounded-pill bg-secondary" ><%= $label %>
+%# Yeah, this should be a FORM, but I can't get it to play nice with Bootstrap
+    <a class="delete-label"
+        href="<%= url_with('/delete-label/' . $note->filename)->query(delete=> $label) %>"
+        hx-get="<%= url_with('/htmx-delete-label/' . $note->filename)->query(delete=> $label) %>"
+    >
+        &#10006;
+    </a>
+    </div>
 %     }
+    </div>
 % }
 
 @@edit-labels.html.ep
