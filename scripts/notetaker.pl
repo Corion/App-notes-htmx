@@ -35,7 +35,7 @@ sub render_index($c) {
 
     my @templates = get_templates();
 
-    $_->{html} //= as_html( $_, strip_links => 1 ) for @documents;
+    $_->{html} //= as_html( $_, strip_links => 1, search => $filter->{text} ) for @documents;
 
     $c->stash( documents => \@documents );
 
@@ -49,7 +49,7 @@ sub render_filter($c) {
     my $filter = fetch_filter($c);
     my @documents = get_documents($filter);
 
-    $_->{html} //= as_html( $_, strip_links => 1 ) for @documents;
+    $_->{html} //= as_html( $_, strip_links => 1, search => $filter->{text} ) for @documents;
 
     $c->stash( documents => \@documents );
     $c->stash( filter => $filter );
@@ -604,7 +604,13 @@ sub as_html( $doc, %options ) {
         mode => 'github',
         disallowed_html_tags => ['script','a','object'],
     );
-    my $html = $renderer->convert( $doc->body );
+
+    my $body = $doc->body;
+    if( my $t = $options{ search } ) {
+        $body =~ s!(\Q$t\E)!<mark>$1</mark>!g;
+    };
+
+    my $html = $renderer->convert( $body );
 
     if( $options{ strip_links } ) {
         $html =~ s/<a\s+href=[^>]*?>//gsi;
