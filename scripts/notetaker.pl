@@ -585,6 +585,11 @@ __DATA__
 <script src="/debug.2.0.1.js"></script>
 <script src="/loading-states.2.0.1.js"></script>
 <script type="module" src="/morphdom-esm.2.7.4.js"></script>
+<script>
+htmx.onLoad(function(elt){
+    elt.querySelectorAll('.nojs').forEach(e => e.remove());
+})
+</script>
 
 @@ index.html.ep
 <!DOCTYPE html>
