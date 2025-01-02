@@ -61,6 +61,7 @@ my %module = (
         'Mojolicious::Lite' => 0,
         'Markdown::Perl' => 0,
         'Mojolicious::Plugin::HTMX' => 0,
+        'Mojolicious::Static::Role::Compressed' => 0,
 
         'Moo'                       => 2, # for some hashes-as-objects
 
