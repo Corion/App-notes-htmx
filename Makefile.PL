@@ -60,7 +60,7 @@ my %module = (
         'Mojo::URL' => 0,
         'Mojolicious::Lite' => 0,
         'Markdown::Perl' => 0,
-        'Mojolicious::Plugin::HTMX' => 8,
+        'Mojolicious::Plugin::HTMX' => 0,
 
         'Moo'                       => 2, # for some hashes-as-objects
 
