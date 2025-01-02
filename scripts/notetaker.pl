@@ -151,6 +151,7 @@ sub display_note( $c, $note ) {
 
     my $html = as_html( $note );
     $c->stash( note_html => $html );
+    $c->stash( all_labels => \%all_labels );
 
     # Meh - we only want to set this to true if a request is coming from
     # this page during a field edit, not during generic page navigation
@@ -426,20 +427,34 @@ sub attach_image( $c ) {
     $c->redirect_to('/note/' . $note->filename );
 }
 
-sub edit_labels( $c ) {
+sub edit_labels( $c, $inline ) {
     my $note = find_note( $c->param('fn') );
+    my $filter = $c->param('label-filter');
 
     my %labels;
     @labels{ keys %all_labels } = (undef) x keys %all_labels;
     $labels{ $_ } = 1 for ($note->frontmatter->{labels} // [])->@*;
 
+    if( defined $filter and length $filter ) {
+        for my $k (keys %labels) {
+            delete $labels{ $k }
+                unless $k =~ /\Q$filter\E/i
+        }
+    }
+
     $c->stash( labels => \%labels );
     $c->stash( note => $note );
+    $c->stash( label_filter => $filter );
 
-    $c->render('edit-labels');
+    if( $inline ) {
+        $c->render('edit-labels');
+
+    } else {
+        $c->render('filter-edit-labels');
+    }
 }
 
-sub update_labels( $c, $autosave=0 ) {
+sub update_labels( $c, $inline=0 ) {
     my $fn = $c->param('fn');
     my %labels = $c->req->params->to_hash->%*;
 
@@ -449,7 +464,13 @@ sub update_labels( $c, $autosave=0 ) {
     $note->frontmatter->{labels} = \@labels;
     $note->save_to( clean_filename( $fn ));
 
-    $c->redirect_to('/note/' . $fn );
+    if( $inline ) {
+        $c->stash( note => $note );
+        $c->render('edit-labels');
+
+    } else {
+        $c->redirect_to('/note/' . $fn );
+    }
 }
 
 sub create_label( $c ) {
@@ -458,22 +479,40 @@ sub create_label( $c ) {
     $c->render('create-label' );
 }
 
-sub add_label( $c ) {
+sub add_label( $c, $inline ) {
     my $fn = $c->param('fn');
     my %labels;
     my $label = $c->param('new-label');
-    $labels{ $label } = 1;
+    my $v = $c->param('status');
 
     my $note = find_or_create_note( $fn );
     my $l = $note->frontmatter->{labels} // [];
     @labels{ $l->@* } = (1) x $l->@*;
+
+    my $status;
+    if ( defined $v ) {
+        $status = $v;
+    } else {
+        $status = 1;
+    };
+
+    if( $status ) {
+        $labels{ $label } = $status;
+    } else {
+        delete $labels{ $label }
+    }
+
     $note->frontmatter->{labels} = [sort { fc($a) cmp fc($b) } keys %labels];
     $note->save_to( clean_filename( $fn ));
 
-    $c->stash(prev_label => $label );
     $c->stash(note => $note);
+    if( $inline ) {
+        $c->render('edit-labels');
 
-    $c->render('display-create-label');
+    } else {
+        $c->stash(prev_label => $label );
+        $c->render('display-create-label');
+    }
 }
 
 sub delete_label( $c, $inline ) {
@@ -538,10 +577,15 @@ post '/upload-image/*fn' => \&attach_image;
 get  '/edit-color/*fn' => \&edit_note_color;
 post '/edit-color/*fn' => \&update_note_color;
 
-get  '/edit-labels/*fn' => \&edit_labels;
-post '/update-labels/*fn' => \&update_labels;
+get  '/htmx-label-menu/*fn' => sub( $c ) { edit_labels( $c, 0 ) };
+get  '/edit-labels/*fn' => sub( $c ) { edit_labels( $c, 0 ) };
+post '/edit-labels/*fn' => sub( $c ) { edit_labels($c, 0 ) };
+get  '/htmx-edit-labels/*fn' => sub( $c ) { edit_labels( $c, 1 ) };
+post '/update-labels/*fn' => sub( $c ) { update_labels( $c, 0 ); };
+post '/htmx-update-labels/*fn' => sub( $c ) { update_labels( $c, 1 ); };
 get  '/create-label/*fn' => \&create_label;
-post '/add-label/*fn' => \&add_label;
+get  '/add-label/*fn' => sub($c) { add_label($c, 0 ); };
+post '/htmx-add-label/*fn' => sub($c) { add_label( $c, 1 ); };
 get  '/delete-label/*fn' => sub( $c ) { delete_label( $c, 0 ); };
 get  '/htmx-delete-label/*fn' => sub( $c ) { delete_label( $c, 1 ); };
 get  '/select-filter' => \&select_filter;
@@ -762,10 +806,8 @@ htmx.onLoad(function(elt){
         >Add Image</a>
     </div>
     <div id="action-labels">
-        <a href="<%= url_for( "/edit-labels/" . $note->filename ) %>"
-            hx-get="<%= url_for( "/edit-labels/" . $note->filename ) %>"
-            hx-swap="outerHTML"
-        >Labels</a>
+% my %labels; $labels{ $_ } = 1 for ($note->frontmatter->{labels} // [])->@*;
+%= include 'menu-edit-labels', note => $note, labels => \%labels, label_filter => ''
     </div>
     <div id="action-color">
         <a href="<%= url_for( "/edit-color/" . $note->filename ) %>"
@@ -883,34 +925,88 @@ htmx.onLoad(function(elt){
     </div>
 % }
 
-@@edit-labels.html.ep
-<form action="<%= url_for( "/update-labels/" . $note->filename ) %>" method="POST"
+@@menu-edit-labels.html.ep
+<div class="dropdown" id="dropdown-labels" hx-trigger="show.bs.dropdown"
+  hx-get="<%= url_with( '/htmx-label-menu/' . $note->filename ) %>"
+  hx-target="find .dropdown-menu"
+  >
+    <button type="button" class="btn btn-secondary dropdown-toggle hide-toggle"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            aria-haspopup="true"
+            data-bs-auto-close="outside"
+      ><span>Manage labels</span>
+    </button>
+
+    <div class="dropdown-menu">
+%=include 'filter-edit-labels', note => $note, label_filter => $label_filter, labels => $labels
+    </div>
+</div>
+
+@@filter-edit-labels.html.ep
+% my $url = url_for( "/edit-labels/" . $note->filename );
+% my $htmx_url = url_for( "/htmx-edit-labels/" . $note->filename );
+<div class="dropdown-item">Label note</div>
+<form action="<%= $url %>" method="GET" id="label-filter-form"
+ class="form-inline dropdown-item"
+ hx-target="#label-edit-list"
+ hx-swap="outerHTML"
+ hx-get="<%= $htmx_url %>"
 >
-  <button type="submit">Set</button>
-%=include 'display-create-label', prev_label => ''
+    <div class="form-group">
+        <div class="input-group input-group-unstyled has-feedback inner-addon right-addon">
+        <i class="glyphicon glyphicon-search form-control-feedback input-group-addon">x</i>
+        <input name="label-filter" type="text" class="form-control"
+            style="width: 30%;"
+            placeholder="Enter label name"
+            autofocus="true"
+            value="<%= $label_filter %>"
+            id="label-filter"
+            hx-get="<%= $htmx_url %>"
+            hx-trigger="input delay:200ms changed, keyup[key=='Enter']"
+        >
+        </div>
+        <button class="nojs btn btn-default">Filter</button>
+    </div>
+</form>
+%=include 'edit-labels', note => $note, labels => $labels, new_name => $label_filter
+
+@@edit-labels.html.ep
+<div id="label-edit-list">
+<form action="<%= url_for( "/update-labels/" . $note->filename ) %>" method="POST"
+  id="label-set-list"
+>
+  <button class="nojs btn btn-default" type="submit">Set</button>
+%=include 'display-create-label', prev_label => '', new_name => $label_filter
 % my $idx=1;
 % for my $label (sort { fc($a) cmp fc($b) } keys $labels->%*) {
 %   my $name = "label-" . $idx++;
-    <span class="label">
-    <input type="checkbox" name="<%= $name %>" id="<%= $name %>" value="<%= $label %>" <%== $labels->{$label} ? 'checked' : ''%>/>
+    <span class="label dropdown-item">
+    <input type="checkbox" name="<%= $name %>"
+           id="<%= $name %>"
+           value="<%= $label %>"
+           hx-post="<%= url_with( '/htmx-update-labels/' . $note->filename ) %>"
+           hx-trigger="change"
+           hx-swap="none"
+           hx-target="this"
+           <%== $labels->{$label} ? 'checked' : ''%>
+    />
     <label for="<%= $name %>"><%= $label %></label>
     </span>
 %   $idx++;
 % }
 </form>
+</div>
 
 @@display-create-label.html.ep
+%# This needs a rework with the above
   <!-- Here, we also need a non-JS solution ... -->
-<a id="create-label" href="<%= url_for("/create-label/" . $note->filename ) %>"
-   hx-get="<%= url_for("/create-label/" . $note->filename ) %>"
+% if( defined $new_name and length($new_name)) {
+%    my $url = url_for("/add-label/" . $note->filename )->query( "new-label" => $new_name );
+<a id="create-label" href=" <%= $url %>"
+   hx-get="<%= $url %>"
    hx-swap="outerHTML"
->[ Add new label ]</a>
-% if( $prev_label ) {
-%# This gets prepended to the label form and when that saves, we actually update the labels
-    <span class="label">
-    <input type="checkbox" name="label-<%= $prev_label %>" id="label-<%= $prev_label %>" value="<%= $prev_label %>" <%== $prev_label ? 'checked' : ''%>/>
-    <label for="label-<%= $prev_label %>"><%= $prev_label %></label>
-    </span>
+>+ Create '<%= $new_name %>'</a>
 % }
 
 @@create-label.html.ep
