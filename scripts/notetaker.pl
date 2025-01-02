@@ -675,7 +675,7 @@ __DATA__
 <div class="grid-item note position-relative"<%== $bgcolor %>
        id="<%= $doc->filename %>">
 %=include 'note-pinned', note => $doc
-    <a href="/note/<%= $doc->filename %>">
+    <a href="/note/<%= $doc->filename %>" class="note-content">
     <div class="title"><%= $doc->frontmatter->{title} %></div>
     <!-- list (some) tags -->
     <div class="content" hx-disable="true"><%== $doc->{html} %></div>
