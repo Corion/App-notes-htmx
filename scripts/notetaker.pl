@@ -738,10 +738,10 @@ htmx.onLoad(function(elt){
 %     if( $sections{ $section }) {
     <h5><%= $section_title{ $section } %></h5>
     <div class="documents grid-layout">
-% for my $doc ($sections{$section}->@*) {
-    % my $bgcolor = $doc->frontmatter->{color}
-    %               ? sprintf q{ style="background-color: %s;"}, $doc->frontmatter->{color}
-    %               : '';
+%         for my $doc ($sections{$section}->@*) {
+%             my $bgcolor = $doc->frontmatter->{color}
+%                           ? sprintf q{ style="background-color: %s;"}, $doc->frontmatter->{color}
+%                           : '';
 <div class="grid-item note position-relative"<%== $bgcolor %>
        id="<%= $doc->filename %>">
 %=include 'note-pinned', note => $doc
@@ -752,9 +752,9 @@ htmx.onLoad(function(elt){
     </a>
 %=include 'display-labels', labels => $doc->frontmatter->{labels}, note => $doc
 </div>
-% }
+%         }
 </div>
-% }
+%     }
 % }
 </div>
 
