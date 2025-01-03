@@ -613,7 +613,7 @@ sub as_html( $doc, %options ) {
 
     my $body = $doc->body;
     if( my $t = $options{ search } ) {
-        $body =~ s!(\Q$t\E)!<mark>$1</mark>!g;
+        $body =~ s!(\Q$t\E)!<mark>$1</mark>!gi;
     };
 
     my $html = $renderer->convert( $body );
