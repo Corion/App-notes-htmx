@@ -834,6 +834,7 @@ htmx.onLoad(function(elt){
 <div id="actionbar" class="navbar mt-auto fixed-bottom navbar-light bg-light">
     <div id="action-attach">
         <a href="<%= url_for( "/attach-image/" . $note->filename ) %>"
+            class="btn btn-secondary"
             hx-get="<%= url_for( "/attach-image/" . $note->filename ) %>"
             hx-swap="outerHTML"
         >Add Image</a>
@@ -856,7 +857,7 @@ htmx.onLoad(function(elt){
     </div>
     <div id="action-delete">
         <form action="<%= url_for('/delete/' . $note->filename ) %>" method="POST"
-        ><button type="submit">Delete</button>
+        ><button class="btn btn-secondary" type="submit">Delete</button>
         </form>
     </div>
 </div>
