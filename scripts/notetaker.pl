@@ -808,7 +808,7 @@ htmx.onLoad(function(elt){
     <div class="edited-date"><%= $note->frontmatter->{updated} %></div>
 </div>
 </div>
-<div id="actionbar" class="footer mt-auto fixed-bottom navbar-light bg-light">
+<div id="actionbar" class="navbar mt-auto fixed-bottom navbar-light bg-light">
     <div id="action-attach">
         <a href="<%= url_for( "/attach-image/" . $note->filename ) %>"
             hx-get="<%= url_for( "/attach-image/" . $note->filename ) %>"
@@ -936,7 +936,7 @@ htmx.onLoad(function(elt){
 % }
 
 @@menu-edit-labels.html.ep
-<div class="dropdown" id="dropdown-labels" hx-trigger="show.bs.dropdown"
+<div class="dropup" id="dropdown-labels" hx-trigger="show.bs.dropdown"
   hx-get="<%= url_with( '/htmx-label-menu/' . $note->filename ) %>"
   hx-target="find .dropdown-menu"
   >
