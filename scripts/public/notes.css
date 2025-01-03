@@ -103,3 +103,9 @@ a.editable {
 .label:not(:hover) .delete-label {
     visibility: hidden;
 }
+
+/* So the label takes up the whole width of the popup menu */
+.edit-label label {
+    width: 100%;
+}
+

@@ -987,7 +987,7 @@ htmx.onLoad(function(elt){
 % my $idx=1;
 % for my $label (sort { fc($a) cmp fc($b) } keys $labels->%*) {
 %   my $name = "label-" . $idx++;
-    <span class="label dropdown-item">
+    <span class="edit-label dropdown-item">
     <input type="checkbox" name="<%= $name %>"
            id="<%= $name %>"
            value="<%= $label %>"
@@ -997,7 +997,7 @@ htmx.onLoad(function(elt){
            hx-target="this"
            <%== $labels->{$label} ? 'checked' : ''%>
     />
-    <label for="<%= $name %>"><%= $label %></label>
+    <label for="<%= $name %>" style="width: 100%"><%= $label %> &#x1F3F7;</label>
     </span>
 %   $idx++;
 % }
