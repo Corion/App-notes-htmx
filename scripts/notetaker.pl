@@ -691,11 +691,10 @@ htmx.onLoad(function(elt){
 
 <div class="dropup position-fixed bottom-0 end-0 rounded-circle m-5">
   <div class="btn-group">
-    <button type="button" class="btn btn-success btn-lg"
-      ><i class="fa-solid fa-plus">
-       <a href="<%= url_with('/new' ) %>">+</a>
-       </i>
-    </button>
+    <a class="btn btn-success btn-lg"
+       href="<%= url_with('/new' ) %>"
+    ><i class="fa-solid fa-plus">+</i>
+    </a>
     <button type="button" class="btn btn-secondary btn-lg dropdown-toggle dropdown-toggle-split hide-toggle"
             data-bs-toggle="dropdown"
             aria-expanded="false"
