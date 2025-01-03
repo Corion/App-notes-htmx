@@ -687,7 +687,9 @@ htmx.onLoad(function(elt){
     </ul>
   </nav>
 </div>
+<div class="container-fluid" id="container">
 %=include "documents", documents => $documents
+</div>
 
 <div class="dropup position-fixed bottom-0 end-0 rounded-circle m-5">
   <div class="btn-group">
@@ -780,6 +782,8 @@ htmx.onLoad(function(elt){
     </ul>
   </nav>
 </div>
+
+<div id="note-container" class="container-flex">
 % my $bgcolor = $note->frontmatter->{color}
 %               ? sprintf q{ style="background-color: %s;"}, $note->frontmatter->{color}
 %               : '';
@@ -802,6 +806,7 @@ htmx.onLoad(function(elt){
 </div>
 </form>
     <div class="edited-date"><%= $note->frontmatter->{updated} %></div>
+</div>
 </div>
 <div id="actionbar" class="footer mt-auto fixed-bottom navbar-light bg-light">
     <div id="action-attach">
