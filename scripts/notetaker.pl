@@ -571,6 +571,7 @@ sub select_filter( $c ) {
 }
 
 sub update_pinned( $c, $pinned, $inline ) {
+    my $filter = fetch_filter($c);
     my $fn = $c->param('fn');
     my $note = find_or_create_note( $fn );
 
@@ -578,8 +579,8 @@ sub update_pinned( $c, $pinned, $inline ) {
     $note->save_to( clean_filename( $fn ));
 
     if( $inline ) {
-        $c->stash( note => $note );
-        $c->render('note-pinned');
+        render_notes( $c );
+        $c->render('documents');
 
     } else {
         # Simply reload the last URL ... except that we need this to be
@@ -782,17 +783,20 @@ htmx.onLoad(function(elt){
 </div>
 
 @@note-pinned.html.ep
-% my $id = 'pin-' . $note->filename;
-    <div class="pin-location position-absolute top-0 end-0" id="<%= $id %>">
+    <div class="pin-location position-absolute top-0 end-0">
 % if( $note->frontmatter->{pinned} ) {
     <form method="POST" action="<%= url_with('/unpin/'.$note->filename) %>"
         hx-post="<%= url_with('/htmx-unpin/'.$note->filename) %>"
-        hx-swap="#<%= $id %>"
+        --hx-swap="closest div"
+        hx-target="#documents"
+        hx-swap="outerHTML transition:true"
     ><button type="submit" class="pinned"><%= "\N{PUSHPIN}" %></bold></button></form>
 % } else {
     <form method="POST" action="<%= url_with('/pin/'.$note->filename) %>"
         hx-post="<%= url_with('/htmx-pin/'.$note->filename) %>"
-        hx-swap="#<%= $id %>"
+        --hx-swap="closest div"
+        hx-target="#documents"
+        hx-swap="outerHTML transition:true"
     ><button type="submit" class="unpinned"><%= "\N{PUSHPIN}" %>&#xfe0e;</button></form>
 % }
     </div>
