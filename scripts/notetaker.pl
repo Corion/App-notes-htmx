@@ -723,8 +723,22 @@ htmx.onLoad(function(elt){
 </html>
 
 @@documents.html.ep
-<div id="documents" class="documents grid-layout">
-% for my $doc ($documents->@*) {
+<div id="documents" class="">
+% my %sections;
+% my %section_title = (qw(pinned Pinned default Notes));
+% for my $note ($documents->@*) {
+%     my $section = 'default';;
+%     if( $note->frontmatter->{pinned} ) {
+%         $section = 'pinned';
+%     }
+%     $sections{ $section } //= [];
+%     push $sections{ $section }->@*, $note;
+% };
+% for my $section (qw(pinned default)) {
+%     if( $sections{ $section }) {
+    <h5><%= $section_title{ $section } %></h5>
+    <div class="documents grid-layout">
+% for my $doc ($sections{$section}->@*) {
     % my $bgcolor = $doc->frontmatter->{color}
     %               ? sprintf q{ style="background-color: %s;"}, $doc->frontmatter->{color}
     %               : '';
@@ -738,6 +752,9 @@ htmx.onLoad(function(elt){
     </a>
 %=include 'display-labels', labels => $doc->frontmatter->{labels}, note => $doc
 </div>
+% }
+</div>
+% }
 % }
 </div>
 
