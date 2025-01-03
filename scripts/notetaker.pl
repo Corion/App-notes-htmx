@@ -26,7 +26,23 @@ sub fetch_filter( $c ) {
         maybe label => $c->param('label'),
         maybe color => $c->param('color'),
     };
+    if( $filter->{color} ) {
+        $filter->{color} =~ /#[0-9a-f]{6}/
+            or delete $filter->{color};
+    }
     return $filter
+}
+
+sub filter_moniker( $filter ) {
+    my ($attr, $location);
+    if( $filter->{label} ) {
+        $location = "in '$filter->{label}'"
+    }
+    if( $filter->{color} ) {
+        #$location = qq{<span class="color-circle" style="background-color:$filter->{color};">&nbsp;</span> notes};
+        $attr = qq{color notes};
+    }
+    return join " ", grep { defined $_ and length $_ } ($attr, $location);
 }
 
 sub render_notes($c) {
@@ -50,6 +66,7 @@ sub render_notes($c) {
     # How do we sort the templates? By name?!
     $c->stash( templates => \@templates );
     $c->stash( filter => $filter );
+    $c->stash( moniker => filter_moniker( $filter ));
 }
 
 sub render_index($c) {
@@ -681,7 +698,7 @@ htmx.onLoad(function(elt){
     <li>
       <form id="form-filter" method="GET" action="/">
         <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
-            placeholder="Search notes"
+            placeholder="<%== $moniker %>"
             hx-get="<%= url_with( "/filter" ) %>"
             hx-trigger="input delay:200ms changed, keyup[key=='Enter'], load"
             hx-target="#documents"
