@@ -29,30 +29,36 @@ sub fetch_filter( $c ) {
     return $filter
 }
 
-sub render_index($c) {
+sub render_notes($c) {
     my $filter = fetch_filter($c);
     my @documents = get_documents($filter);
 
     my @templates = get_templates();
 
-    $_->{html} //= as_html( $_, strip_links => 1, search => $filter->{text} ) for @documents;
+    for my $note ( @documents ) {
+        my $repr;
+        if( length $note->body ) {
+            $repr = as_html( $note, strip_links => 1, search => $filter->{text} );
+        } else {
+            $repr = '&nbsp;'; # so even an empty note becomes clickable
+        };
+        $note->{html} = $repr;
+    }
 
     $c->stash( documents => \@documents );
 
     # How do we sort the templates? By name?!
     $c->stash( templates => \@templates );
     $c->stash( filter => $filter );
+}
+
+sub render_index($c) {
+    render_notes( $c );
     $c->render('index');
 }
 
 sub render_filter($c) {
-    my $filter = fetch_filter($c);
-    my @documents = get_documents($filter);
-
-    $_->{html} //= as_html( $_, strip_links => 1, search => $filter->{text} ) for @documents;
-
-    $c->stash( documents => \@documents );
-    $c->stash( filter => $filter );
+    render_notes( $c );
     $c->render('documents');
 }
 
