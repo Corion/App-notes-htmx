@@ -11,14 +11,21 @@ use PerlX::Maybe;
 use charnames ':full';
 
 use App::Notetaker::Document;
+use App::Notetaker::Session;
 use Markdown::Perl;
 
 app->static->with_roles('+Compressed');
 plugin 'DefaultHelpers';
 plugin 'HTMX';
 
-my $document_directory = Mojo::File->new( './notes' )->to_abs();
-mkdir "$document_directory/deleted"; # so we can always (un)delete notes
+sub get_session( $c ) {
+    # Validate cookie, send session cookie(?)
+    return
+        App::Notetaker::Session->new(
+            username => 'demo',
+            document_directory => './notes',
+        );
+}
 
 sub fetch_filter( $c ) {
     my $filter = {
@@ -47,9 +54,10 @@ sub filter_moniker( $filter ) {
 
 sub render_notes($c) {
     my $filter = fetch_filter($c);
-    my @documents = get_documents($filter);
+    my $session = get_session( $c );
+    my @documents = get_documents($session, $filter);
 
-    my @templates = get_templates();
+    my @templates = get_templates($session);
 
     for my $note ( @documents ) {
         my $repr;
@@ -83,7 +91,8 @@ our %all_labels;
 our %all_colors;
 
 # Initialize all labels & colours
-get_documents();
+# This will crash if we move to more than one user ...
+get_documents(get_session(undef));
 
 sub match_text( $filter, $note ) {
        $note->body =~ /\Q$filter\E/i
@@ -99,7 +108,7 @@ sub match_label( $filter, $note ) {
 }
 
 # If we had a real database, this would be the interface ...
-sub get_documents($filter={}) {
+sub get_documents($session, $filter={}) {
     my %stat;
     return
         grep {
@@ -133,23 +142,16 @@ sub get_documents($filter={}) {
             $stat{ $note } = (stat($_))[9]; # most-recent changed;
             $note
         }
-        glob "$document_directory/*.markdown";
+        $session->documents
 }
 
 # Ugh - we are conflating display and data...
-sub get_templates {
-    get_documents( { label => 'Template' } )
+sub get_templates( $session ) {
+    get_documents(  $session, { label => 'Template' } )
 }
 
-sub clean_filename( $fn ) {
-    # Sanitize filename; maybe we want Text::CleanFragment?!
-    $fn =~ s![\x00-\x1f]! !g;
-    $fn =~ s!\\/!!g;
-    return "$document_directory/$fn"
-}
-
-sub find_note( $fn ) {
-    my $filename = clean_filename( $fn );
+sub find_note( $session, $fn ) {
+    my $filename = $session->clean_filename( $fn );
 
     if( -f $filename ) {
         return App::Notetaker::Document->from_file( $filename );
@@ -157,8 +159,8 @@ sub find_note( $fn ) {
     return;
 }
 
-sub find_or_create_note( $fn ) {
-    my $filename = clean_filename( $fn );
+sub find_or_create_note( $session, $fn ) {
+    my $filename = $session->clean_filename( $fn );
 
     if( -f $filename ) {
         return App::Notetaker::Document->from_file( $filename );
@@ -171,6 +173,7 @@ sub find_or_create_note( $fn ) {
 
 sub display_note( $c, $note ) {
     $c->stash( note => $note );
+    my $session = get_session( $c );
 
     my $html = as_html( $note );
     $c->stash( note_html => $html );
@@ -184,9 +187,10 @@ sub display_note( $c, $note ) {
 };
 
 sub serve_attachment( $c ) {
+    my $session = get_session( $c );
     my $fn = $c->param('fn');
     $fn =~ s![\x00-\x1f\\/]!!g;
-    $c->reply->file( "$document_directory/attachments/$fn" );
+    $c->reply->file( $session->document_directory . "/attachments/$fn" );
 }
 
 get '/index.html' => \&render_index;
@@ -194,15 +198,16 @@ get '/' => \&render_index;
 get '/filter' => \&render_filter;
 
 get  '/new' => sub( $c ) {
-    my $fn = tempnote();
+    my $session = get_session( $c );
+    my $fn = $session->tempnote();
 
     # We'll create a file here, no matter whether there is content or not
     my $note;
 
     if( my $t = $c->param('template')) {
-        my $template = find_note($t);
+        my $template = find_note($session, $t);
         # Copy over the (relevant) attributes, or everything?!
-        $note //= find_note( $fn );
+        $note //= find_note( $session, $fn );
         $note->{body} = $template->{body};
 
         my $f = $template->{frontmatter};
@@ -219,20 +224,20 @@ get  '/new' => sub( $c ) {
     }
 
     if( my $c = $c->param('color')) {
-        $note //= find_note( $fn );
+        $note //= find_note( $session, $fn );
         $note->frontmatter->{color} = $c;
     }
     if( my $c = $c->param('label')) {
-        $note //= find_note( $fn );
+        $note //= find_note( $session, $fn );
         $note->frontmatter->{labels} //= [];
         push $note->frontmatter->{labels}->@*, $c;
     }
     if( my $body = $c->param('body')) {
-        $note //= find_note( $fn );
+        $note //= find_note( $session, $fn );
         $note->body( $body );
     }
     if( $note ) {
-        save_note( $note, $fn );
+        save_note( $session, $note, $fn );
     }
 
     $c->redirect_to( $c->url_for("/note/$fn"));
@@ -241,52 +246,49 @@ get  '/new' => sub( $c ) {
 get  '/note/attachments/*fn' => \&serve_attachment;
 
 get '/note/*fn' => sub($c) {
-    my $note = find_note( $c->param('fn'));
+    my $session = get_session( $c );
+    my $note = find_note( $session, $c->param('fn'));
     display_note( $c, $note );
 };
 
-sub save_note( $note, $fn ) {
+sub save_note( $session, $note, $fn ) {
     $note->frontmatter->{created} //= strftime '%Y-%m-%dT%H:%M:%SZ', gmtime(time);
     $note->frontmatter->{updated} = strftime '%Y-%m-%dT%H:%M:%SZ', gmtime(time);
-    $note->save_to( clean_filename( $fn ));
-}
-
-sub tempnote() {
-    my($fh,$fn) = File::Temp::tempfile( "unnamedXXXXXXXX", DIR => "$document_directory", SUFFIX => '.markdown' );
-    close $fh;
-    return basename($fn)
+    $note->save_to( $session->clean_filename( $fn ));
 }
 
 sub save_note_body( $c ) {
     my $fn = $c->param('fn');
+    my $session = get_session( $c );
 
     if( ! $fn) {
-        $fn = tempnote();
+        $fn = $session->tempnote();
         $c->htmx->res->replace_url($c->url_for("/note/$fn"));
     }
 
-    my $note = find_or_create_note( $fn );
+    my $note = find_or_create_note( $session, $fn );
 
     my $body = $c->param('body');
     $body =~ s/\A\s+//sm;
     $body =~ s/\s+\z//sm;
 
     $note->body($body);
-    save_note( $note, $fn );
+    save_note( $session, $note, $fn );
 
     $c->redirect_to('/note/' . $fn );
 };
 
 sub delete_note( $c ) {
+    my $session = get_session( $c );
     my $fn = $c->param('fn');
-    my $note = find_note( $fn );
+    my $note = find_note( $session, $fn );
 
     if( $note ) {
         # Save undo data?!
         $c->stash( undo => '/undelete/' . $note->filename );
         $note->frontmatter->{deleted} = strftime '%Y-%m-%dT%H:%M:%SZ', gmtime(time);
-        save_note( $note, $fn );
-        move_note( "$document_directory/" . $note->filename  => "$document_directory/deleted/" . $note->filename );
+        save_note( $session, $note, $fn );
+        move_note( $session->document_directory . "/" . $note->filename  => $session->document_directory . "/deleted/" . $note->filename );
     }
 
     # Can we keep track of current filters and restore them here?
@@ -317,6 +319,7 @@ post '/note/' => \&save_note_body; # we make up a filename then
 post '/delete/*fn' => \&delete_note;
 
 sub edit_field( $c, $note, $field_name ) {
+    my $session = get_session( $c );
     $c->stash( note => $note );
     $c->stash( field_name => $field_name );
     $c->stash( value => $note->frontmatter->{ $field_name } );
@@ -324,6 +327,7 @@ sub edit_field( $c, $note, $field_name ) {
 }
 
 sub edit_color_field( $c, $note, $field_name ) {
+    my $session = get_session( $c );
     $c->stash( note => $note );
     $c->stash( field_name => $field_name );
     $c->stash( value => $note->frontmatter->{ $field_name } );
@@ -331,34 +335,38 @@ sub edit_color_field( $c, $note, $field_name ) {
 }
 
 sub edit_note_title( $c ) {
+    my $session = get_session( $c );
     my $fn = $c->param('fn');
     if( ! $fn) {
         $fn = tempnote();
         $c->htmx->res->replace_url($c->url_for("/note/$fn"));
     }
 
-    my $note = find_or_create_note( $fn );
+    my $note = find_or_create_note( $session, $fn );
     edit_field( $c, $note, 'title' );
 }
 
 sub edit_note_color( $c ) {
+    my $session = get_session( $c );
     my $fn = $c->param('fn');
     if( ! $fn) {
-        $fn = tempnote();
+        my $session = get_session( $c );
+        $fn = $session->tempnote();
         $c->htmx->res->replace_url($c->url_for("/note/$fn"));
     }
 
-    my $note = find_or_create_note( $fn );
+    my $note = find_or_create_note( $session, $fn );
     edit_color_field( $c, $note, 'color' );
 }
 
 sub update_note_color( $c, $autosave=0 ) {
+    my $session = get_session( $c );
     my $fn = $c->param('fn');
     my $color = $c->param('color');
 
-    my $note = find_or_create_note( $fn );
+    my $note = find_or_create_note( $session, $fn );
     $note->frontmatter->{color} = $color;
-    $note->save_to( clean_filename( $fn ));
+    $note->save_to( $session->clean_filename( $fn ));
 
     if( $autosave ) {
         $c->redirect_to('/edit-color/' . $fn );
@@ -377,12 +385,14 @@ sub display_field( $c, $fn, $note, $field_name, $class ) {
 }
 
 sub display_note_title( $c ) {
+    my $session = get_session( $c );
     my $fn = $c->param('fn');
-    my $note = find_note( $fn );
+    my $note = find_note( $session, $fn );
     display_field( $c, $fn, $note, 'title', 'title' );
 }
 
 sub update_note_title( $c, $autosave=0 ) {
+    my $session = get_session( $c );
     my $fn = $c->param('fn');
     my $title = $c->param('title');
 
@@ -392,14 +402,14 @@ sub update_note_title( $c, $autosave=0 ) {
     # First, save the new information to the old, existing file
     $fn //= $new_fn;
     if( ! $fn) {
-        $fn = tempnote();
+        $fn = $session->tempnote();
         $c->htmx->res->replace_url($c->url_for("/note/$fn"));
     }
 
-    my $note = find_or_create_note( $fn );
+    my $note = find_or_create_note( $session, $fn );
     my $rename = ($note->frontmatter->{title} ne $title);
     $note->frontmatter->{title} = $title;
-    $note->save_to( clean_filename( $fn ));
+    $note->save_to( $session->clean_filename( $fn ));
 
     # Now, check if the title changed and we want to rename the file:
     if( $rename ) {
@@ -412,7 +422,7 @@ sub update_note_title( $c, $autosave=0 ) {
         # We need to find a way to later rename the files according to
         # their title
 
-        my $final_name = move_note( clean_filename( $fn ) => "$document_directory/$new_fn.markdown");
+        my $final_name = move_note( $session->clean_filename( $fn ) => $session->document_directory . "/$new_fn.markdown");
         $fn = basename($final_name);
         $note->filename( $fn );
     }
@@ -428,7 +438,8 @@ sub update_note_title( $c, $autosave=0 ) {
 }
 
 sub capture_image( $c ) {
-    my $note = find_note( $c->param('fn') );
+    my $session = get_session( $c );
+    my $note = find_note( $session, $c->param('fn') );
     $c->stash( field_name => 'image' );
     $c->stash( note => $note );
     $c->render('attach-image');
@@ -439,19 +450,21 @@ sub capture_image( $c ) {
 # XXX create thumbnail for image / reduce resolution/quality
 # XXX convert image to jpeg in the process, or webp or whatever
 sub attach_image( $c ) {
-    my $note = find_note( $c->param('fn') );
+    my $session = get_session( $c );
+    my $note = find_note( $session, $c->param('fn') );
     my $image = $c->param('image');
     my $filename = "attachments/" . clean_fragment( $image->filename );
     # Check that we have some kind of image file according to the name
     return if $filename !~ /\.(jpg|jpeg|png|webp|dng|heic)\z/i;
-    $image->move_to("$document_directory/$filename");
+    $image->move_to($session->document_directory . "/$filename");
     $note->body( $note->body . "\n![$filename]($filename)\n" );
-    $note->save_to( "$document_directory/" . $note->filename );
+    $note->save_to( $session->document_directory . "/" . $note->filename );
     $c->redirect_to('/note/' . $note->filename );
 }
 
 sub edit_labels( $c, $inline ) {
-    my $note = find_note( $c->param('fn') );
+    my $session = get_session( $c );
+    my $note = find_note( $session, $c->param('fn') );
     my $filter = $c->param('label-filter');
 
     my %labels;
@@ -478,14 +491,15 @@ sub edit_labels( $c, $inline ) {
 }
 
 sub update_labels( $c, $inline=0 ) {
+    my $session = get_session( $c );
     my $fn = $c->param('fn');
     my %labels = $c->req->params->to_hash->%*;
 
     my @labels = sort { fc($a) cmp fc($b) } values %labels;
 
-    my $note = find_or_create_note( $fn );
+    my $note = find_or_create_note( $session, $fn );
     $note->frontmatter->{labels} = \@labels;
-    $note->save_to( clean_filename( $fn ));
+    $note->save_to( $session->clean_filename( $fn ));
 
     if( $inline ) {
         $c->stash( note => $note );
@@ -503,12 +517,13 @@ sub create_label( $c ) {
 }
 
 sub add_label( $c, $inline ) {
+    my $session = get_session( $c );
     my $fn = $c->param('fn');
     my %labels;
     my $label = $c->param('new-label');
     my $v = $c->param('status');
 
-    my $note = find_or_create_note( $fn );
+    my $note = find_or_create_note( $session, $fn );
     my $l = $note->frontmatter->{labels} // [];
     @labels{ $l->@* } = (1) x $l->@*;
 
@@ -526,7 +541,7 @@ sub add_label( $c, $inline ) {
     }
 
     $note->frontmatter->{labels} = [sort { fc($a) cmp fc($b) } keys %labels];
-    $note->save_to( clean_filename( $fn ));
+    $note->save_to( $session->clean_filename( $fn ));
 
     $c->stash(note => $note);
     if( $inline ) {
@@ -539,13 +554,14 @@ sub add_label( $c, $inline ) {
 }
 
 sub delete_label( $c, $inline ) {
+    my $session = get_session( $c );
     my $fn = $c->param('fn');
-    my $note = find_or_create_note( $fn );
+    my $note = find_or_create_note( $session, $fn );
     my $remove = $c->param('delete');
 
     if( my $l = $note->frontmatter->{labels} ) {
         $l->@* = grep { $_ ne $remove } $l->@*;
-        $note->save_to( clean_filename( $fn ));
+        $note->save_to( $session->clean_filename( $fn ));
     }
 
     if( $inline ) {
@@ -571,12 +587,13 @@ sub select_filter( $c ) {
 }
 
 sub update_pinned( $c, $pinned, $inline ) {
+    my $session = get_session( $c );
     my $filter = fetch_filter($c);
     my $fn = $c->param('fn');
-    my $note = find_or_create_note( $fn );
+    my $note = find_or_create_note( $session, $fn );
 
     $note->frontmatter->{pinned} = $pinned;
-    $note->save_to( clean_filename( $fn ));
+    $note->save_to( $session->clean_filename( $fn ));
 
     if( $inline ) {
         render_notes( $c );
