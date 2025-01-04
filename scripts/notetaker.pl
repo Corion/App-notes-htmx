@@ -52,8 +52,12 @@ sub filter_moniker( $filter ) {
     return join " ", grep { defined $_ and length $_ } ($attr, $location);
 }
 
+our %all_labels;
+our %all_colors;
+
 sub render_notes($c) {
     my $filter = fetch_filter($c);
+    my $sidebar = $c->param('sidebar');
     my $session = get_session( $c );
     my @documents = get_documents($session, $filter);
 
@@ -73,7 +77,9 @@ sub render_notes($c) {
 
     # How do we sort the templates? By name?!
     $c->stash( templates => \@templates );
+    $c->stash( labels => [sort { fc($a) cmp fc($b) } keys %all_labels] );
     $c->stash( filter => $filter );
+    $c->stash( sidebar => $sidebar );
     $c->stash( moniker => filter_moniker( $filter ));
 }
 
@@ -86,9 +92,6 @@ sub render_filter($c) {
     render_notes( $c );
     $c->render('documents');
 }
-
-our %all_labels;
-our %all_colors;
 
 # Initialize all labels & colours
 # This will crash if we move to more than one user ...
@@ -700,6 +703,10 @@ htmx.onLoad(function(elt){
 <div class="navbar navbar-expand-lg sticky-top navbar-light bg-light">
   <nav>
     <ul>
+    <li>
+        <a href="#" data-bs-target="#sidebar" data-bs-toggle="collapse"
+               class="border rounded-3 p-1 text-decoration-none"><i class="bi bi-list bi-lg py-2 p-1"></i> Labels</a>
+    </li>
     <li><a href="/">index</a></li>
     <li>
       <div id="form-filter-2">
@@ -729,9 +736,15 @@ htmx.onLoad(function(elt){
   </nav>
 </div>
 <div class="container-fluid" id="container">
-%=include "documents", documents => $documents
-</div>
+<div class="row flex-nowrap">
+    <div class="col-auto px-0">
+%=include 'sidebar', labels => $labels, filter => $filter,
+    </div>
 
+    <main class="col">
+%=include "documents", documents => $documents
+    </main>
+</div>
 <div class="dropup position-fixed bottom-0 end-0 rounded-circle m-5">
   <div class="btn-group">
     <a class="btn btn-success btn-lg"
@@ -797,6 +810,24 @@ htmx.onLoad(function(elt){
 </div>
 %     }
 % }
+</div>
+
+@@sidebar.html.ep
+<div id="sidebar" class="collapse collapse-horizontal border-end <%= $sidebar ? 'show' : '' %>">
+    <div id="sidebar-nav" class="list-group border-0 rounded-0 text-sm-start min-vh-100">
+% my $current = $filter->{label} // '';
+    <a href="<%= url_with()->query({ label => '', sidebar => 1 }) %>"
+       class="list-group-item border-end-0 d-inline-block text-truncate"
+       data-bs-parent="#sidebar"
+    >Notes</a>
+% for my $label ($labels->@*) {
+%     my $current_class = $label eq $current ? 'sidebar-current' : '';
+    <a href="<%= url_with()->query({ label => $label, sidebar => 1 }) %>"
+       class="list-group-item border-end-0 d-inline-block text-truncate <%= $current_class %>"
+       data-bs-parent="#sidebar"
+    ><%= $label %> &#x1F3F7;</a>
+% }
+    </div>
 </div>
 
 @@note-pinned.html.ep

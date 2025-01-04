@@ -109,3 +109,6 @@ a.editable {
     width: 100%;
 }
 
+.sidebar-current {
+    background-color: green;
+}
