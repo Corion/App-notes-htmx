@@ -10,7 +10,13 @@ async function startRecording() {
     const recordButton = document.getElementById('record');
     const stopButton = document.getElementById('stop');
 
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    let stream = null;
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (e) {
+        alert("Could not read audio recording device:"+e);
+        return;
+    }
     audio.srcObject = stream;
 
     mediaRecorder = new MediaRecorder(stream);
