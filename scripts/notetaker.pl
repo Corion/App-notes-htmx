@@ -1036,8 +1036,8 @@ htmx.onLoad(function(elt){
           method="POST"
           enctype="multipart/form-data"
           id="form-audio-upload"
-          hx-encoding="multipart/form-data"
-          hx-post="<%= url_with( "/upload-audio/" . $note->filename ) %>"
+          --hx-encoding="multipart/form-data"
+          --hx-post="<%= url_with( "/upload-audio/" . $note->filename ) %>"
     >
     <input id="upload-audio" type="file" accept="audio/*" name="<%= $field_name %>" />
     <button type="submit" id="do-upload">Upload</button>
