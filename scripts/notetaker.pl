@@ -465,6 +465,29 @@ sub attach_image( $c ) {
     $c->redirect_to('/note/' . $note->filename );
 }
 
+# Maybe, capture media?!
+sub capture_audio( $c ) {
+    my $session = get_session( $c );
+    my $note = find_note( $session, $c->param('fn') );
+    $c->stash( field_name => 'audio' );
+    $c->stash( note => $note );
+    $c->render('attach-audio');
+}
+
+# "attach_media"?
+sub attach_audio( $c ) {
+    my $session = get_session( $c );
+    my $note = find_note( $session, $c->param('fn') );
+    my $image = $c->param('audio');
+    my $filename = "attachments/" . clean_fragment( $image->filename );
+    # Check that we have some kind of image file according to the name
+    return if $filename !~ /\.(ogg|mp3)\z/i;
+    $image->move_to($session->document_directory . "/$filename");
+    $note->body( $note->body . "\n![$filename]($filename)\n" );
+    $note->save_to( $session->document_directory . "/" . $note->filename );
+    $c->redirect_to('/note/' . $note->filename );
+}
+
 sub edit_labels( $c, $inline ) {
     my $session = get_session( $c );
     my $note = find_note( $session, $c->param('fn') );
@@ -618,6 +641,8 @@ post '/edit-title' => \&update_note_title; # empty note
 get  '/display-title/*fn' => \&display_note_title;
 get  '/attach-image/*fn' => \&capture_image;
 post '/upload-image/*fn' => \&attach_image;
+get  '/attach-audio/*fn' => \&capture_audio;
+post '/upload-audio/*fn' => \&attach_audio;
 get  '/edit-color/*fn' => \&edit_note_color;
 post '/edit-color/*fn' => \&update_note_color;
 
@@ -679,6 +704,7 @@ __DATA__
 <script src="/debug.2.0.1.js"></script>
 <script src="/loading-states.2.0.1.js"></script>
 <script type="module" src="/morphdom-esm.2.7.4.js"></script>
+<script src="/app-notekeeper.js"></script>
 <script>
 htmx.onLoad(function(elt){
     elt.querySelectorAll('.nojs').forEach(e => e.remove());
@@ -908,6 +934,13 @@ htmx.onLoad(function(elt){
             hx-swap="outerHTML"
         >Add Image</a>
     </div>
+    <div id="action-attach-audio">
+        <a href="<%= url_for( "/attach-audio/" . $note->filename ) %>"
+            class="btn btn-secondary"
+            hx-get="<%= url_for( "/attach-audio/" . $note->filename ) %>"
+            hx-swap="outerHTML"
+        >Record</a>
+    </div>
     <div id="action-labels">
 % my %labels; $labels{ $_ } = 1 for ($note->frontmatter->{labels} // [])->@*;
 %= include 'menu-edit-labels', note => $note, labels => \%labels, label_filter => ''
@@ -985,6 +1018,30 @@ htmx.onLoad(function(elt){
        hx-trigger="blur from:#note-input-text-<%= $field_name %>"
     >x</a>
 </form>
+
+@@attach-audio.html.ep
+<div id="audio-recorder" >
+    <audio id="audio" width="640" height="480" autoplay></audio>
+    <a href="#" onclick="startRecording()">Prepare</a>
+    <button class="btn btn-primary" id="record">Record</button>
+    <button class="btn" id="stop">Stop</button>
+    <form action="<%= url_with( "/upload-audio/" . $note->filename ) %>"
+          method="POST"
+          enctype="multipart/form-data"
+          id="form-audio-upload"
+          hx-encoding="multipart/form-data"
+          hx-post="<%= url_with( "/upload-audio/" . $note->filename ) %>"
+    >
+    <input id="upload-audio" type="file" accept="audio/*" name="<%= $field_name %>" />
+    <button type="submit" id="do-upload">Upload</button>
+     <progress id='progress' value='0' max='100'></progress>
+    </form>
+    <script>
+        htmx.on('#form-audio-upload', 'htmx:xhr:progress', function(evt) {
+          htmx.find('#progress').setAttribute('value', evt.detail.loaded/evt.detail.total * 100)
+        });
+    </script>
+</div>
 
 @@edit-color.html.ep
 <form action="<%= url_for( "/edit-color/" . $note->filename ) %>" method="POST"
