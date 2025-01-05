@@ -478,11 +478,18 @@ sub capture_audio( $c ) {
 sub attach_audio( $c ) {
     my $session = get_session( $c );
     my $note = find_note( $session, $c->param('fn') );
-    my $image = $c->param('audio');
-    my $filename = "attachments/" . clean_fragment( $image->filename );
+    my $media = $c->param('audio');
+
+    my $fn = clean_fragment( $media->filename );
     # Check that we have some kind of image file according to the name
-    return if $filename !~ /\.(ogg|mp3)\z/i;
-    $image->move_to($session->document_directory . "/$filename");
+    return if $fn !~ /\.(ogg|mp3)\z/i;
+
+    if( $fn eq 'audio-capture.ogg' ) {
+        $fn = strftime 'audio-capture-%Y%m%d-%H%M%S.ogg', gmtime();
+    }
+
+    my $filename = "attachments/" . $fn;
+    $media->move_to($session->document_directory . "/$filename");
     $note->body( $note->body . "\n![$filename]($filename)\n" );
     $note->save_to( $session->document_directory . "/" . $note->filename );
     $c->redirect_to('/note/' . $note->filename );
