@@ -6,6 +6,8 @@
 
 ![Firefox mobile](screenshots/firefox-mobile-nomasonry.png)
 
+![Chromium](screenshots/chrome-new-from-template.png)
+
 
 # NAME
 

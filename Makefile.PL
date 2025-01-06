@@ -186,6 +186,8 @@ INSTALL
 
 ![Firefox mobile](screenshots/firefox-mobile-nomasonry.png)
 
+![Chromium](screenshots/chrome-new-from-template.png)
+
 
 STATUS
         update_file( 'README.mkdn', $readme_mkdn );
