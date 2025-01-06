@@ -966,7 +966,7 @@ htmx.onLoad(function(elt){
     </div>
     <div id="action-delete">
         <form action="<%= url_for('/delete/' . $note->filename ) %>" method="POST"
-        ><button class="btn btn-secondary" type="submit">Delete</button>
+        ><button class="btn btn-secondary" type="submit">&#x1F5D1;</button>
         </form>
     </div>
 </div>
