@@ -1,6 +1,8 @@
 
-[![Windows](https://github.com/Corion/App-Notetaker-Document/workflows/windows/badge.svg)](https://github.com/Corion/App-Notetaker-Document/actions?query=workflow%3Awindows)
-[![MacOS](https://github.com/Corion/App-Notetaker-Document/workflows/macos/badge.svg)](https://github.com/Corion/App-Notetaker-Document/actions?query=workflow%3Amacos)
-[![Linux](https://github.com/Corion/App-Notetaker-Document/workflows/linux/badge.svg)](https://github.com/Corion/App-Notetaker-Document/actions?query=workflow%3Alinux)
+[![Windows](https://github.com/Corion/App-Notetaker/workflows/windows/badge.svg)](https://github.com/Corion/App-Notetaker/actions?query=workflow%3Awindows)
+[![MacOS](https://github.com/Corion/App-Notetaker/workflows/macos/badge.svg)](https://github.com/Corion/App-Notetaker/actions?query=workflow%3Amacos)
+[![Linux](https://github.com/Corion/App-Notetaker/workflows/linux/badge.svg)](https://github.com/Corion/App-Notetaker/actions?query=workflow%3Alinux)
 
+# NAME
 
+App::Notetaker - a markdown notetaker
