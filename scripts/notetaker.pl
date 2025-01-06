@@ -84,11 +84,13 @@ sub render_notes($c) {
 }
 
 sub render_index($c) {
+    return login_detour($c) unless $c->is_user_authenticated;
     render_notes( $c );
     $c->render('index');
 }
 
 sub render_filter($c) {
+    return login_detour($c) unless $c->is_user_authenticated;
     render_notes( $c );
     $c->render('documents');
 }
@@ -175,6 +177,8 @@ sub find_or_create_note( $session, $fn ) {
 }
 
 sub display_note( $c, $note ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
     $c->stash( note => $note );
     my $session = get_session( $c );
 
@@ -190,6 +194,8 @@ sub display_note( $c, $note ) {
 };
 
 sub serve_attachment( $c ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
     my $session = get_session( $c );
     my $fn = $c->param('fn');
     $fn =~ s![\x00-\x1f\\/]!!g;
@@ -201,6 +207,8 @@ get '/' => \&render_index;
 get '/filter' => \&render_filter;
 
 get  '/new' => sub( $c ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
     my $session = get_session( $c );
     my $fn = $session->tempnote();
 
@@ -249,6 +257,8 @@ get  '/new' => sub( $c ) {
 get  '/note/attachments/*fn' => \&serve_attachment;
 
 get '/note/*fn' => sub($c) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
     my $session = get_session( $c );
     my $note = find_note( $session, $c->param('fn'));
     display_note( $c, $note );
@@ -261,6 +271,8 @@ sub save_note( $session, $note, $fn ) {
 }
 
 sub save_note_body( $c ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
     my $fn = $c->param('fn');
     my $session = get_session( $c );
 
@@ -282,6 +294,8 @@ sub save_note_body( $c ) {
 };
 
 sub delete_note( $c ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
     my $session = get_session( $c );
     my $fn = $c->param('fn');
     my $note = find_note( $session, $fn );
@@ -322,6 +336,8 @@ post '/note/' => \&save_note_body; # we make up a filename then
 post '/delete/*fn' => \&delete_note;
 
 sub edit_field( $c, $note, $field_name ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
     my $session = get_session( $c );
     $c->stash( note => $note );
     $c->stash( field_name => $field_name );
@@ -330,6 +346,8 @@ sub edit_field( $c, $note, $field_name ) {
 }
 
 sub edit_color_field( $c, $note, $field_name ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
     my $session = get_session( $c );
     $c->stash( note => $note );
     $c->stash( field_name => $field_name );
@@ -338,6 +356,8 @@ sub edit_color_field( $c, $note, $field_name ) {
 }
 
 sub edit_note_title( $c ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
     my $session = get_session( $c );
     my $fn = $c->param('fn');
     if( ! $fn) {
@@ -350,6 +370,8 @@ sub edit_note_title( $c ) {
 }
 
 sub edit_note_color( $c ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
     my $session = get_session( $c );
     my $fn = $c->param('fn');
     if( ! $fn) {
@@ -363,6 +385,8 @@ sub edit_note_color( $c ) {
 }
 
 sub update_note_color( $c, $autosave=0 ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
     my $session = get_session( $c );
     my $fn = $c->param('fn');
     my $color = $c->param('color');
@@ -388,6 +412,8 @@ sub display_field( $c, $fn, $note, $field_name, $class ) {
 }
 
 sub display_note_title( $c ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
     my $session = get_session( $c );
     my $fn = $c->param('fn');
     my $note = find_note( $session, $fn );
@@ -395,6 +421,8 @@ sub display_note_title( $c ) {
 }
 
 sub update_note_title( $c, $autosave=0 ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
     my $session = get_session( $c );
     my $fn = $c->param('fn');
     my $title = $c->param('title');
@@ -441,6 +469,8 @@ sub update_note_title( $c, $autosave=0 ) {
 }
 
 sub capture_image( $c ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
     my $session = get_session( $c );
     my $note = find_note( $session, $c->param('fn') );
     $c->stash( field_name => 'image' );
@@ -453,6 +483,8 @@ sub capture_image( $c ) {
 # XXX create thumbnail for image / reduce resolution/quality
 # XXX convert image to jpeg in the process, or webp or whatever
 sub attach_image( $c ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
     my $session = get_session( $c );
     my $note = find_note( $session, $c->param('fn') );
     my $image = $c->param('image');
@@ -467,6 +499,8 @@ sub attach_image( $c ) {
 
 # Maybe, capture media?!
 sub capture_audio( $c ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
     my $session = get_session( $c );
     my $note = find_note( $session, $c->param('fn') );
     $c->stash( field_name => 'audio' );
@@ -476,6 +510,8 @@ sub capture_audio( $c ) {
 
 # "attach_media"?
 sub attach_audio( $c ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
     my $session = get_session( $c );
     my $note = find_note( $session, $c->param('fn') );
     my $media = $c->param('audio');
@@ -496,6 +532,8 @@ sub attach_audio( $c ) {
 }
 
 sub edit_labels( $c, $inline ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
     my $session = get_session( $c );
     my $note = find_note( $session, $c->param('fn') );
     my $filter = $c->param('label-filter');
@@ -524,6 +562,8 @@ sub edit_labels( $c, $inline ) {
 }
 
 sub update_labels( $c, $inline=0 ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
     my $session = get_session( $c );
     my $fn = $c->param('fn');
     my %labels = $c->req->params->to_hash->%*;
@@ -544,12 +584,16 @@ sub update_labels( $c, $inline=0 ) {
 }
 
 sub create_label( $c ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
     my $note = find_note( $c->param('fn') );
     $c->stash( note => $note );
     $c->render('create-label' );
 }
 
 sub add_label( $c, $inline ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
     my $session = get_session( $c );
     my $fn = $c->param('fn');
     my %labels;
@@ -587,6 +631,8 @@ sub add_label( $c, $inline ) {
 }
 
 sub delete_label( $c, $inline ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
     my $session = get_session( $c );
     my $fn = $c->param('fn');
     my $note = find_or_create_note( $session, $fn );
@@ -611,6 +657,8 @@ sub delete_label( $c, $inline ) {
 }
 
 sub select_filter( $c ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
     my $filter = fetch_filter($c);
     $c->stash( filter => $filter );
     $c->stash( labels => [sort { fc($a) cmp fc($b) } keys %all_labels] );
@@ -620,6 +668,8 @@ sub select_filter( $c ) {
 }
 
 sub update_pinned( $c, $pinned, $inline ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
     my $session = get_session( $c );
     my $filter = fetch_filter($c);
     my $fn = $c->param('fn');
@@ -639,6 +689,74 @@ sub update_pinned( $c, $pinned, $inline ) {
         $c->redirect_to( $c->htmx->req->current_url );
     }
 }
+
+# User authentification
+
+{
+   my %db = (
+      foo => {pass => 'FOO', name => 'Foo De Pois'},
+      bar => {pass => 'BAZ', name => 'Bar Auangle'},
+      demo => {pass => 'demo', name => 'Demo User'},
+   );
+   sub load_account ($u) { return $db{$u} // undef }
+   sub validate ($u, $p) {
+      warn "user<$u> pass<$p>\n";
+      my $account = load_account($u) or return;
+      return $account->{pass} eq $p;
+   }
+}
+
+app->plugin(
+   Authentication => {
+      load_user     => sub ($app, $uid) { load_account($uid) },
+      validate_user => sub ($c, $u, $p, $e) { validate($u, $p) ? $u : () },
+   }
+);
+
+my $session_store = Mojolicious::Sessions->new();
+$session_store->default_expiration(0); # cookies are forever
+
+app->hook(
+    before_render => sub ($c, $args) {
+        if( $c->is_user_authenticated ) {
+# say "User is authenticated";
+        } else {
+# say "Need login";
+        };
+        my $user = $c->is_user_authenticated ? $c->current_user : undef;
+        $c->stash(user => $user);
+        return $c;
+    }
+);
+
+sub login_detour( $c ) {
+    # Somehow save the request parameters in the session
+    # This once more means we really need a local (in-memory if need be) session module
+    # for Mojolicious
+    # XXX we should also preserve form uploads here?!
+    $c->session( return_to => $c->req->url->to_abs );
+    return $c->redirect_to('/login');
+}
+
+get '/login' => sub ($c) { $c->render(template => 'login') };
+post '/login' => sub ($c) {
+    my $username = $c->param('username');
+    my $password = $c->param('password');
+    if ($c->authenticate($username, $password)) {
+        warn $c->is_user_authenticated ? 'YES' : 'NOT YET';
+        my $next = $c->session('return_to') // $c->url_for('/');
+        $c->redirect_to($next);
+    }
+    else {
+        $c->redirect_to($c->url_for('/'));
+    }
+    return;
+};
+
+post '/logout' => sub ($c) {
+    $c->logout if $c->is_user_authenticated;
+    return $c->redirect_to('/');
+};
 
 
 get  '/edit-title' => \&edit_note_title; # empty note
@@ -670,6 +788,26 @@ post '/pin/*fn'   => sub($c) { \&update_pinned( $c, 1, 0 ) };
 post '/unpin/*fn' => sub($c) { \&update_pinned( $c, 0, 0 ) };
 post '/htmx-pin/*fn'   => sub($c) { \&update_pinned( $c, 1, 1 ) };
 post '/htmx-unpin/*fn' => sub($c) { \&update_pinned( $c, 0, 1 ) };
+
+# Session handling
+get '/login' => sub ($c) { $c->render(template => 'login') };
+post '/login' => sub ($c) {
+    my $username = $c->param('username');
+    my $password = $c->param('password');
+    if ($c->authenticate($username, $password)) {
+        warn $c->is_user_authenticated ? 'YES' : 'NOT YET';
+        my $next = $c->session('return_to') // $c->url_for('/');
+        $c->redirect_to($next);
+    }
+    else {
+        $c->redirect_to($c->req->url->to_abs);
+    }
+    return;
+};
+post '/logout' => sub ($c) {
+    $c->logout if $c->is_user_authenticated;
+    return $c->redirect_to('/');
+};
 
 app->start;
 
@@ -970,6 +1108,31 @@ htmx.onLoad(function(elt){
         </form>
     </div>
 </div>
+</body>
+</html>
+
+@@login.html.ep
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+%=include 'htmx-header'
+
+<title>Login - notekeeper</title>
+</head>
+<body
+    hx-boost="true"
+    id="body"
+    hx-ext="morphdom-swap"
+    hx-swap="morphdom"
+>
+  <div id="container" class="grid-container" hx-history-elt>
+      <form action="<%= url_for( '/login' )%>" method="POST">
+          <input type="text" name="username" value="" text="Username" />
+          <input type="password" name="password" value="" text="Password" />
+          <button type="submit">Log in</button>
+      </form>
+  </div>
 </body>
 </html>
 
