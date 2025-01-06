@@ -137,6 +137,10 @@ This document describes version $version.
 VERSION
             <<INSTALL,
 
+# Notekeeper - another Google Keep clone
+
+![Firefox with the experimental masonry layout](screenshots/firefox-masonry.png)
+
 INSTALLATION
 
 This is a Perl module distribution. It should be installed with whichever
@@ -153,6 +157,8 @@ Should you wish to install this module manually, the procedure is
   make
   make test
   make install
+
+![Firefox mobile](screenshots/firefox-mobile-nomasonry.png)
 
 INSTALL
             pod_section($file, 'REPOSITORY'),
