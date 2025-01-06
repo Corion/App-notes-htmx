@@ -1,7 +1,11 @@
 
-[![Windows](https://github.com/Corion/App-Notetaker/workflows/windows/badge.svg)](https://github.com/Corion/App-Notetaker/actions?query=workflow%3Awindows)
-[![MacOS](https://github.com/Corion/App-Notetaker/workflows/macos/badge.svg)](https://github.com/Corion/App-Notetaker/actions?query=workflow%3Amacos)
-[![Linux](https://github.com/Corion/App-Notetaker/workflows/linux/badge.svg)](https://github.com/Corion/App-Notetaker/actions?query=workflow%3Alinux)
+# Notekeeper - another Google Keep clone
+
+![Firefox with the experimental masonry layout](screenshots/firefox-masonry.png)
+
+
+![Firefox mobile](screenshots/firefox-mobile-nomasonry.png)
+
 
 # NAME
 

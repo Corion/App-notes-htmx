@@ -136,11 +136,6 @@ sub regen_README {
 This document describes version $version.
 VERSION
             <<INSTALL,
-
-# Notekeeper - another Google Keep clone
-
-![Firefox with the experimental masonry layout](screenshots/firefox-masonry.png)
-
 INSTALLATION
 
 This is a Perl module distribution. It should be installed with whichever
@@ -157,8 +152,6 @@ Should you wish to install this module manually, the procedure is
   make
   make test
   make install
-
-![Firefox mobile](screenshots/firefox-mobile-nomasonry.png)
 
 INSTALL
             pod_section($file, 'REPOSITORY'),
@@ -186,9 +179,13 @@ INSTALL
         $parser->parse_from_file($_[0]);
         my $readme_mkdn = <<STATUS . $parser->as_markdown;
 
-[![Windows](https://github.com/Corion/$distbase/workflows/windows/badge.svg)](https://github.com/Corion/$distbase/actions?query=workflow%3Awindows)
-[![MacOS](https://github.com/Corion/$distbase/workflows/macos/badge.svg)](https://github.com/Corion/$distbase/actions?query=workflow%3Amacos)
-[![Linux](https://github.com/Corion/$distbase/workflows/linux/badge.svg)](https://github.com/Corion/$distbase/actions?query=workflow%3Alinux)
+# Notekeeper - another Google Keep clone
+
+![Firefox with the experimental masonry layout](screenshots/firefox-masonry.png)
+
+
+![Firefox mobile](screenshots/firefox-mobile-nomasonry.png)
+
 
 STATUS
         update_file( 'README.mkdn', $readme_mkdn );

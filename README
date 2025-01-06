@@ -3,11 +3,6 @@ App::Notetaker - a markdown notetaker
 
 This document describes version 0.01.
 
-
-# Notekeeper - another Google Keep clone
-
-![Firefox with the experimental masonry layout](screenshots/firefox-masonry.png)
-
 INSTALLATION
 
 This is a Perl module distribution. It should be installed with whichever
@@ -24,8 +19,6 @@ Should you wish to install this module manually, the procedure is
   make
   make test
   make install
-
-![Firefox mobile](screenshots/firefox-mobile-nomasonry.png)
 
 
 
