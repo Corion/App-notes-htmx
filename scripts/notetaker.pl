@@ -729,6 +729,18 @@ app->hook(
     }
 );
 
+# If we are behind a reverse proxy, prepend our path
+if ( my $path = $ENV{MOJO_REVERSE_PROXY} ) {
+    my @path_parts = grep /\S/, split m{/}, $path;
+    app->hook( before_dispatch => sub( $c ) {
+        my $url = $c->req->url;
+        my $base = $url->base;
+        push @{ $base->path }, @path_parts;
+        $base->path->trailing_slash(1);
+        $url->path->leading_slash(0);
+    });
+}
+
 sub login_detour( $c ) {
     # Somehow save the request parameters in the session
     # This once more means we really need a local (in-memory if need be) session module
