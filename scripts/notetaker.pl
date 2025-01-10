@@ -735,7 +735,9 @@ sub login_detour( $c ) {
     # for Mojolicious
     # XXX we should also preserve form uploads here?!
     $c->session( return_to => $c->req->url->to_abs );
-    return $c->redirect_to($c->url_for('/login'));
+    my $login = $c->url_for('/login');
+    warn "Detouring for login to <$login>";
+    return $c->redirect_to($login);
 }
 
 get '/login' => sub ($c) { $c->render(template => 'login') };
