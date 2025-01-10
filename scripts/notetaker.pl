@@ -731,7 +731,8 @@ app->hook(
 
 # If we are behind a reverse proxy, prepend our path
 if ( my $path = $ENV{MOJO_REVERSE_PROXY} ) {
-    my @path_parts = grep /\S/, split m{/}, $path;
+    my $path_uri = Mojo::URL->new($path);
+    my @path_parts = grep /\S/, split m{/}, $path_uri->path;
     app->hook( before_dispatch => sub( $c ) {
         my $url = $c->req->url;
         warn "URL  is     <$url>";
@@ -739,6 +740,10 @@ if ( my $path = $ENV{MOJO_REVERSE_PROXY} ) {
         push @{ $base->path }, @path_parts;
         $base->path->trailing_slash(1);
         $url->path->leading_slash(0);
+        $url->scheme($path_uri->protocol);
+        $base->scheme($path_uri->protocol);
+        $url->host($path_uri->host);
+        $base->host($path_uri->host);
 
         warn "Base is     <$base>";
         warn "URL  is now <$url>";
