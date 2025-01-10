@@ -742,8 +742,19 @@ if ( my $path = $ENV{MOJO_REVERSE_PROXY} ) {
         $url->path->leading_slash(0);
         $url->scheme($path_uri->protocol);
         $base->scheme($path_uri->protocol);
-        $url->host($path_uri->host);
-        $base->host($path_uri->host);
+
+        if( my $f = $c->req->headers->header('X-Forwarded-Host')
+            and not $path_uri->host ) {
+            # We could guess the host here if it wasn't set in MOJO_REVERSE_PROXY
+            # This requires that the outside-facing server resets
+            # X-Forwarded-Host , so that header is not allowed to be user-controllable
+            (my $host) = split /,/, $f;
+            $url->host( $host );
+            $base->host( $host );
+        } else {
+            $url->host($path_uri->host);
+            $base->host($path_uri->host);
+        }
 
         warn "Base is     <$base>";
         warn "URL  is now <$url>";
@@ -772,6 +783,8 @@ post '/login' => sub ($c) {
     if ($c->authenticate($username, $password)) {
         warn $c->is_user_authenticated ? 'YES' : 'NOT YET';
         my $next = $c->session('return_to') // $c->url_for('/');
+        $next = $next->to_abs();
+        warn "Sending user to <$next>";
         $c->redirect_to($next);
     }
     else {
