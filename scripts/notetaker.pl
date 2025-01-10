@@ -66,7 +66,7 @@ sub render_notes($c) {
     for my $note ( @documents ) {
         my $repr;
         if( length $note->body ) {
-            $repr = as_html( $note, strip_links => 1, search => $filter->{text} );
+            $repr = as_html( $c, $note, strip_links => 1, search => $filter->{text} );
         } else {
             $repr = '&nbsp;'; # so even an empty note becomes clickable
         };
@@ -182,7 +182,7 @@ sub display_note( $c, $note ) {
     $c->stash( note => $note );
     my $session = get_session( $c );
 
-    my $html = as_html( $note );
+    my $html = as_html( $c, $note );
     $c->stash( note_html => $html );
     $c->stash( all_labels => \%all_labels );
 
@@ -827,7 +827,7 @@ app->start;
 
 # Make relative links actually relative to /note/ so that we can also
 # properly serve attachments
-sub as_html( $doc, %options ) {
+sub as_html( $c, $doc, %options ) {
     my $renderer = Markdown::Perl->new(
         mode => 'github',
         disallowed_html_tags => ['script','a','object'],
@@ -845,7 +845,7 @@ sub as_html( $doc, %options ) {
         $html =~ s!</a>!!gsi;
     }
 
-    my $base = app->url_for('/note/');
+    my $base = $c->url_for('/note/');
     $html =~ s!<img src="\K(?=attachments/)!$base!g;
 
     return $html
