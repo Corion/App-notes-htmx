@@ -892,7 +892,7 @@ htmx.onLoad(function(elt){
         <a href="#" data-bs-target="#sidebar" data-bs-toggle="collapse"
                class="border rounded-3 p-1 text-decoration-none"><i class="bi bi-list bi-lg py-2 p-1"></i> Labels</a>
     </li>
-    <li><a href="/">index</a></li>
+    <li><a href="<%= url_for( "/" )%>">index</a></li>
     <li>
       <div id="form-filter-2">
       <form id="form-filter-instant" method="GET" action="/">
@@ -1052,7 +1052,7 @@ htmx.onLoad(function(elt){
 <div class="navbar navbar-expand-lg sticky-top navbar-light bg-light">
   <nav>
     <ul>
-    <li><a href="/"
+    <li><a href="<%= url_for( "/" ) %>"
             hx-trigger="click, keyup[key=='Escape'] from:body"
         >index</a></li>
     <!-- delete note -->
