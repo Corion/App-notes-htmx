@@ -841,15 +841,15 @@ __DATA__
 @@ htmx-header.html.ep
 <meta htmx.config.allowScriptTags="true">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="/bootstrap.5.3.3.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-<link rel="stylesheet" href="/notes.css" />
-<script src="/bootstrap.5.3.3.min.js"></script>
-<script src="/htmx.2.0.4.min.js"></script>
-<script src="/ws.2.0.1.js"></script>
-<script src="/debug.2.0.1.js"></script>
-<script src="/loading-states.2.0.1.js"></script>
-<script type="module" src="/morphdom-esm.2.7.4.js"></script>
-<script src="/app-notekeeper.js"></script>
+<link rel="stylesheet" href="<%= url_for( "/bootstrap.5.3.3.min.css" ) %> integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+<link rel="stylesheet" href="<%= url_for( "/notes.css" )%> />
+<script src=<%= url_for( "/bootstrap.5.3.3.min.js")%>"></script>
+<script src=<%= url_for( "/htmx.2.0.4.min.js")%>"></script>
+<script src=<%= url_for( "/ws.2.0.1.js")%>"></script>
+<script src=<%= url_for( "/debug.2.0.1.js")%>"></script>
+<script src=<%= url_for( "/loading-states.2.0.1.js")%>"></script>
+<script type="module" src=<%= url_for( "/morphdom-esm.2.7.4.js")%>"></script>
+<script src=<%= url_for( "/app-notekeeper.js" )%>"></script>
 <script>
 htmx.onLoad(function(elt){
     elt.querySelectorAll('.nojs').forEach(e => e.remove());
