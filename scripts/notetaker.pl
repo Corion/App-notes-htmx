@@ -290,7 +290,7 @@ sub save_note_body( $c ) {
     $note->body($body);
     save_note( $session, $note, $fn );
 
-    $c->redirect_to($c->url_for('/note/') . $fn );
+    $c->redirect_to('/note/'. $fn );
 };
 
 sub delete_note( $c ) {
@@ -984,7 +984,7 @@ htmx.onLoad(function(elt){
 <div class="grid-item note position-relative"<%== $bgcolor %>
        id="<%= $doc->filename %>">
 %=include 'note-pinned', note => $doc
-    <a href="<%= url_for( "/note/" .$doc->filename ) %>" class="note-content">
+    <a href="<%= url_for( "/note/" . $doc->filename ) %>" class="note-content">
     <div class="title"><%= $doc->frontmatter->{title} %></div>
     <!-- list (some) tags -->
     <div class="content" hx-disable="true"><%== $doc->{html} %></div>
