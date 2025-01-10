@@ -734,10 +734,14 @@ if ( my $path = $ENV{MOJO_REVERSE_PROXY} ) {
     my @path_parts = grep /\S/, split m{/}, $path;
     app->hook( before_dispatch => sub( $c ) {
         my $url = $c->req->url;
+        warn "URL  is     <$url>";
         my $base = $url->base;
         push @{ $base->path }, @path_parts;
         $base->path->trailing_slash(1);
         $url->path->leading_slash(0);
+
+        warn "Base is     <$base>";
+        warn "URL  is now <$url>";
     });
 }
 
@@ -746,7 +750,11 @@ sub login_detour( $c ) {
     # This once more means we really need a local (in-memory if need be) session module
     # for Mojolicious
     # XXX we should also preserve form uploads here?!
+    warn $c->req->base;
     $c->session( return_to => $c->req->url->to_abs );
+
+    # Make the redirect URL relative
+
     my $login = $c->url_for('/login');
     warn "Detouring for login to <$login>";
     return $c->redirect_to($login);
@@ -762,7 +770,8 @@ post '/login' => sub ($c) {
         $c->redirect_to($next);
     }
     else {
-        $c->redirect_to($c->url_for('/'));
+        # XXX also here, we should preserve form uploads etc.
+        $c->redirect_to($c->url_for('/login'));
     }
     return;
 };
