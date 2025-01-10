@@ -290,7 +290,7 @@ sub save_note_body( $c ) {
     $note->body($body);
     save_note( $session, $note, $fn );
 
-    $c->redirect_to('/note/' . $fn );
+    $c->redirect_to($c->url_for('/note/') . $fn );
 };
 
 sub delete_note( $c ) {
@@ -310,7 +310,7 @@ sub delete_note( $c ) {
 
     # Can we keep track of current filters and restore them here?
 
-    $c->redirect_to('/');
+    $c->redirect_to($c->url_for('/'));
 }
 
 sub move_note( $source_name, $target_name ) {
@@ -396,10 +396,10 @@ sub update_note_color( $c, $autosave=0 ) {
     $note->save_to( $session->clean_filename( $fn ));
 
     if( $autosave ) {
-        $c->redirect_to('/edit-color/' . $fn );
+        $c->redirect_to($c->url_for('/edit-color/') . $fn );
 
     } else {
-        $c->redirect_to('/note/' . $fn );
+        $c->redirect_to($c->url_for('/note/') . $fn );
     }
 }
 
@@ -460,11 +460,11 @@ sub update_note_title( $c, $autosave=0 ) {
 
     if( $autosave ) {
         warn "Redirecting to editor with (new?) name '$fn'";
-        $c->redirect_to('/edit-title/' . $fn );
+        $c->redirect_to($c->url_for('/edit-title/') . $fn );
 
     } else {
         warn "Redirecting to (new?) name '$fn'";
-        $c->redirect_to('/note/' . $fn );
+        $c->redirect_to($c->url_for('/note/') . $fn );
     }
 }
 
@@ -494,7 +494,7 @@ sub attach_image( $c ) {
     $image->move_to($session->document_directory . "/$filename");
     $note->body( $note->body . "\n![$filename]($filename)\n" );
     $note->save_to( $session->document_directory . "/" . $note->filename );
-    $c->redirect_to('/note/' . $note->filename );
+    $c->redirect_to($c->url_for('/note/') . $note->filename );
 }
 
 # Maybe, capture media?!
@@ -528,7 +528,7 @@ sub attach_audio( $c ) {
     $media->move_to($session->document_directory . "/$filename");
     $note->body( $note->body . "\n![$filename]($filename)\n" );
     $note->save_to( $session->document_directory . "/" . $note->filename );
-    $c->redirect_to('/note/' . $note->filename );
+    $c->redirect_to($c->url_for('/note/') . $note->filename );
 }
 
 sub edit_labels( $c, $inline ) {
@@ -579,7 +579,7 @@ sub update_labels( $c, $inline=0 ) {
         $c->render('edit-labels');
 
     } else {
-        $c->redirect_to('/note/' . $fn );
+        $c->redirect_to($c->url_for('/note/') . $fn );
     }
 }
 
@@ -735,7 +735,7 @@ sub login_detour( $c ) {
     # for Mojolicious
     # XXX we should also preserve form uploads here?!
     $c->session( return_to => $c->req->url->to_abs );
-    return $c->redirect_to('/login');
+    return $c->redirect_to($c->url_for('/login'));
 }
 
 get '/login' => sub ($c) { $c->render(template => 'login') };
@@ -806,7 +806,7 @@ post '/login' => sub ($c) {
 };
 post '/logout' => sub ($c) {
     $c->logout if $c->is_user_authenticated;
-    return $c->redirect_to('/');
+    return $c->redirect_to($c->url_for('/'));
 };
 
 app->start;
