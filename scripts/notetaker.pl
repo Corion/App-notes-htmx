@@ -965,7 +965,7 @@ htmx.onLoad(function(elt){
 % if( $user ) {
     <ul class="navbar-nav ms-auto">
     <li class="nav-item">
-      <form id="form-logout" method="POST" action="/logout">
+      <form id="form-logout" method="POST" action="<%= $c->url_for( "/logout" ) %>">
       <button name="logout" id="logout">Log '<%= $user->{user} %>' out</button>
       </form>
     </li>
