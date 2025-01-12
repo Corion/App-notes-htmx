@@ -35,6 +35,8 @@ async function startRecording() {
         const datTran = new ClipboardEvent('').clipboardData || new DataTransfer();
         datTran.items.add(file);  // Add the file to the DT object
         input.files = datTran.files; // overwrite the input file list with ours
+
+        // We really want to do the sending in the background, later
         document.getElementById('do-upload').click();
         recordedChunks = [];
     };
