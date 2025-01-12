@@ -18,13 +18,22 @@ app->static->with_roles('+Compressed');
 plugin 'DefaultHelpers';
 plugin 'HTMX';
 
-sub get_session( $c ) {
-    # Validate cookie, send session cookie(?)
-    return
-        App::Notetaker::Session->new(
+my %user_db = (
+    demo => App::Notetaker::Session->new(
             username => 'demo',
             document_directory => './notes',
-        );
+    ),
+    corion => App::Notetaker::Session->new(
+            username => 'corion',
+            document_directory => './notes_corion',
+    ),
+);
+
+sub get_session( $c ) {
+    my $user = $c->current_user;
+    my $username = $user->{user}
+        or return;
+    return $user_db{ $username }
 }
 
 sub fetch_filter( $c ) {
@@ -97,7 +106,7 @@ sub render_filter($c) {
 
 # Initialize all labels & colours
 # This will crash if we move to more than one user ...
-get_documents(get_session(undef));
+#get_documents(get_session());
 
 sub match_text( $filter, $note ) {
        $note->body =~ /\Q$filter\E/i
@@ -694,9 +703,10 @@ sub update_pinned( $c, $pinned, $inline ) {
 
 {
    my %db = (
-      foo => {pass => 'FOO', name => 'Foo De Pois'},
-      bar => {pass => 'BAZ', name => 'Bar Auangle'},
-      demo => {pass => 'demo', name => 'Demo User'},
+      foo  => {user => 'foo', pass => 'FOO', name => 'Foo De Pois'},
+      bar  => {user => 'bar', pass => 'BAZ', name => 'Bar Auangle'},
+      demo => {user => 'demo', pass => 'demo', name => 'Demo User'},
+      corion => {user => 'corion', pass => 'noiroc', name => 'Second Demo User'},
    );
    sub load_account ($u) { return $db{$u} // undef }
    sub validate ($u, $p) {
@@ -766,7 +776,6 @@ sub login_detour( $c ) {
     # This once more means we really need a local (in-memory if need be) session module
     # for Mojolicious
     # XXX we should also preserve form uploads here?!
-    warn $c->req->base;
     $c->session( return_to => $c->req->url->to_abs );
 
     # Make the redirect URL relative
@@ -782,8 +791,13 @@ post '/login' => sub ($c) {
     my $password = $c->param('password');
     if ($c->authenticate($username, $password)) {
         warn $c->is_user_authenticated ? 'YES' : 'NOT YET';
-        my $next = $c->session('return_to') // $c->url_for('/');
-        $next = $next->to_abs();
+
+        my $next = $c->url_for('/');
+        if( $c->is_user_authenticated ) {
+            #$c->session( user => get_session($username) );
+            $next = $c->session('return_to');
+        };
+        $next = Mojo::URL->new($next)->to_abs();
         warn "Sending user to <$next>";
         $c->redirect_to($next);
     }
