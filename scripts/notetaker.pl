@@ -926,15 +926,14 @@ htmx.onLoad(function(elt){
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
 >
-<div class="navbar navbar-expand-lg sticky-top navbar-light bg-light">
-  <nav>
-    <ul class="navbar-nav ms-auto">
-    <li>
+<nav class="navbar navbar-expand-lg sticky-top bd-navbar">
+    <ul class="navbar-nav me-auto">
+    <li class="nav-item">
         <a href="#" data-bs-target="#sidebar" data-bs-toggle="collapse"
                class="border rounded-3 p-1 text-decoration-none"><i class="bi bi-list bi-lg py-2 p-1"></i> Labels</a>
     </li>
-    <li><a href="<%= url_for( "/" )%>">index</a></li>
-    <li>
+    <li class="nav-item"><a href="<%= url_for( "/" )%>">index</a></li>
+    <li class="nav-item">
       <div id="form-filter-2">
       <form id="form-filter-instant" method="GET" action="/">
         <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
@@ -946,7 +945,7 @@ htmx.onLoad(function(elt){
       </form>
       </div>
     </li>
-    <li>
+    <li class="nav-item">
       <form id="form-filter" method="GET" action="/">
         <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
             placeholder="<%== $moniker %>"
@@ -959,17 +958,16 @@ htmx.onLoad(function(elt){
       </form>
     </li>
     </ul>
-    <ul class="navbar-nav me-auto">
 % if( $user ) {
-    <li>
+    <ul class="navbar-nav ms-auto">
+    <li class="nav-item">
       <form id="form-logout" method="POST" action="/logout">
       <button name="logout" id="logout">Log '<%= $user->{user} %>' out</button>
       </form>
     </li>
-% }
     </ul>
-  </nav>
-</div>
+% }
+</nav>
 <div class="container-fluid" id="container">
 <div class="row flex-nowrap">
     <div class="col-auto px-0">
@@ -1099,7 +1097,7 @@ htmx.onLoad(function(elt){
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
 >
-<div class="navbar navbar-expand-lg sticky-top navbar-light bg-light">
+<div class="navbar navbar-expand-lg sticky-top bg-light">
   <nav>
     <ul>
     <li><a href="<%= url_for( "/" ) %>"
@@ -1135,7 +1133,7 @@ htmx.onLoad(function(elt){
     <div class="edited-date"><%= $note->frontmatter->{updated} %></div>
 </div>
 </div>
-<div id="actionbar" class="navbar mt-auto fixed-bottom navbar-light bg-light">
+<div id="actionbar" class="navbar mt-auto fixed-bottom bg-light">
     <div id="action-attach">
         <a href="<%= url_for( "/attach-image/" . $note->filename ) %>"
             class="btn btn-secondary"
