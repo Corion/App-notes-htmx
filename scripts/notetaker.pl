@@ -776,7 +776,10 @@ sub login_detour( $c ) {
     # This once more means we really need a local (in-memory if need be) session module
     # for Mojolicious
     # XXX we should also preserve form uploads here?!
-    $c->session( return_to => $c->req->url->to_abs );
+    if( ! $c->session( 'return_to' )) {
+        # Only set a new return_to path if we don't have one already
+        $c->session( return_to => $c->req->url->to_abs );
+    }
 
     # Make the redirect URL relative
 
@@ -795,7 +798,8 @@ post '/login' => sub ($c) {
         my $next = $c->url_for('/');
         if( $c->is_user_authenticated ) {
             #$c->session( user => get_session($username) );
-            $next = $c->session('return_to');
+            $next = $c->session('return_to') // $c->url_for( '/' );
+            $c->session('return_to' => undef);
         };
         $next = Mojo::URL->new($next)->to_abs();
         warn "Sending user to <$next>";
