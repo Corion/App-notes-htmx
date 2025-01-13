@@ -963,11 +963,18 @@ htmx.onLoad(function(elt){
     </li>
     </ul>
 % if( $user ) {
-    <ul class="navbar-nav ms-auto">
-    <li class="nav-item">
+    <ul class="navbar-nav ms-auto" >
+    <li class="nav-item dropdown">
+    <div class="btn btn-secondary dropdown-toggle"
+        data-bs-toggle="dropdown"><%= "\N{BUST IN SILHOUETTE}" %></div>
+
+    <div class="dropdown-menu dropdown-menu-end dropdown-menu-right">
+    <div class="dropdown-item">
       <form id="form-logout" method="POST" action="<%= $c->url_for( "/logout" ) %>">
-      <button name="logout" id="logout">Log '<%= $user->{user} %>' out</button>
+      <button name="logout"
+          class="btn btn-secondary" id="logout">Log '<%= $user->{user} %>' out</button>
       </form>
+    </div>
     </li>
     </ul>
 % }
