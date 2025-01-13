@@ -1201,7 +1201,7 @@ htmx.onLoad(function(elt){
 >
   <div id="container" class="grid-container" hx-history-elt>
       <form action="<%= url_for( '/login' )%>" method="POST">
-          <input type="text" name="username" value="" text="Username" />
+          <input type="text" autofocus name="username" value="" text="Username" />
           <input type="password" name="password" value="" text="Password" />
           <button type="submit">Log in</button>
       </form>
