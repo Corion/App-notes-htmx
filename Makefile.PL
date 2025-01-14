@@ -66,6 +66,7 @@ my %module = (
 
         'Moo'                       => 2, # for some hashes-as-objects
 
+        'YAML::PP::LibYAML' => 0,
         'Crypt::Passphrase' => 0,
         'Crypt::Passphrase::Argon2' => 0,
 
