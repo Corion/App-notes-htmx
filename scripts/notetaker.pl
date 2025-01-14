@@ -23,22 +23,12 @@ app->static->with_roles('+Compressed');
 plugin 'DefaultHelpers';
 plugin 'HTMX';
 
-my %user_db = (
-    demo => App::Notetaker::Session->new(
-            username => 'demo',
-            document_directory => './notes',
-    ),
-    corion => App::Notetaker::Session->new(
-            username => 'corion',
-            document_directory => './notes_corion',
-    ),
-);
-
 sub get_session( $c ) {
     my $user = $c->current_user;
-    my $username = $user->{user}
-        or return;
-    return $user_db{ $username }
+    return App::Notetaker::Session->new(
+        username => $user->{user},
+        document_directory => $user->{notes}
+    );
 }
 
 sub fetch_filter( $c ) {
