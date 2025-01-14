@@ -728,7 +728,6 @@ sub update_pinned( $c, $pinned, $inline ) {
         }
     };
     sub validate ($u, $p) {
-        warn "user<$u> pass<$p>\n";
         my $account = load_account($u) or return;
         if( !$passphrase->verify_password( $p, $account->{pass} )) {
             return undef;
