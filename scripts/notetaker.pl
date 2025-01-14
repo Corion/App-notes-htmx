@@ -711,9 +711,10 @@ sub update_pinned( $c, $pinned, $inline ) {
         try {
             if( -f $fn and -r $fn ) {
                 # libyaml still calls exit() in random situations
-                return LoadFile( $fn )
+                return LoadFile( $fn );
             }
         } catch ($e) {
+            warn "Got exception: $e";
             return undef
         }
     };
@@ -723,7 +724,7 @@ sub update_pinned( $c, $pinned, $inline ) {
             return undef;
 
         } elsif( $passphrase->needs_rehash($account->{pass})) {
-            say "Upgrading user hash for <$u>";
+            say "Upgrading password hash for <$u>";
             my $new_hash = $passphrase->hash_password( $p );
             $account->{pass} = $new_hash;
             DumpFile( "$user_directory/$u.yaml", $account )
