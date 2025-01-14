@@ -10,7 +10,10 @@ use Text::CleanFragment;
 use POSIX 'strftime';
 use PerlX::Maybe;
 use charnames ':full';
-use YAML::PP::LibYAML 'LoadFile';
+use YAML::PP::LibYAML 'LoadFile', 'DumpFile';
+
+use Crypt::Passphrase;
+use Crypt::Passphrase::Argon2;
 
 use App::Notetaker::Document;
 use App::Notetaker::Session;
@@ -705,6 +708,13 @@ sub update_pinned( $c, $pinned, $inline ) {
 
 {
     my $user_directory = 'users';
+    sub plaintext($password, $hash) {
+        return $password eq $hash;
+    }
+    my $passphrase = Crypt::Passphrase->new(
+        encoder    => 'Argon2',
+        validators => [ \&plaintext ],
+    );
     sub load_account ($u) {
         $u =~ s![\\/]!!g;
         my $fn = "$user_directory/$u.yaml";
@@ -720,7 +730,17 @@ sub update_pinned( $c, $pinned, $inline ) {
     sub validate ($u, $p) {
         warn "user<$u> pass<$p>\n";
         my $account = load_account($u) or return;
-        return $account->{pass} eq $p;
+        if( !$passphrase->verify_password( $p, $account->{pass} )) {
+            return undef;
+
+        } elsif( $passphrase->needs_rehash($account->{pass})) {
+            say "Upgrading user hash for <$u>";
+            my $new_hash = $passphrase->hash_password( $p );
+            $account->{pass} = $new_hash;
+            DumpFile( "$user_directory/$u.yaml", $account )
+        };
+
+        return 1
     }
 }
 
@@ -755,7 +775,7 @@ if ( my $path = $ENV{MOJO_REVERSE_PROXY} ) {
         my $url = $c->req->url;
         warn "URL  is     <$url>";
         my $base = $url->base;
-        push @{ $base->path }, @path_parts;
+        unshift @{ $base->path }, @path_parts;
         $base->path->trailing_slash(1);
         $url->path->leading_slash(0);
         $url->scheme($path_uri->protocol);

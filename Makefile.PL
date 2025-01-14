@@ -66,6 +66,9 @@ my %module = (
 
         'Moo'                       => 2, # for some hashes-as-objects
 
+        'Crypt::Passphrase' => 0,
+        'Crypt::Passphrase::Argon2' => 0,
+
         'Text::FrontMatter::YAML' => 0,
         'Mojo::File' => 0,
         'File::Temp' => 0,
