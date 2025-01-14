@@ -1,6 +1,7 @@
 #!perl
 use 5.020;
 use Mojolicious::Lite '-signatures';
+use experimental 'try';
 use Text::FrontMatter::YAML;
 use Mojo::File;
 use File::Temp;
@@ -9,6 +10,7 @@ use Text::CleanFragment;
 use POSIX 'strftime';
 use PerlX::Maybe;
 use charnames ':full';
+use YAML::PP::LibYAML 'LoadFile';
 
 use App::Notetaker::Document;
 use App::Notetaker::Session;
@@ -702,18 +704,24 @@ sub update_pinned( $c, $pinned, $inline ) {
 # User authentification
 
 {
-   my %db = (
-      foo  => {user => 'foo', pass => 'FOO', name => 'Foo De Pois'},
-      bar  => {user => 'bar', pass => 'BAZ', name => 'Bar Auangle'},
-      demo => {user => 'demo', pass => 'demo', name => 'Demo User'},
-      corion => {user => 'corion', pass => 'noiroc', name => 'Second Demo User'},
-   );
-   sub load_account ($u) { return $db{$u} // undef }
-   sub validate ($u, $p) {
-      warn "user<$u> pass<$p>\n";
-      my $account = load_account($u) or return;
-      return $account->{pass} eq $p;
-   }
+    my $user_directory = 'users';
+    sub load_account ($u) {
+        $u =~ s![\\/]!!g;
+        my $fn = "$user_directory/$u.yaml";
+        try {
+            if( -f $fn and -r $fn ) {
+                # libyaml still calls exit() in random situations
+                return LoadFile( $fn )
+            }
+        } catch ($e) {
+            return undef
+        }
+    };
+    sub validate ($u, $p) {
+        warn "user<$u> pass<$p>\n";
+        my $account = load_account($u) or return;
+        return $account->{pass} eq $p;
+    }
 }
 
 app->plugin(
