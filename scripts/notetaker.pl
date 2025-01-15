@@ -1350,6 +1350,7 @@ htmx.onLoad(function(elt){
 <div class="dropup" id="dropdown-labels" hx-trigger="show.bs.dropdown"
   hx-get="<%= url_with( '/htmx-label-menu/' . $note->filename ) %>"
   hx-target="find .dropdown-menu"
+  hx-disinherit="hx-target"
   >
     <button type="button" class="btn btn-secondary dropdown-toggle hide-toggle"
             data-bs-toggle="dropdown"
