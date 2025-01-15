@@ -1329,7 +1329,7 @@ htmx.onLoad(function(elt){
 %     $id =~ s![.]!_!g;
     <div class="labels"
         id="<%= $id %>"
-        hx-target="#<%= $id %>"
+        hx-target="this"
         hx-swap="outerHTML"
     >
 %     for my $label ($labels->@*) {
