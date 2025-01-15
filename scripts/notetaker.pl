@@ -89,6 +89,7 @@ sub render_notes($c) {
 
 sub render_index($c) {
     return login_detour($c) unless $c->is_user_authenticated;
+    $c->session(expiration => 86400);
     render_notes( $c );
     $c->render('index');
 }
