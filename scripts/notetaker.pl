@@ -23,12 +23,18 @@ app->static->with_roles('+Compressed');
 plugin 'DefaultHelpers';
 plugin 'HTMX';
 
+my %sessions;
+
 sub get_session( $c ) {
     my $user = $c->current_user;
-    return App::Notetaker::Session->new(
+    return $sessions{ $user->{user} }
+        if $sessions{ $user->{user} };
+    my $s = App::Notetaker::Session->new(
         username => $user->{user},
-        document_directory => $user->{notes}
+        document_directory => $user->{notes},
     );
+    $s->init();
+    return $sessions{ $user->{user} } = $s;
 }
 
 sub fetch_filter( $c ) {
@@ -56,9 +62,6 @@ sub filter_moniker( $filter ) {
     return join " ", grep { defined $_ and length $_ } ($attr, $location);
 }
 
-our %all_labels;
-our %all_colors;
-
 sub render_notes($c) {
     my $filter = fetch_filter($c);
     my $sidebar = $c->param('sidebar');
@@ -81,7 +84,7 @@ sub render_notes($c) {
 
     # How do we sort the templates? By name?!
     $c->stash( templates => \@templates );
-    $c->stash( labels => [sort { fc($a) cmp fc($b) } keys %all_labels] );
+    $c->stash( labels => [sort { fc($a) cmp fc($b) } keys $session->labels->%* ] );
     $c->stash( filter => $filter );
     $c->stash( sidebar => $sidebar );
     $c->stash( moniker => filter_moniker( $filter ));
@@ -120,6 +123,10 @@ sub match_label( $filter, $note ) {
 # If we had a real database, this would be the interface ...
 sub get_documents($session, $filter={}) {
     my %stat;
+    my $labels = $session->labels;
+    my $colors = $session->colors;
+    #%$labels = ();
+    #%$colors = ();
     return
         grep {
                ($filter->{text}  ? match_text( $filter->{text}, $_ )   : 1)
@@ -131,11 +138,11 @@ sub get_documents($session, $filter={}) {
 
             # While we're at it, also read in all labels
             if( $n->frontmatter->{labels}) {
-                $all_labels{ $_ } = 1 for $n->frontmatter->{labels}->@*;
+                $labels->{ $_ } = 1 for $n->frontmatter->{labels}->@*;
             }
 
             # While we're at it, also read in all used colors
-            $all_colors{ $n->frontmatter->{color} } = 1
+            $colors->{ $n->frontmatter->{color} } = 1
                 if $n->frontmatter->{color};
 
             $n ? $n : ()
@@ -189,7 +196,7 @@ sub display_note( $c, $note ) {
 
     my $html = as_html( $c, $note );
     $c->stash( note_html => $html );
-    $c->stash( all_labels => \%all_labels );
+    $c->stash( all_labels => $session->labels );
 
     # Meh - we only want to set this to true if a request is coming from
     # this page during a field edit, not during generic page navigation
@@ -544,7 +551,7 @@ sub edit_labels( $c, $inline ) {
     my $filter = $c->param('label-filter');
 
     my %labels;
-    @labels{ keys %all_labels } = (undef) x keys %all_labels;
+    @labels{ keys $session->labels->%* } = (undef) x keys $session->labels->%*;
     $labels{ $_ } = 1 for ($note->frontmatter->{labels} // [])->@*;
 
     if( defined $filter and length $filter ) {
@@ -664,11 +671,13 @@ sub delete_label( $c, $inline ) {
 sub select_filter( $c ) {
     return login_detour($c) unless $c->is_user_authenticated;
 
+    my $session = get_session( $c );
+
     my $filter = fetch_filter($c);
     $c->stash( filter => $filter );
-    $c->stash( labels => [sort { fc($a) cmp fc($b) } keys %all_labels] );
+    $c->stash( labels => [sort { fc($a) cmp fc($b) } keys $session->labels->%*] );
     $c->stash( types  => [] );
-    $c->stash( colors => [sort { fc($a) cmp fc($b) } keys %all_colors] );
+    $c->stash( colors => [sort { fc($a) cmp fc($b) } keys $session->colors->%*] );
     $c->render('select-filter' );
 }
 

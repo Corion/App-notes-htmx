@@ -13,11 +13,21 @@ has 'document_directory' => (
     is => 'ro',
 );
 
+has 'labels' => (
+    is => 'ro',
+    default => sub { {} },
+);
+has 'colors' => (
+    is => 'ro',
+    default => sub { {} },
+);
+
 sub init( $self, $document_directory = $self->document_directory ) {
     mkdir $self->document_directory . "/deleted"; # so we can always (un)delete notes
 }
 
 sub documents( $self, $document_directory = $self->document_directory ) {
+    #warn "Loading '" . $self->document_directory . "/*.markdown'";
     return glob $self->document_directory . "/*.markdown";
 }
 
