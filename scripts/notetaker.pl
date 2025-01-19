@@ -203,7 +203,8 @@ sub display_note( $c, $note ) {
     # this page during a field edit, not during generic page navigation
     $c->stash( htmx_update => $c->is_htmx_request() );
 
-    my $editor = $c->param('editor') // 'markdown';
+    my $editor = $c->param('editor') // $session->editor // 'markdown';
+    $session->editor( $editor );
     # Sanitize
     $c->stash( editor => $editor );
 

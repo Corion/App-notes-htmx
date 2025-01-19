@@ -22,6 +22,11 @@ has 'colors' => (
     default => sub { {} },
 );
 
+has 'editor' => (
+    is => 'rw',
+    default => 'html',
+);
+
 sub init( $self, $document_directory = $self->document_directory ) {
     mkdir $self->document_directory . "/deleted"; # so we can always (un)delete notes
 }
