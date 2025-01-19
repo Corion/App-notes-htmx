@@ -201,6 +201,10 @@ sub display_note( $c, $note ) {
     # this page during a field edit, not during generic page navigation
     $c->stash( htmx_update => $c->is_htmx_request() );
 
+    my $editor = $c->param('editor') // 'markdown';
+    # Sanitize
+    $c->stash( editor => $editor );
+
     $c->render('note');
 };
 
@@ -254,7 +258,7 @@ get  '/new' => sub( $c ) {
         $note->frontmatter->{labels} //= [];
         push $note->frontmatter->{labels}->@*, $c;
     }
-    if( my $body = $c->param('body')) {
+    if( my $body = $c->param('body-markdown')) {
         $note //= find_note( $session, $fn );
         $note->body( $body );
     }
@@ -294,7 +298,7 @@ sub save_note_body_markdown( $c ) {
 
     my $note = find_or_create_note( $session, $fn );
 
-    my $body = $c->param('body');
+    my $body = $c->param('body-markdown');
     $body =~ s/\A\s+//sm;
     $body =~ s/\s+\z//sm;
 
@@ -1030,7 +1034,7 @@ htmx.onLoad(function(elt){
     </button>
     <ul class="dropdown-menu">
       <li>
-          <a class="dropdown-item" href="/new?label=Template&body=Alternatively+just+add+the+'Template+tag+to+a+note">+ Create a new template</a>
+          <a class="dropdown-item" href="/new?label=Template&body-markdown=Alternatively+just+add+the+'Template+tag+to+a+note">+ Create a new template</a>
       </li>
 % for my $template ($templates->@*) {
 %     my $title = $template->frontmatter->{title} || '(untitled)';
@@ -1158,7 +1162,7 @@ htmx.onLoad(function(elt){
 <button name="save" type="submit">Close</button>
 %=include "display-text", field_name => 'title', value => $note->frontmatter->{title}, class => 'title';
 <div class="xcontainer" style="height:400px">
-<textarea name="body" id="note-textarea" autofocus
+<textarea name="body-markdown" id="note-textarea" autofocus
     hx-post="<%= url_for( $doc_url ) %>"
     hx-trigger="#note-textarea, keyup delay:200ms changed"
     hx-swap="none"
