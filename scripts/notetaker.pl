@@ -285,7 +285,7 @@ sub save_note( $session, $note, $fn ) {
     $note->save_to( $session->clean_filename( $fn ));
 }
 
-sub save_note_body_markdown( $c ) {
+sub save_note_body( $c ) {
     return login_detour($c) unless $c->is_user_authenticated;
 
     my $fn = $c->param('fn');
@@ -298,7 +298,12 @@ sub save_note_body_markdown( $c ) {
 
     my $note = find_or_create_note( $session, $fn );
 
-    my $body = $c->param('body-markdown');
+    my $p = $c->req->params()->to_hash;
+    my $body;
+    if( exists $p->{'body-markdown'}) {
+        $body = $p->{'body-markdown'};
+
+    }
     $body =~ s/\A\s+//sm;
     $body =~ s/\s+\z//sm;
 
@@ -346,8 +351,8 @@ sub move_note( $source_name, $target_name ) {
     return $target_name
 }
 
-post '/note/*fn' => \&save_note_body_markdown;
-post '/note/' => \&save_note_body_markdown; # we make up a filename then
+post '/note/*fn' => \&save_note_body;
+post '/note/' => \&save_note_body; # we make up a filename then
 post '/delete/*fn' => \&delete_note;
 
 sub edit_field( $c, $note, $field_name ) {
