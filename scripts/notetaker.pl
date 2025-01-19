@@ -303,7 +303,15 @@ sub save_note_body( $c ) {
     if( exists $p->{'body-markdown'}) {
         $body = $p->{'body-markdown'};
 
+    } elsif( exists $p->{'body-html'}) {
+        use lib '../Text-HTML-Turndown/lib';
+        use Text::HTML::Turndown;
+
+        my $turndown = Text::HTML::Turndown->new();
+        $turndown->use('Text::HTML::Turndown::GFM');
+        $body = $turndown->turndown($c->param('body-html'));
     }
+
     $body =~ s/\A\s+//sm;
     $body =~ s/\s+\z//sm;
 
@@ -1162,19 +1170,35 @@ htmx.onLoad(function(elt){
 %=include 'display-labels', labels => $note->frontmatter->{labels}, note => $note
 <div class="single-note"<%== $bgcolor %>>
 <div>Filename: <%= $note->filename %></div>
+<div id="editor-switch">
+    <a href="<%= url_with()->query({ editor => 'html' }) %>">HTML</a>
+    <a href="<%= url_with()->query({ editor => 'markdown' }) %>">Markdown</a>
+</div>
 % my $doc_url = '/note/' . $note->filename;
 <form action="<%= url_for( $doc_url ) %>" method="POST">
 <button name="save" type="submit">Close</button>
 %=include "display-text", field_name => 'title', value => $note->frontmatter->{title}, class => 'title';
 <div class="xcontainer" style="height:400px">
+% if( $editor eq 'markdown' ) {
 <textarea name="body-markdown" id="note-textarea" autofocus
     hx-post="<%= url_for( $doc_url ) %>"
     hx-trigger="#note-textarea, keyup delay:200ms changed"
     hx-swap="none"
 ><%= $note->body %></textarea>
+% } elsif( $editor eq 'html' ) {
+%# This can only work with JS enabled; well, the saving
+<div id="note_html"
+    hx-post="<%= url_for( $doc_url ) %>"
+    hx-vals='js:{"body-html":htmx.find("#usercontent").innerHTML}'
+    hx-trigger="input"
+    hx-swap="none"
+    >
+    <!-- This is untrusted content, so tell HTMX that -->
+    <div id="usercontent"
+        hx-disable="true"
+        contentEditable="true"><%== $note_html %></div>
 </div>
-<div id="preview" hx-swap-oob="<%= $htmx_update ? 'true':'false' %>" hx-disable="true">
-<%== $note_html %>
+% }
 </div>
 </form>
     <div class="edited-date"><%= $note->frontmatter->{updated} %></div>
