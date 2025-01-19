@@ -33,7 +33,6 @@ sub get_session( $c ) {
         username => $user->{user},
         document_directory => $user->{notes},
     );
-    $s->init();
     return $sessions{ $user->{user} } = $s;
 }
 
