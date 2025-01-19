@@ -17,7 +17,9 @@ use Crypt::Passphrase::Argon2;
 
 use App::Notetaker::Document;
 use App::Notetaker::Session;
+
 use Markdown::Perl;
+use Text::HTML::Turndown;
 
 app->static->with_roles('+Compressed');
 plugin 'DefaultHelpers';
@@ -304,9 +306,6 @@ sub save_note_body( $c ) {
         $body = $p->{'body-markdown'};
 
     } elsif( exists $p->{'body-html'}) {
-        use lib '../Text-HTML-Turndown/lib';
-        use Text::HTML::Turndown;
-
         my $turndown = Text::HTML::Turndown->new();
         $turndown->use('Text::HTML::Turndown::GFM');
         $body = $turndown->turndown($c->param('body-html'));

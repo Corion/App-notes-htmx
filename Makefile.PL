@@ -54,26 +54,27 @@ my %module = (
         'PerlX::Maybe' => 0,
         'Mojolicious' => 8,
         'File::Basename' => 0,
+        'File::Temp' => 0,
         'Getopt::Long' => 0,
         'Mojo::Base' => 0,
         'Mojo::File' => 0,
         'Mojo::URL' => 0,
-        'Mojolicious::Lite' => 0,
-        'Markdown::Perl' => 0,
+        'Mojolicious::Lite'    => 0,
         'Mojolicious::Plugin::HTMX' => 0,
         'Mojolicious::Plugin::Authentication' => 0,
         'Mojolicious::Static::Role::Compressed' => 0,
+        'Text::CleanFragment' => 0,
+
+        # Convert from and to HTML
+        'Markdown::Perl'       => 0,
+        'Text::HTML::Turndown' => 0,
+        'Text::FrontMatter::YAML' => 0,
 
         'Moo'                       => 2, # for some hashes-as-objects
 
         'YAML::PP::LibYAML' => 0,
         'Crypt::Passphrase' => 0,
         'Crypt::Passphrase::Argon2' => 0,
-
-        'Text::FrontMatter::YAML' => 0,
-        'Mojo::File' => 0,
-        'File::Temp' => 0,
-        'Text::CleanFragment' => 0,
     },
     TEST_REQUIRES => {
         'Test2::V0'    => 0,
