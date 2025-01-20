@@ -53,4 +53,3 @@ async function startRecording() {
 
     console.log(recordButton);
 }
-
