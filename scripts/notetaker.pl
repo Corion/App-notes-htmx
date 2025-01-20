@@ -979,55 +979,7 @@ htmx.onLoad(function(elt){
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
 >
-<nav class="navbar navbar-expand-lg sticky-top bd-navbar">
-    <ul class="navbar-nav me-auto">
-    <li class="nav-item">
-        <a href="#" data-bs-target="#sidebar" data-bs-toggle="collapse"
-               class="border rounded-3 p-1 text-decoration-none"><i class="bi bi-list bi-lg py-2 p-1"></i> Labels</a>
-    </li>
-    <li class="nav-item"><a href="<%= url_for( "/" )%>">index</a></li>
-    <li class="nav-item">
-      <div id="form-filter-2">
-      <form id="form-filter-instant" method="GET" action="/">
-        <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
-            placeholder="Search"
-            hx-get="<%= url_with( "/select-filter" ) %>"
-            hx-trigger="focus"
-            hx-swap="outerHTML"
-        />
-      </form>
-      </div>
-    </li>
-    <li class="nav-item">
-      <form id="form-filter" method="GET" action="/">
-        <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
-            placeholder="<%== $moniker %>"
-            hx-get="<%= url_with( "/filter" ) %>"
-            hx-trigger="input delay:200ms changed, keyup[key=='Enter'], load"
-            hx-target="#documents"
-            hx-swap="outerHTML"
-            autofocus
-        />
-      </form>
-    </li>
-    </ul>
-% if( $user ) {
-    <ul class="navbar-nav ms-auto" >
-    <li class="nav-item dropdown">
-    <div class="btn btn-secondary dropdown-toggle"
-        data-bs-toggle="dropdown"><%= "\N{BUST IN SILHOUETTE}" %></div>
-
-    <div class="dropdown-menu dropdown-menu-end dropdown-menu-right">
-    <div class="dropdown-item">
-      <form id="form-logout" method="POST" action="<%= $c->url_for( "/logout" ) %>">
-      <button name="logout"
-          class="btn btn-secondary" id="logout">Log '<%= $user->{user} %>' out</button>
-      </form>
-    </div>
-    </li>
-    </ul>
-% }
-</nav>
+%=include('navbar', type => 'documents');
 <div class="container-fluid" id="container">
 <div class="row flex-nowrap">
     <div class="col-auto px-0">
@@ -1105,6 +1057,68 @@ htmx.onLoad(function(elt){
 % }
 </div>
 
+@@navbar.html.ep
+<nav class="navbar navbar-expand-lg sticky-top bd-navbar bg-light">
+<div class="container-fluid">
+% if( $type eq 'documents' ) {
+    <ul class="navbar-nav me-auto">
+    <li class="nav-item">
+        <a href="#" data-bs-target="#sidebar" data-bs-toggle="collapse"
+               class="border rounded-3 p-1 text-decoration-none"><i class="bi bi-list bi-lg py-2 p-1"></i> Labels</a>
+    </li>
+    <li class="nav-item"><a href="<%= url_for( "/" )%>">index</a></li>
+    <li class="nav-item">
+      <div id="form-filter-2">
+      <form id="form-filter-instant" method="GET" action="/">
+        <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
+            placeholder="Search"
+            hx-get="<%= url_with( "/select-filter" ) %>"
+            hx-trigger="focus"
+            hx-swap="outerHTML"
+        />
+      </form>
+      </div>
+    </li>
+    <li class="nav-item">
+      <form id="form-filter" method="GET" action="/">
+        <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
+            placeholder="<%== $moniker %>"
+            hx-get="<%= url_with( "/filter" ) %>"
+            hx-trigger="input delay:200ms changed, keyup[key=='Enter'], load"
+            hx-target="#documents"
+            hx-swap="outerHTML"
+            autofocus
+        />
+      </form>
+    </li>
+    </ul>
+% } elsif( $type eq 'note' ) {
+    <ul>
+    <li><a href="<%= url_with( "/" ) %>"
+            hx-trigger="click, keyup[key=='Escape'] from:body"
+        ><span class="rounded-circle fs-3">&#x2715;</span></a></li>
+    <!-- delete note -->
+    </ul>
+% }
+% if( $user ) {
+    <ul class="navbar-nav ms-auto" >
+    <li class="nav-item dropdown">
+    <div class="btn btn-secondary dropdown-toggle"
+        data-bs-toggle="dropdown"><%= "\N{BUST IN SILHOUETTE}" %></div>
+
+    <div class="dropdown-menu dropdown-menu-end dropdown-menu-right">
+    <div class="dropdown-item">
+      <form id="form-logout" method="POST" action="<%= $c->url_for( "/logout" ) %>">
+      <button name="logout"
+          class="btn btn-secondary" id="logout">Log '<%= $user->{user} %>' out</button>
+      </form>
+    </div>
+    </li>
+    </ul>
+% }
+</div>
+</nav>
+
 @@sidebar.html.ep
 <div id="sidebar" class="collapse collapse-horizontal border-end <%= $sidebar ? 'show' : '' %>">
     <div id="sidebar-nav" class="list-group border-0 rounded-0 text-sm-start min-vh-100">
@@ -1157,16 +1171,7 @@ htmx.onLoad(function(elt){
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
 >
-<div class="navbar navbar-expand-lg sticky-top bg-light">
-  <nav>
-    <ul>
-    <li><a href="<%= url_for( "/" ) %>"
-            hx-trigger="click, keyup[key=='Escape'] from:body"
-        >index</a></li>
-    <!-- delete note -->
-    </ul>
-  </nav>
-</div>
+%=include('navbar', type => 'note');
 
 <div id="note-container" class="container-flex">
 % my $bgcolor = $note->frontmatter->{color}
