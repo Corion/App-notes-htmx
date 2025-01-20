@@ -194,10 +194,13 @@ sub display_note( $c, $note ) {
 
     $c->stash( note => $note );
     my $session = get_session( $c );
+    my $filter = fetch_filter( $c );
 
     my $html = as_html( $c, $note );
     $c->stash( note_html => $html );
     $c->stash( all_labels => $session->labels );
+    $c->stash( filter => $filter );
+    $c->stash( moniker => filter_moniker( $filter ));
 
     # Meh - we only want to set this to true if a request is coming from
     # this page during a field edit, not during generic page navigation
@@ -276,8 +279,10 @@ get  '/note/attachments/*fn' => \&serve_attachment;
 
 get '/note/*fn' => sub($c) {
     return login_detour($c) unless $c->is_user_authenticated;
+    my $filter = fetch_filter($c);
 
     my $session = get_session( $c );
+    $c->stash( filter => $filter );
     my $note = find_note( $session, $c->param('fn'));
     display_note( $c, $note );
 };
