@@ -8,6 +8,7 @@ pm_to_blib
 blib/
 notes/
 users/
+notes_demo/
 .releaserc
 .prove
 *.patch
