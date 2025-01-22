@@ -1120,7 +1120,7 @@ htmx.onLoad(function(elt){
 </nav>
 
 @@sidebar.html.ep
-<div id="sidebar" class="collapse collapse-horizontal border-end <%= $sidebar ? 'show' : '' %>">
+<div id="sidebar" class="collapse collapse-horizontal border-end <%= $sidebar ? 'show' : '' %> sticky-top">
     <div id="sidebar-nav" class="list-group border-0 rounded-0 text-sm-start min-vh-100">
 % my $current = $filter->{label} // '';
     <a href="<%= url_with()->query({ label => '', sidebar => 1 }) %>"
