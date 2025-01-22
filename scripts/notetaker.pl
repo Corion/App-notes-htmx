@@ -82,11 +82,11 @@ sub render_notes($c) {
     }
 
     $c->stash( documents => \@documents );
+    $c->stash( show_filter => !!$c->param('show-filter') );
 
     # How do we sort the templates? By name?!
     $c->stash( templates => \@templates );
-    $c->stash( labels => [sort { fc($a) cmp fc($b) } keys $session->labels->%* ] );
-    $c->stash( filter => $filter );
+    stash_filter( $c, $filter );
     $c->stash( sidebar => $sidebar );
     $c->stash( moniker => filter_moniker( $filter ));
 }
@@ -104,9 +104,6 @@ sub render_filter($c) {
     $c->render('documents');
 }
 
-# Initialize all labels & colours
-# This will crash if we move to more than one user ...
-#get_documents(get_session());
 
 sub match_text( $filter, $note ) {
        $note->body =~ /\Q$filter\E/i
@@ -210,6 +207,8 @@ sub display_note( $c, $note ) {
     $session->editor( $editor );
     # Sanitize
     $c->stash( editor => $editor );
+
+    stash_filter( $c, $filter );
 
     $c->render('note');
 };
@@ -689,16 +688,21 @@ sub delete_label( $c, $inline ) {
     }
 }
 
+sub stash_filter( $c, $filter ) {
+    my $session = get_session( $c );
+    $c->stash( filter => $filter );
+    $c->stash( labels => [sort { fc($a) cmp fc($b) } keys $session->labels->%*] );
+    $c->stash( types  => [] );
+    $c->stash( colors => [sort { fc($a) cmp fc($b) } keys $session->colors->%*] );
+}
+
 sub select_filter( $c ) {
     return login_detour($c) unless $c->is_user_authenticated;
 
     my $session = get_session( $c );
 
     my $filter = fetch_filter($c);
-    $c->stash( filter => $filter );
-    $c->stash( labels => [sort { fc($a) cmp fc($b) } keys $session->labels->%*] );
-    $c->stash( types  => [] );
-    $c->stash( colors => [sort { fc($a) cmp fc($b) } keys $session->colors->%*] );
+    stash_filter( $c, $filter );
     $c->render('select-filter' );
 }
 
@@ -979,7 +983,7 @@ htmx.onLoad(function(elt){
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
 >
-%=include('navbar', type => 'documents');
+%=include('navbar', type => 'documents', colors => $colors, labels => $labels);
 <div class="container-fluid" id="container">
 <div class="row flex-nowrap">
     <div class="col-auto px-0">
@@ -1070,17 +1074,23 @@ htmx.onLoad(function(elt){
     <li class="nav-item">
       <div id="form-filter-2">
       <form id="form-filter-instant" method="GET" action="/">
+% if( $show_filter ) {
+%=include('select-filter', types => [], colors => $colors, labels => $labels)
+% } else {
+%# We already have a selection
         <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
             placeholder="Search"
             hx-get="<%= url_with( "/select-filter" ) %>"
             hx-trigger="focus"
             hx-swap="outerHTML"
         />
+% }
       </form>
       </div>
     </li>
     <li class="nav-item">
       <form id="form-filter" method="GET" action="/">
+        <div class="input-group">
         <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
             placeholder="<%== $moniker %>"
             hx-get="<%= url_with( "/filter" ) %>"
@@ -1089,6 +1099,17 @@ htmx.onLoad(function(elt){
             hx-swap="outerHTML"
             autofocus
         />
+        <span class="input-group-append">
+% if ( keys $filter->%* ) {
+            <a class="btn btn-white border-start-0 border" type="button"
+            href="<%= url_for('/')->query('show-filter'=>1) %>"
+            --hx-get="<%= url_for( "/select-filter" ) %>"
+            --hx-target="#documents"
+            --hx-swap="outerHTML"
+            >x</a>
+% }
+        </span>
+        </div>
       </form>
     </li>
     </ul>
