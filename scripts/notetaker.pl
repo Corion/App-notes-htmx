@@ -1180,9 +1180,11 @@ htmx.onLoad(function(elt){
 %=include 'display-labels', labels => $note->frontmatter->{labels}, note => $note
 <div class="single-note"<%== $bgcolor %>>
 <div>Filename: <%= $note->filename %></div>
-<div id="editor-switch">
-    <a href="<%= url_with()->query({ editor => 'html' }) %>">HTML</a>
-    <a href="<%= url_with()->query({ editor => 'markdown' }) %>">Markdown</a>
+<div id="editor-switch" class="nav nav-tabs">
+% my $active = $editor eq 'html' ? ' active' : '';
+    <div class="nav-item"><a class="nav-link<%= $active %>" href="<%= url_with()->query({ editor => 'html' }) %>">HTML</a></div>
+%    $active = $editor eq 'markdown' ? ' active' : '';
+    <div class="nav-item"><a class="nav-link<%= $active %>" href="<%= url_with()->query({ editor => 'markdown' }) %>">Markdown</a></div>
 </div>
 % my $doc_url = '/note/' . $note->filename;
 <form action="<%= url_for( $doc_url ) %>" method="POST">
