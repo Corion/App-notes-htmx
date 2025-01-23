@@ -1008,7 +1008,7 @@ htmx.onLoad(function(elt){
     </button>
     <ul class="dropdown-menu">
       <li>
-          <a class="dropdown-item" href="/new?label=Template&body-markdown=Alternatively+just+add+the+'Template+tag+to+a+note">+ Create a new template</a>
+          <a class="dropdown-item" href="<%= url_for("/new ")->query({ label => 'Template', 'body-markdown' => "Alternatively just add the 'Template' tag to a note" }) %>">+ Create a new template</a>
       </li>
 % for my $template ($templates->@*) {
 %     my $title = $template->frontmatter->{title} || '(untitled)';
@@ -1330,7 +1330,7 @@ htmx.onLoad(function(elt){
     />
     <button type="submit">Save</button>
     <a href="<%= url_for( "/note/" . $note->filename ) %>"
-       hx-get="/display-<%= $field_name %>/<%= $note->filename %>"
+       hx-get="<%= url_for( "/display" )%>-<%= $field_name %>/<%= $note->filename %>"
        hx-target="#note-<%= $field_name %>"
        hx-swap="innerHTML"
        --hx-trigger="blur from:#note-input-text-<%= $field_name %>"
