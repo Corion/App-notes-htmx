@@ -11,6 +11,8 @@ use POSIX 'strftime';
 use PerlX::Maybe;
 use charnames ':full';
 use YAML::PP::LibYAML 'LoadFile', 'DumpFile';
+use Text::ParseWords 'shellwords';
+use List::Util 'first';
 
 use Crypt::Passphrase;
 use Crypt::Passphrase::Argon2;
@@ -106,8 +108,14 @@ sub render_filter($c) {
 
 
 sub match_text( $filter, $note ) {
-       $note->body =~ /\Q$filter\E/i
-    || $note->frontmatter->{title} =~ /\Q$filter\E/i
+       ( $note->body // '' ) =~ /\Q$filter\E/i
+    || ( $note->frontmatter->{title} // '' ) =~ /\Q$filter\E/i
+}
+
+# Does an AND match
+sub match_terms( $text, $note ) {
+    my $terms = [shellwords( $text )];
+    return ! defined ( first { ! match_text( $_, $note ) } $terms->@* );
 }
 
 sub match_color( $filter, $note ) {
@@ -127,7 +135,7 @@ sub get_documents($session, $filter={}) {
     #%$colors = ();
     return
         grep {
-               ($filter->{text}  ? match_text( $filter->{text}, $_ )   : 1)
+               ($filter->{text}  ? match_terms( $filter->{text}, $_ )   : 1)
             && ($filter->{color} ? match_color( $filter->{color}, $_ ) : 1)
             && ($filter->{label} ? match_label( $filter->{label}, $_ ) : 1)
         }
@@ -934,8 +942,10 @@ sub as_html( $c, $doc, %options ) {
     );
 
     my $body = $doc->body;
-    if( my $t = $options{ search } ) {
-        $body =~ s!(\Q$t\E)!<mark>$1</mark>!gi;
+    if( my $w = $options{ search } ) {
+        my @t = shellwords($w);
+        my $t = join "|", map { quotemeta $_ } shellwords( $w );
+        $body =~ s!($t)!<mark>$1</mark>!gi;
     };
 
     my $html = $renderer->convert( $body );
