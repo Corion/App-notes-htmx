@@ -1073,9 +1073,9 @@ htmx.onLoad(function(elt){
     <li class="nav-item"><a href="<%= url_for( "/" )%>">index</a></li>
     <li class="nav-item">
       <div id="form-filter-2">
-      <form id="form-filter-instant" method="GET" action="/">
+      <form id="form-filter-instant" method="GET" action="<%= url_for( "/" ) %>">
 % if( $show_filter ) {
-%=include('select-filter', types => [], colors => $colors, labels => $labels)
+%=include('select-filter', types => [], colors => $colors, labels => $labels, moniker => $moniker)
 % } else {
 %# We already have a selection
         <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
@@ -1129,7 +1129,7 @@ htmx.onLoad(function(elt){
 
     <div class="dropdown-menu dropdown-menu-end dropdown-menu-right">
     <div class="dropdown-item">
-      <form id="form-logout" method="POST" action="<%= $c->url_for( "/logout" ) %>">
+      <form id="form-logout" method="POST" action="<%= url_for( "/logout" ) %>">
       <button name="logout"
           class="btn btn-secondary" id="logout">Log '<%= $user->{user} %>' out</button>
       </form>
@@ -1520,7 +1520,7 @@ htmx.onLoad(function(elt){
 
 @@select-filter.html.ep
 <div id="form-filter-2">
-      <form id="form-filter-instant" method="GET" action="/">
+      <form id="form-filter-instant" method="GET" action="<%= url_for( "/" ) %>">
         <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
             placeholder="Search"
             hx-get="<%= url_with( "/select-filter" ) %>"
