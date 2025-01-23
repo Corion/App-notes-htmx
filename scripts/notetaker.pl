@@ -198,6 +198,7 @@ sub display_note( $c, $note ) {
     $c->stash( all_labels => $session->labels );
     $c->stash( filter => $filter );
     $c->stash( moniker => filter_moniker( $filter ));
+    $c->stash( show_filter => !!$c->param('show-filter') );
 
     # Meh - we only want to set this to true if a request is coming from
     # this page during a field edit, not during generic page navigation
@@ -703,6 +704,7 @@ sub select_filter( $c ) {
 
     my $filter = fetch_filter($c);
     stash_filter( $c, $filter );
+    $c->stash( moniker => filter_moniker( $filter ));
     $c->render('select-filter' );
 }
 
@@ -983,7 +985,7 @@ htmx.onLoad(function(elt){
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
 >
-%=include('navbar', type => 'documents', colors => $colors, labels => $labels);
+%=include('navbar', type => 'documents', colors => $colors, labels => $labels, show_filter => $show_filter);
 <div class="container-fluid" id="container">
 <div class="row flex-nowrap">
     <div class="col-auto px-0">
@@ -1088,30 +1090,6 @@ htmx.onLoad(function(elt){
       </form>
       </div>
     </li>
-    <li class="nav-item">
-      <form id="form-filter" method="GET" action="/">
-        <div class="input-group">
-        <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
-            placeholder="<%== $moniker %>"
-            hx-get="<%= url_with( "/filter" ) %>"
-            hx-trigger="input delay:200ms changed, keyup[key=='Enter'], load"
-            hx-target="#documents"
-            hx-swap="outerHTML"
-            autofocus
-        />
-        <span class="input-group-append">
-% if ( keys $filter->%* ) {
-            <a class="btn btn-white border-start-0 border" type="button"
-            href="<%= url_for('/')->query('show-filter'=>1) %>"
-            --hx-get="<%= url_for( "/select-filter" ) %>"
-            --hx-target="#documents"
-            --hx-swap="outerHTML"
-            >x</a>
-% }
-        </span>
-        </div>
-      </form>
-    </li>
     </ul>
 % } elsif( $type eq 'note' ) {
     <ul>
@@ -1192,7 +1170,7 @@ htmx.onLoad(function(elt){
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
 >
-%=include('navbar', type => 'note');
+%=include('navbar', type => 'note', show_filter => $show_filter );
 
 <div id="note-container" class="container-flex">
 % my $bgcolor = $note->frontmatter->{color}
@@ -1521,12 +1499,23 @@ htmx.onLoad(function(elt){
 @@select-filter.html.ep
 <div id="form-filter-2">
       <form id="form-filter-instant" method="GET" action="<%= url_for( "/" ) %>">
+        <div class="input-group">
         <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
-            placeholder="Search"
-            hx-get="<%= url_with( "/select-filter" ) %>"
-            hx-trigger="focus"
-            hx-swap="#form-filter-2"
+            placeholder="<%== $moniker %>"
+            hx-get="<%= url_with( "/filter" ) %>"
+            hx-trigger="input delay:200ms changed, keyup[key=='Enter'], load"
+            hx-target="#documents"
+            hx-swap="outerHTML"
+            autofocus
         />
+        <span class="input-group-append">
+% if ( keys $filter->%* ) {
+            <a class="btn btn-white border-start-0 border" type="button"
+            href="<%= url_for('/')->query('show-filter'=>1) %>"
+            >x</a>
+% }
+        </span>
+        </div>
       </form>
 <!-- (note) types (images, lists, ...) -->
 % if( $types->@* ) {
