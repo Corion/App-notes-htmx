@@ -1085,16 +1085,16 @@ htmx.onLoad(function(elt){
     <li class="nav-item"><a href="<%= url_for( "/" )%>">index</a></li>
     <li class="nav-item">
       <div id="form-filter-2">
-      <form id="form-filter-instant" method="GET" action="<%= url_for( "/" ) %>">
+      <form id="form-filter-instant" method="GET" action="<%= url_with( "/" )->query({ "show-filter" => 1 }) %>">
 % if( $show_filter ) {
 %=include('select-filter', types => [], colors => $colors, labels => $labels, moniker => $moniker)
 % } else {
 %# We already have a selection
         <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
             placeholder="Search"
-            hx-get="<%= url_with( "/select-filter" ) %>"
+            hx-get="<%= url_with( "/" )->query( 'show-filter'=>1 ) %>"
             hx-trigger="focus"
-            hx-swap="outerHTML"
+            hx-target="#body"
         />
 % }
       </form>
@@ -1532,7 +1532,7 @@ htmx.onLoad(function(elt){
 <div>
 <h2>Types</h2>
 %    for my $t ($types->@*) {
-    <a href="<%= url_with('/')->query( type => $t ) %>"><%= $t %></a>
+    <a href="<%= url_with('/')->query({ type => $t }) %>"><%= $t %></a>
 %    }
 </div>
 %}
@@ -1540,7 +1540,7 @@ htmx.onLoad(function(elt){
 <div>
 <h2>Labels</h2>
 %    for my $l ($labels->@*) {
-    <a href="<%= url_with('/')->query( label => $l ) %>"><%= $l %></a>
+    <a href="<%= url_with('/')->query({ label => $l }) %>"><%= $l %></a>
 %    }
 </div>
 %}
@@ -1549,7 +1549,7 @@ htmx.onLoad(function(elt){
 <div>
 <h2>Colors</h2>
 %    for my $l ($colors->@*) {
-    <a href="<%= url_with('/')->query( color => $l ) %>"><span class="color-circle" style="background-color:<%== $l %>;">&nbsp;</span></a>
+    <a href="<%= url_with('/')->query({ color => $l }) %>"><span class="color-circle" style="background-color:<%== $l %>;">&nbsp;</span></a>
 %    }
 </div>
 %}
