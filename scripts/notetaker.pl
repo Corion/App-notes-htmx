@@ -1209,7 +1209,7 @@ htmx.onLoad(function(elt){
 </div>
 % my $doc_url = '/note/' . $note->filename;
 <form action="<%= url_for( $doc_url ) %>" method="POST">
-<button name="save" type="submit">Close</button>
+<button class="nojs" name="save" type="submit">Save</button>
 %=include "display-text", field_name => 'title', value => $note->frontmatter->{title}, class => 'title';
 <div class="xcontainer" style="height:400px">
 % if( $editor eq 'markdown' ) {
