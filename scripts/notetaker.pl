@@ -961,7 +961,6 @@ sub as_html( $c, $doc, %options ) {
         mode => 'github',
         disallowed_html_tags => ['script','a','object'],
     );
-
     my $body = $doc->body;
     if( my $w = $options{ search } ) {
         my @t = shellwords($w);
@@ -970,14 +969,14 @@ sub as_html( $c, $doc, %options ) {
     };
 
     my $html = $renderer->convert( $body );
-
     if( $options{ strip_links } ) {
         $html =~ s/<a\s+href=[^>]*?>//gsi;
         $html =~ s!</a>!!gsi;
     }
 
     my $base = $c->url_for('/note/');
-    $html =~ s!<img src="\K(?=attachments/)!$base!g;
+    $html =~ s!<img src="\K(?=attachments/[^"]+\.(?:png|jpg|jpeg|gif)")!$base!gi;
+    $html =~ s!<img src="(attachments/[^"]+\.(?:ogg|mp3|aac))"!<audio src="$base$1" controls>!g;
 
     return $html
 }
