@@ -1109,8 +1109,12 @@ htmx.onLoad(function(elt){
     <!-- delete note -->
     </ul>
 % }
-% if( $user ) {
     <ul class="navbar-nav ms-auto" >
+    <li class="nav-item">
+    <a href="https://github.com/Corion/App-notes-htmx" target="_blank">Github</a>
+    </li>
+
+% if( $user ) {
     <li class="nav-item dropdown">
     <div class="btn btn-secondary dropdown-toggle"
         data-bs-toggle="dropdown"><%= "\N{BUST IN SILHOUETTE}" %></div>
@@ -1123,8 +1127,8 @@ htmx.onLoad(function(elt){
       </form>
     </div>
     </li>
-    </ul>
 % }
+    </ul>
 </div>
 </nav>
 
