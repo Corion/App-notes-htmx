@@ -1259,11 +1259,7 @@ htmx.onLoad(function(elt){
         >Add Image</a>
     </div>
     <div id="action-attach-audio">
-        <a href="<%= url_for( "/attach-audio/" . $note->filename ) %>"
-            class="btn btn-secondary"
-            hx-get="<%= url_for( "/attach-audio/" . $note->filename ) %>"
-            hx-swap="outerHTML"
-        >Record</a>
+%=include('attach-audio', note => $note, field_name => 'audio' );
     </div>
     <div id="action-labels">
 % my %labels; $labels{ $_ } = 1 for ($note->frontmatter->{labels} // [])->@*;
@@ -1369,20 +1365,16 @@ htmx.onLoad(function(elt){
 
 @@attach-audio.html.ep
 <div id="audio-recorder" >
-    <audio id="audio" width="640" height="480" autoplay></audio>
-    <a href="#" onclick="startRecording()">Prepare</a>
-    <button class="btn btn-primary" id="record">Record</button>
-    <button class="btn" id="stop">Stop</button>
+    <button class="btn btn-primary" id="button-record" onclick="startRecording()">&#x1F399;</button>
     <form action="<%= url_with( "/upload-audio/" . $note->filename ) %>"
+          style="display: none;"
           method="POST"
           enctype="multipart/form-data"
           id="form-audio-upload"
-          --hx-encoding="multipart/form-data"
-          --hx-post="<%= url_with( "/upload-audio/" . $note->filename ) %>"
     >
-    <input id="upload-audio" type="file" accept="audio/*" name="<%= $field_name %>" />
-    <button type="submit" id="do-upload">Upload</button>
-     <progress id='progress' value='0' max='100'></progress>
+        <input id="upload-audio" type="file" accept="audio/*" name="<%= $field_name %>" />
+        <button type="submit" id="do-upload">Upload</button>
+        <progress id='progress' value='0' max='100'></progress>
     </form>
     <script>
         htmx.on('#form-audio-upload', 'htmx:xhr:progress', function(evt) {

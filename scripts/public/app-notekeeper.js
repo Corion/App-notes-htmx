@@ -6,9 +6,10 @@ let recordedChunks = [];
 
 // Function to start the audio stream
 async function startRecording() {
-    const audio = document.getElementById('audio');
-    const recordButton = document.getElementById('record');
-    const stopButton = document.getElementById('stop');
+    const recordButton = document.getElementById('button-record');
+    const stopButton = recordButton;
+    const startCaption = recordButton.innerHTML;
+    const input = document.getElementById('upload-audio');
 
     let stream = null;
     try {
@@ -17,7 +18,6 @@ async function startRecording() {
         alert("Could not read audio recording device:"+e);
         return;
     }
-    audio.srcObject = stream;
 
     mediaRecorder = new MediaRecorder(stream);
     mediaRecorder.ondataavailable = event => {
@@ -29,8 +29,6 @@ async function startRecording() {
 
     mediaRecorder.onstop = () => {
         const blob = new Blob(recordedChunks, { type: 'audio/ogg; codecs=opus' });
-        console.log(blob);
-        const input = document.getElementById('upload-audio');
         const file = new File( [blob], 'audio-capture.ogg', {type: 'audio/ogg'} );
         const datTran = new ClipboardEvent('').clipboardData || new DataTransfer();
         datTran.items.add(file);  // Add the file to the DT object
@@ -41,15 +39,21 @@ async function startRecording() {
         recordedChunks = [];
     };
 
-    // Event listener to start recording
-    recordButton.addEventListener('click', () => {
-        mediaRecorder.start();
-    });
+    function toggleRecording() {
+        if( ! recording ) {
+            recordButton.innerHTML = "\u23F9"; // stop recording
+            mediaRecorder.start();
+            recording = true;
 
-    // Event listener to stop recording
-    stopButton.addEventListener('click', () => {
-        mediaRecorder.stop();
-    });
+        } else {
+            recordButton.innerHTML = startCaption;
+            mediaRecorder.stop();
+            recording = false;
+        }
+    }
 
-    console.log(recordButton);
+    // Event listener to (re)start recording
+    let recording = false;
+    recordButton.addEventListener('click', toggleRecording );
+    toggleRecording();
 }
