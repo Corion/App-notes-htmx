@@ -354,6 +354,26 @@ sub delete_note( $c ) {
     $c->redirect_to($c->url_for('/'));
 }
 
+sub archive_note( $c ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
+    my $session = get_session( $c );
+    my $fn = $c->param('fn');
+    my $note = find_note( $session, $fn );
+
+    if( $note ) {
+        # Save undo data?!
+        $c->stash( undo => '/unarchive/' . $note->filename );
+        $note->frontmatter->{archived} = strftime '%Y-%m-%dT%H:%M:%SZ', gmtime(time);
+        save_note( $session, $note, $fn );
+        move_note( $session->document_directory . "/" . $note->filename  => $session->document_directory . "/archived/" . $note->filename );
+    }
+
+    # Can we keep track of current filters and restore them here?
+
+    $c->redirect_to($c->url_for('/'));
+}
+
 sub move_note( $source_name, $target_name ) {
     my $count = 0;
     my $tn = Mojo::File->new( $target_name );
@@ -375,6 +395,7 @@ sub move_note( $source_name, $target_name ) {
 post '/note/*fn' => \&save_note_body;
 post '/note/' => \&save_note_body; # we make up a filename then
 post '/delete/*fn' => \&delete_note;
+post '/archive/*fn' => \&archive_note;
 
 sub edit_field( $c, $note, $field_name ) {
     return login_detour($c) unless $c->is_user_authenticated;
@@ -1255,10 +1276,9 @@ htmx.onLoad(function(elt){
         >Set color</a>
     </div>
     <div id="action-archive">
-        <a href="#"
-            hx-get="#"
-            hx-swap="outerHTML"
-        >Archive note</a>
+        <form action="<%= url_for('/archive/' . $note->filename ) %>" method="POST"
+        ><button class="btn btn-secondary" type="submit">&#x1f5c3;</button>
+        </form>
     </div>
     <div id="action-delete">
         <form action="<%= url_for('/delete/' . $note->filename ) %>" method="POST"
