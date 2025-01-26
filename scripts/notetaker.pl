@@ -375,7 +375,7 @@ sub save_note_body( $c ) {
     $note->body($body);
     save_note( $session, $note, $fn );
 
-    $c->redirect_to('/note/'. $fn );
+    $c->redirect_to($c->url_for( '/note/'. $fn ));
 };
 
 sub delete_note( $c ) {
