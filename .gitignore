@@ -12,3 +12,4 @@ notes_demo/
 .releaserc
 .prove
 *.patch
+.git-version
