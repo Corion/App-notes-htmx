@@ -69,6 +69,7 @@ my %module = (
         'Markdown::Perl'       => 0,
         'Text::HTML::Turndown' => 0,
         'Text::FrontMatter::YAML' => 0,
+        'Date::Period::Human' => 0,
 
         'Moo'                       => 2, # for some hashes-as-objects
 

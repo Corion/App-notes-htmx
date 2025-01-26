@@ -22,6 +22,7 @@ use App::Notetaker::Session;
 
 use Markdown::Perl;
 use Text::HTML::Turndown;
+use Date::Period::Human;
 
 app->static->with_roles('+Compressed');
 plugin 'DefaultHelpers';
@@ -40,21 +41,40 @@ sub get_session( $c ) {
     return $sessions{ $user->{user} } = $s;
 }
 
+sub date_range_visual( $range ) {
+    my $d = Date::Period::Human->new({ lang => 'en' });
+    my $s = $d->human_readable( $range->{start} =~ s/\A(..........)T(........)Z\z/$1 $2/gr );
+    my $e = $d->human_readable( $range->{end}   =~ s/\A(..........)T(........)Z\z/$1 $2/gr );
+    return qq{between $s and $e};
+}
+
 sub fetch_filter( $c ) {
     my $filter = {
         maybe text  => $c->param('q'),
         maybe label => $c->param('label'),
         maybe color => $c->param('color'),
+        maybe created_start => $c->param('created.start'),
+        maybe created_end   => $c->param('created.end'),
     };
     if( $filter->{color} ) {
         $filter->{color} =~ /#[0-9a-f]{6}/
             or delete $filter->{color};
     }
+
+    if( my $v = delete $filter->{created_start} ) {
+        $filter->{created} //= {};
+        $filter->{created}->{start} = $v;
+    }
+    if( my $v = delete $filter->{created_end} ) {
+        $filter->{created} //= {};
+        $filter->{created}->{end} = $v;
+    }
+
     return $filter
 }
 
 sub filter_moniker( $filter ) {
-    my ($attr, $location);
+    my ($attr, $location, $created);
     if( $filter->{label} ) {
         $location = "in '$filter->{label}'"
     }
@@ -62,7 +82,10 @@ sub filter_moniker( $filter ) {
         #$location = qq{<span class="color-circle" style="background-color:$filter->{color};">&nbsp;</span> notes};
         $attr = qq{color notes};
     }
-    return join " ", grep { defined $_ and length $_ } ($attr, $location);
+    if( $filter->{created} ) {
+        $created = date_range_visual( $filter->{created} );
+    }
+    return join " ", grep { defined $_ and length $_ } ($attr, $location, $created);
 }
 
 sub render_notes($c) {
@@ -126,18 +149,32 @@ sub match_label( $filter, $note ) {
     grep { $_ eq $filter } ($note->frontmatter->{labels} // [])->@*
 }
 
+sub match_field_range( $filter, $field, $note ) {
+    my $val = $note->frontmatter->{ $field } // '';
+        (!$filter->{ start } || $filter->{ start } le $val)
+    and (!$filter->{ end }   || $filter->{ end } ge $val)
+}
+
+sub match_range( $filter, $field, $note ) {
+    match_field_range( $filter->{$field}, $field, $note )
+}
+
 # If we had a real database, this would be the interface ...
 sub get_documents($session, $filter={}) {
     my %stat;
     my $labels = $session->labels;
     my $colors = $session->colors;
+    #my $created_buckets = $session->created_buckets;
     #%$labels = ();
     #%$colors = ();
+    use Data::Dumper; warn Dumper $filter;
     return
         grep {
                ($filter->{text}  ? match_terms( $filter->{text}, $_ )   : 1)
             && ($filter->{color} ? match_color( $filter->{color}, $_ ) : 1)
             && ($filter->{label} ? match_label( $filter->{label}, $_ ) : 1)
+            && ($filter->{created} ? match_range( $filter, 'created', $_ ) : 1)
+            && ($filter->{updated} ? match_range( $filter, 'updated', $_ ) : 1)
         }
         map {
             my $n = $_;
@@ -150,6 +187,10 @@ sub get_documents($session, $filter={}) {
             # While we're at it, also read in all used colors
             $colors->{ $n->frontmatter->{color} } = 1
                 if $n->frontmatter->{color};
+
+            # While we're at it, sort the items in buckets
+            #$created_buckets->{ $n->frontmatter->{created} }++
+            #    if $n->frontmatter->{created};
 
             $n ? $n : ()
         }
@@ -295,9 +336,16 @@ get '/note/*fn' => sub($c) {
     display_note( $c, $note );
 };
 
+sub timestamp( $ts = time ) {
+    return strftime '%Y-%m-%dT%H:%M:%SZ', gmtime($ts)
+}
+
 sub save_note( $session, $note, $fn ) {
-    $note->frontmatter->{created} //= strftime '%Y-%m-%dT%H:%M:%SZ', gmtime(time);
-    $note->frontmatter->{updated} = strftime '%Y-%m-%dT%H:%M:%SZ', gmtime(time);
+    my $ts = time;
+    warn "Setting creation timestamp to " . timestamp( $ts )
+        if ! $note->frontmatter->{created};
+    $note->frontmatter->{created} //= timestamp( $ts );
+    $note->frontmatter->{updated} = timestamp( $ts );
     $note->save_to( $session->clean_filename( $fn ));
 }
 
@@ -724,6 +772,7 @@ sub stash_filter( $c, $filter ) {
     $c->stash( labels => [sort { fc($a) cmp fc($b) } keys $session->labels->%*] );
     $c->stash( types  => [] );
     $c->stash( colors => [sort { fc($a) cmp fc($b) } keys $session->colors->%*] );
+    $c->stash( created_buckets => $session->created_buckets );
 }
 
 sub select_filter( $c ) {
@@ -1107,7 +1156,7 @@ htmx.onLoad(function(elt){
       <div id="form-filter-2">
       <form id="form-filter-instant" method="GET" action="<%= url_with( "/" )->query({ "show-filter" => 1 }) %>">
 % if( $show_filter ) {
-%=include('select-filter', types => [], colors => $colors, labels => $labels, moniker => $moniker)
+%=include('select-filter', types => [], colors => $colors, labels => $labels, moniker => $moniker, created_buckets => $created_buckets)
 % } else {
 %# We already have a selection
         <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
@@ -1560,11 +1609,20 @@ htmx.onLoad(function(elt){
 </div>
 %}
 <!-- things -->
-% if( $labels->@* ) {
+% if( $colors->@* ) {
 <div>
 <h2>Colors</h2>
 %    for my $l ($colors->@*) {
     <a href="<%= url_with('/')->query({ color => $l }) %>"><span class="color-circle" style="background-color:<%== $l %>;">&nbsp;</span></a>
+%    }
+</div>
+%}
+<!-- date created -->
+% if( $created_buckets->@* ) {
+<div>
+<h2>Created</h2>
+%    for my $t ($created_buckets->@*) {
+    <a href="<%= url_with('/')->query({ 'created.start' => $t->{start}, 'created.end' => $t->{end} }) %>"><%= $t->{vis} %></a>
 %    }
 </div>
 %}
