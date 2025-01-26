@@ -419,27 +419,76 @@ sub archive_note( $c ) {
 }
 
 sub move_note( $source_name, $target_name ) {
-    my $count = 0;
-    my $tn = Mojo::File->new( $target_name );
-    my $target_directory = $tn->dirname;
-    my $base_name = $tn->basename;
-    $base_name =~ s/\.markdown\z//;
-
-    while( -f $target_name ) {
-        # maybe add todays date or something to prevent endless collisions?!
-        $target_name = sprintf "%s/%s (%d).markdown", $target_directory, $target_name, $count++;
-    }
-
+    $target_name = find_name( $target_name );
     warn "We want to rename from '$source_name' to '$target_name'";
     rename $source_name => $target_name;
 
     return $target_name
 }
 
+=head2 C<< find_name $target_name >>
+
+  my $new_name = find_name( $target_name );
+
+Using the basic name of C<$target_name>, finds a suitable filename that does
+not exist for that user.
+
+=cut
+
+sub find_name( $target_name ) {
+    my $count = 0;
+    my $tn = Mojo::File->new( $target_name );
+    my $target_directory = $tn->dirname;
+    my $base_name = $tn->basename;
+    $base_name =~ s/\.markdown\z//;
+
+    if( $base_name =~ s! \(\d+\)\z!! ) {
+        $count = $1;
+    };
+
+    # Yes, this has the potential for race conditions, but we don't
+    while( -f $target_name ) {
+        # maybe add todays date or something to prevent endless collisions?!
+        $target_name = sprintf "%s/%s (%d).markdown", $target_directory, $base_name, $count++;
+        #warn "Checking if '$target_name' exists (inner)";
+    }
+
+    #warn "New name: '$target_name'";
+    return $target_name
+}
+
+=head2 copy_note( $source_name )
+
+Creates a copy of a note with a new name and redirects to it
+
+=cut
+
+sub copy_note( $c ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
+    my $session = get_session( $c );
+    my $fn = $c->param('fn');
+    my $note = find_note( $session, $fn );
+
+    if( $note ) {
+        # Save undo data?!
+        $c->stash( undo => '/uncopy/' . $note->filename );
+        my $filename = $session->clean_filename( $fn );
+        my $new_name = basename( find_name( $filename ));
+        $note->frontmatter->{created} = timestamp(time);
+        warn "Saving to '$new_name'";
+        save_note( $session, $note, $new_name );
+        return $c->redirect_to($c->url_with('/note/' . $new_name ));
+    } else {
+        $c->redirect_to($c->url_for('/'));
+    }
+}
+
 post '/note/*fn' => \&save_note_body;
 post '/note/' => \&save_note_body; # we make up a filename then
 post '/delete/*fn' => \&delete_note;
 post '/archive/*fn' => \&archive_note;
+post '/copy/*fn' => \&copy_note;
 
 sub edit_field( $c, $note, $field_name ) {
     return login_detour($c) unless $c->is_user_authenticated;
@@ -1315,14 +1364,19 @@ htmx.onLoad(function(elt){
             hx-swap="outerHTML"
         >Set color</a>
     </div>
+    <div id="action-copy">
+        <form action="<%= url_for('/copy/' . $note->filename ) %>" method="POST"
+        ><button class="btn btn-secondary" type="submit">&#xFE0E;⎘</button>
+        </form>
+    </div>
     <div id="action-archive">
         <form action="<%= url_for('/archive/' . $note->filename ) %>" method="POST"
-        ><button class="btn btn-secondary" type="submit">&#x1f5c3;</button>
+        ><button class="btn btn-secondary" type="submit">&#xFE0E;&#x1f5c3;</button>
         </form>
     </div>
     <div id="action-delete">
         <form action="<%= url_for('/delete/' . $note->filename ) %>" method="POST"
-        ><button class="btn btn-secondary" type="submit">&#x1F5D1;</button>
+        ><button class="btn btn-secondary" type="submit">&#xFE0E;&#x1F5D1;</button>
         </form>
     </div>
 </div>
