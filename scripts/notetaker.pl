@@ -168,7 +168,6 @@ sub get_documents($session, $filter={}) {
     #my $created_buckets = $session->created_buckets;
     #%$labels = ();
     #%$colors = ();
-    use Data::Dumper; warn Dumper $filter;
     return
         grep {
                ($filter->{text}  ? match_terms( $filter->{text}, $_ )   : 1)
