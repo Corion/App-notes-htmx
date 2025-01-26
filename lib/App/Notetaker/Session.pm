@@ -7,7 +7,7 @@ use File::Temp;
 use File::Basename;
 use Time::Local 'timelocal';
 use Date::Period::Human;
-use POSIX 'strftime';
+use App::Notetaker::Utils 'timestamp';
 
 has 'username' => (
     is => 'ro',
@@ -28,10 +28,11 @@ has 'colors' => (
 
 sub _make_bucket( $start, $end, $name=undef ) {
     my $d = Date::Period::Human->new({ lang => 'en' });
+    use Data::Dumper; warn Dumper [$start, $end];
     return +{
         vis => $name // $d->human_readable( $start ),
-        start => main::timestamp( $start ),
-        end => main::timestamp( $end ),
+        start => timestamp( $start ),
+        end => timestamp( $end ),
     };
 }
 

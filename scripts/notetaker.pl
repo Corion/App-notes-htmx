@@ -19,6 +19,7 @@ use Crypt::Passphrase::Argon2;
 
 use App::Notetaker::Document;
 use App::Notetaker::Session;
+use App::Notetaker::Utils 'timestamp';
 
 use Markdown::Perl;
 use Text::HTML::Turndown;
@@ -336,10 +337,6 @@ get '/note/*fn' => sub($c) {
     display_note( $c, $note );
 };
 
-sub timestamp( $ts = time ) {
-    return strftime '%Y-%m-%dT%H:%M:%SZ', gmtime($ts)
-}
-
 sub save_note( $session, $note, $fn ) {
     my $ts = time;
     warn "Setting creation timestamp to " . timestamp( $ts )
@@ -392,7 +389,7 @@ sub delete_note( $c ) {
     if( $note ) {
         # Save undo data?!
         $c->stash( undo => '/undelete/' . $note->filename );
-        $note->frontmatter->{deleted} = strftime '%Y-%m-%dT%H:%M:%SZ', gmtime(time);
+        $note->frontmatter->{deleted} = timestamp(time);
         save_note( $session, $note, $fn );
         move_note( $session->document_directory . "/" . $note->filename  => $session->document_directory . "/deleted/" . $note->filename );
     }
@@ -412,7 +409,7 @@ sub archive_note( $c ) {
     if( $note ) {
         # Save undo data?!
         $c->stash( undo => '/unarchive/' . $note->filename );
-        $note->frontmatter->{archived} = strftime '%Y-%m-%dT%H:%M:%SZ', gmtime(time);
+        $note->frontmatter->{archived} = timestamp(time);
         save_note( $session, $note, $fn );
         move_note( $session->document_directory . "/" . $note->filename  => $session->document_directory . "/archived/" . $note->filename );
     }
