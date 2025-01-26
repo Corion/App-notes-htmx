@@ -928,7 +928,7 @@ if ( my $path = $ENV{MOJO_REVERSE_PROXY} ) {
         unshift @{ $base->path }, @path_parts;
         $base->path->trailing_slash(1);
         $url->path->leading_slash(0);
-        $url->scheme($path_uri->protocol);
+        #$url->scheme($path_uri->protocol);
         $base->scheme($path_uri->protocol);
 
         if( my $f = $c->req->headers->header('X-Forwarded-Host')
@@ -937,15 +937,16 @@ if ( my $path = $ENV{MOJO_REVERSE_PROXY} ) {
             # This requires that the outside-facing server resets
             # X-Forwarded-Host , so that header is not allowed to be user-controllable
             (my $host) = split /,/, $f;
-            $url->host( $host );
+            #$url->host( $host );
             $base->host( $host );
         } else {
-            $url->host($path_uri->host);
+            #$url->host($path_uri->host);
             $base->host($path_uri->host);
         }
 
         warn "Base is     <$base>";
         warn "URL  is now <$url>";
+        $url->base( $base );
     });
 }
 
