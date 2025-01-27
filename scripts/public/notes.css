@@ -52,14 +52,44 @@ nav ul li {
     border: solid 1px black;
 }
 
-.note-content {
-    color: inherit; /* blue colors for links too */
-    text-decoration: inherit; /* no underline */
-}
-
-.note .title {
+/* Expand the note title across the whole note so clicking it immediately
+ * leads to the note itself */
+.note a.title {
     font-size: 12pt;
     font-weight: bold;
+    position: static;
+    text-decoration: inherit;
+    color: black;
+    /* expand the pseudo-element to cover the note area */
+    &::before {
+        content: "";
+        position: absolute;
+        z-index: 0; /* we'll elevate inner links above that */
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        /* ... */
+        text-decoration: inherit;
+    }
+}
+
+/* Make links within a note directly clickable */
+.content a {
+    position: relative;
+    z-index: 1;
+}
+
+/* Make audio within a note directly clickable */
+.content audio {
+    position: relative;
+    z-index: 1;
+}
+
+/* Make video within a note directly clickable */
+.content video {
+    position: relative;
+    z-index: 1;
 }
 
 .single-note {

@@ -100,7 +100,7 @@ sub render_notes($c) {
     for my $note ( @documents ) {
         my $repr;
         if( length $note->body ) {
-            $repr = as_html( $c, $note, strip_links => 1, search => $filter->{text} );
+            $repr = as_html( $c, $note, strip_links => 0, search => $filter->{text} );
         } else {
             $repr = '&nbsp;'; # so even an empty note becomes clickable
         };
@@ -1175,8 +1175,9 @@ htmx.onLoad(function(elt){
 <div class="grid-item note position-relative"<%== $bgcolor %>
        id="<%= $doc->filename %>">
 %=include 'note-pinned', note => $doc
-    <a href="<%= url_for( "/note/" . $doc->filename ) %>" class="note-content">
-    <div class="title"><%= $doc->frontmatter->{title} %></div>
+    <a href="<%= url_for( "/note/" . $doc->filename ) %>" class="title">
+    <div class="title-text"><%= $doc->frontmatter->{title} %></div>
+    </a>
     <!-- list (some) tags -->
     <div class="content" hx-disable="true"><%== $doc->{html} %></div>
     </a>
