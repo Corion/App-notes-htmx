@@ -972,7 +972,7 @@ post '/login' => sub ($c) {
     my $username = $c->param('username');
     my $password = $c->param('password');
     if ($c->authenticate($username, $password)) {
-        warn $c->is_user_authenticated ? 'YES' : 'NOT YET';
+        #warn $c->is_user_authenticated ? 'YES' : 'NOT YET';
 
         my $next = $c->url_for('/');
         if( $c->is_user_authenticated ) {
@@ -981,7 +981,6 @@ post '/login' => sub ($c) {
             $c->session('return_to' => undef);
         };
         $next = Mojo::URL->new($next)->to_abs();
-        warn "Sending user to <$next>";
         $c->redirect_to($next);
     }
     else {
