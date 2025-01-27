@@ -1400,6 +1400,7 @@ htmx.onLoad(function(elt){
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
 >
+<h1>Log into notekeeper</h1>
   <div id="container" class="grid-container" hx-history-elt>
       <form action="<%= url_for( '/login' )%>" method="POST">
           <input type="text" autofocus name="username" value="" text="Username" />
