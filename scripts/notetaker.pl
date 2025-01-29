@@ -235,6 +235,10 @@ sub find_or_create_note( $session, $fn ) {
     }
 }
 
+our %field_properties = (
+    title => { reload => 1 },
+);
+
 sub display_note( $c, $note ) {
     return login_detour($c) unless $c->is_user_authenticated;
 
@@ -259,6 +263,9 @@ sub display_note( $c, $note ) {
     $c->stash( editor => $editor );
 
     stash_filter( $c, $filter );
+
+    $c->stash( edit_field => undef);
+    $c->stash( field_properties => \%field_properties);
 
     $c->render('note');
 };
@@ -496,6 +503,8 @@ sub edit_field( $c, $note, $field_name ) {
     my $session = get_session( $c );
     $c->stash( note => $note );
     $c->stash( field_name => $field_name );
+
+    $c->stash( field_properties => $field_properties{ $field_name } // {} );
     $c->stash( value => $note->frontmatter->{ $field_name } );
     $c->render('edit-text');
 }
@@ -510,7 +519,7 @@ sub edit_color_field( $c, $note, $field_name ) {
     $c->render('edit-color');
 }
 
-sub edit_note_title( $c ) {
+sub edit_note_title( $c, $inline = 0 ) {
     return login_detour($c) unless $c->is_user_authenticated;
 
     my $session = get_session( $c );
@@ -521,7 +530,14 @@ sub edit_note_title( $c ) {
     }
 
     my $note = find_or_create_note( $session, $fn );
-    edit_field( $c, $note, 'title' );
+
+    if( $inline ) {
+        return edit_field( $c, $note, 'title' );
+    } else {
+        $c->stash( edit_field => 'title' );
+        $c->stash( note => $note );
+        $c->render('note');
+    }
 }
 
 sub edit_note_color( $c ) {
@@ -563,6 +579,7 @@ sub display_field( $c, $fn, $note, $field_name, $class ) {
     $c->stash( field_name => $field_name );
     $c->stash( value => $note->frontmatter->{ $field_name } );
     $c->stash( class => $class );
+    $c->stash( field_properties => $field_properties{ $field_name } // {} );
     $c->render('display-text');
 }
 
@@ -572,7 +589,7 @@ sub display_note_title( $c ) {
     my $session = get_session( $c );
     my $fn = $c->param('fn');
     my $note = find_note( $session, $fn );
-    display_field( $c, $fn, $note, 'title', 'title' );
+    display_field( $c, $fn, $note, 'title', 'title', 0 );
 }
 
 sub update_note_title( $c, $autosave=0 ) {
@@ -613,14 +630,14 @@ sub update_note_title( $c, $autosave=0 ) {
         $note->filename( $fn );
     }
 
-    if( $autosave ) {
-        warn "Redirecting to editor with (new?) name '$fn'";
-        $c->redirect_to($c->url_for('/edit-title/') . $fn );
-
-    } else {
+    #if( $autosave ) {
+    #    warn "Redirecting to editor with (new?) name '$fn'";
+    #    $c->redirect_to($c->url_for('/edit-title/') . $fn );
+    #
+    #} else {
         warn "Redirecting to (new?) name '$fn'";
         $c->redirect_to($c->url_for('/note/') . $fn );
-    }
+    #}
 }
 
 sub capture_image( $c ) {
@@ -998,6 +1015,8 @@ post '/logout' => sub ($c) {
 
 get  '/edit-title' => \&edit_note_title; # empty note
 get  '/edit-title/*fn' => \&edit_note_title;
+get  '/htmx-edit-title' => sub( $c ) { edit_note_title( $c, 1 ) }; # empty note
+get  '/htmx-edit-title/*fn' => sub( $c ) { edit_note_title( $c, 1 ) };
 post '/edit-title/*fn' => \&update_note_title;
 post '/edit-title' => \&update_note_title; # empty note
 get  '/display-title/*fn' => \&display_note_title;
@@ -1317,7 +1336,11 @@ htmx.onLoad(function(elt){
 % my $doc_url = '/note/' . $note->filename;
 <form action="<%= url_for( $doc_url ) %>" method="POST">
 <button class="nojs" name="save" type="submit">Save</button>
-%=include "display-text", field_name => 'title', value => $note->frontmatter->{title}, class => 'title';
+% if( $edit_field and $edit_field eq 'title' ) {
+%=include "edit-text", field_name => 'title', value => $note->frontmatter->{title}, class => 'title', reload => 1, field_properties => $field_properties->{title},
+% } else {
+%=include "display-text", field_name => 'title', value => $note->frontmatter->{title}, class => 'title', reload => 1
+% }
 <div class="xcontainer" style="height:400px">
 % if( $editor eq 'markdown' ) {
 <textarea name="body-markdown" id="note-textarea" autofocus
@@ -1415,34 +1438,45 @@ htmx.onLoad(function(elt){
 % if( defined $value && $value ne '' ) {
     <%= $value %>
     <a href="<%= url_for( "/edit-$field_name/" . $note->filename ) %>"
-    hx-get="<%= url_for( "/edit-$field_name/" . $note->filename ) %>"
-    hx-target="#note-<%= $field_name %>"
+    hx-get="<%= url_for( "/htmx-edit-$field_name/" . $note->filename ) %>"
+    hx-target="closest div"
     hx-swap="innerHTML"
     >&#x270E;</a>
 % } else {
     <a class="editable"
        href="<%= url_for( "/edit-$field_name/" . $note->filename ) %>"
+%     if( !$reload ) {
        hx-get="<%= url_for( "/edit-$field_name/" . $note->filename ) %>"
-       hx-target="#note-<%= $field_name %>"
+       hx-target="closest div"
        hx-swap="innerHTML"
+%     }
     ><%= $field_name %></a>
 % }
 </div>
 
 @@edit-text.html.ep
 <form action="<%= url_for( "/edit-$field_name/" . $note->filename ) %>" method="POST"
+% if( $field_properties->{ reload } ) {
+    hx-trigger="blur from:#note-input-text-<%= $field_name %>"
+% } else {
     hx-swap="outerHTML"
+% }
 >
     <input type="text" name="<%= $field_name %>" id="note-input-text-<%= $field_name %>" value="<%= $value %>"
         autofocus
     />
-    <button type="submit">Save</button>
+    <button type="submit" class="nojs">Save</button>
+<!--
     <a href="<%= url_for( "/note/" . $note->filename ) %>"
+% if( $field_properties->{ reload } ) {
+       hx-post="<%= url_for( "/edit-display" )%>-<%= $field_name %>/<%= $note->filename %>"
+% } else {
        hx-get="<%= url_for( "/display" )%>-<%= $field_name %>/<%= $note->filename %>"
        hx-target="#note-<%= $field_name %>"
        hx-swap="innerHTML"
-       --hx-trigger="blur from:#note-input-text-<%= $field_name %>"
+% }
     >x</a>
+-->
 </form>
 
 @@attach-image.html.ep
