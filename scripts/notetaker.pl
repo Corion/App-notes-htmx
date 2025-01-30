@@ -1445,11 +1445,11 @@ htmx.onLoad(function(elt){
 % } else {
     <a class="editable"
        href="<%= url_for( "/edit-$field_name/" . $note->filename ) %>"
-%     if( !$reload ) {
-       hx-get="<%= url_for( "/edit-$field_name/" . $note->filename ) %>"
+%#     if( !$reload ) {
+       hx-get="<%= url_for( "/htmx-edit-$field_name/" . $note->filename ) %>"
        hx-target="closest div"
        hx-swap="innerHTML"
-%     }
+%#     }
     ><%= $field_name %></a>
 % }
 </div>
