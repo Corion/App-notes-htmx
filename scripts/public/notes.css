@@ -74,6 +74,18 @@ nav ul li {
     }
 }
 
+/* Limit the maximum display size of a single note to ~20 lines */
+.content {
+    @supports (-webkit-line-clamp: 10) {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: initial;
+      display: -webkit-box;
+      -webkit-line-clamp: 10;
+      -webkit-box-orient: vertical;
+    }
+}
+
 /* Make links within a note directly clickable */
 .content a {
     position: relative;
