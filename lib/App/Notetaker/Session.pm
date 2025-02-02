@@ -12,6 +12,7 @@ use App::Notetaker::Utils 'timestamp';
 has 'username' => (
     is => 'ro',
 );
+
 has 'document_directory' => (
     is => 'ro',
 );
@@ -60,6 +61,8 @@ has 'editor' => (
 
 sub init( $self, $document_directory = $self->document_directory ) {
     mkdir $self->document_directory . "/deleted"; # so we can always (un)delete notes
+    mkdir $self->document_directory . "/attachments"; # so we can always attach media
+    mkdir $self->document_directory . "/archived"; # so we can always attach media
 }
 
 sub documents( $self, $document_directory = $self->document_directory ) {
