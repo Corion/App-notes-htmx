@@ -1482,13 +1482,14 @@ htmx.onLoad(function(elt){
 @@attach-image.html.ep
 <form action="<%= url_for( "/upload-$field_name/" . $note->filename ) %>" method="POST"
     enctype='multipart/form-data'
-    hx-encoding='multipart/form-data'
-    hx-post="<%= url_for( "/upload-$field_name/" . $note->filename ) %>"
-    hx-swap="outerHTML"
+    hx-trigger="input from: find #upload-<%=$field_name%>"
 >
     <label for="upload-<%=$field_name%>">Upload image</label>
-    <input id="upload-<%=$field_name%>" type="file" accept="image/*" name="<%= $field_name %>" id="capture-image-<%= $field_name %>" capture="environment" />
-    <button type="submit">Upload</button>
+    <input id="upload-<%=$field_name%>" type="file" accept="image/*"
+           name="<%= $field_name %>" id="capture-image-<%= $field_name %>"
+           capture="environment"
+    />
+    <button type="submit" class="nojs">Upload</button>
     <a href="<%= url_for( "/note/" . $note->filename ) %>"
        hx-get="xxx-display-actions"
        hx-target="xxx"
