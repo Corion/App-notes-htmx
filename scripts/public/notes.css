@@ -104,10 +104,15 @@ nav ul li {
     z-index: 1;
 }
 
+#single-note {
+    display: flex;
+}
+
 .single-note {
   display: flex;
   flex-direction: column;
-  width: 100%;
+  width: 100vw;
+  height: 100vh;
  }
 
 .single-note .title {
