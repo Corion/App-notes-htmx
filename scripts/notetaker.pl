@@ -636,7 +636,7 @@ sub update_note_title( $c, $autosave=0 ) {
     #
     #} else {
         warn "Redirecting to (new?) name '$fn'";
-        $c->redirect_to($c->url_for('/note/') . $fn );
+        $c->redirect_to($c->url_for('/note/'. $fn ));
     #}
 }
 
@@ -666,7 +666,7 @@ sub attach_image( $c ) {
     $image->move_to($session->document_directory . "/$filename");
     $note->body( $note->body . "\n![$filename]($filename)\n" );
     $note->save_to( $session->document_directory . "/" . $note->filename );
-    $c->redirect_to($c->url_for('/note/') . $note->filename );
+    $c->redirect_to($c->url_for('/note/' . $note->filename ));
 }
 
 # Maybe, capture media?!
@@ -700,7 +700,7 @@ sub attach_audio( $c ) {
     $media->move_to($session->document_directory . "/$filename");
     $note->body( $note->body . "\n![$filename]($filename)\n" );
     $note->save_to( $session->document_directory . "/" . $note->filename );
-    $c->redirect_to($c->url_for('/note/') . $note->filename );
+    $c->redirect_to($c->url_for('/note/' . $note->filename ));
 }
 
 sub edit_labels( $c, $inline ) {
@@ -751,7 +751,7 @@ sub update_labels( $c, $inline=0 ) {
         $c->render('edit-labels');
 
     } else {
-        $c->redirect_to($c->url_for('/note/') . $fn );
+        $c->redirect_to($c->url_for('/note/' . $fn ));
     }
 }
 
