@@ -7,4 +7,11 @@ App::Notetaker - a markdown notetaker
 
 =cut
 
+=head1 LIVE DEMO
+
+The live demo lives at
+L<https://datenzoo.de/notes/> ( C<< demo:demo >> )
+
+=cut
+
 1;

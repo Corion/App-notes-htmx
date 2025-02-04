@@ -12,3 +12,8 @@
 # NAME
 
 App::Notetaker - a markdown notetaker
+
+# LIVE DEMO
+
+The live demo lives at
+[https://datenzoo.de/notes/](https://datenzoo.de/notes/) ( `demo:demo` )
