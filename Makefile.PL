@@ -76,6 +76,8 @@ my %module = (
         'YAML::PP::LibYAML' => 0,
         'Crypt::Passphrase' => 0,
         'Crypt::Passphrase::Argon2' => 0,
+
+        'Archive::Zip'              => 0,
     },
     TEST_REQUIRES => {
         'Test2::V0'    => 0,

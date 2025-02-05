@@ -25,6 +25,9 @@ use Markdown::Perl;
 use Text::HTML::Turndown;
 use Date::Period::Human;
 
+use File::Find;
+use Archive::Zip;
+
 app->static->with_roles('+Compressed');
 plugin 'DefaultHelpers';
 plugin 'HTMX';
@@ -871,6 +874,33 @@ sub update_pinned( $c, $pinned, $inline ) {
     }
 }
 
+sub export_archive( $c ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
+    my $session = get_session( $c );
+
+    my $base = Mojo::File->new( $session->document_directory());
+    my $zip = Archive::Zip->new();
+    warn "Archiving $base";
+    File::Find::find( {
+        wanted => sub {
+                if( -f $File::Find::name ) {
+                    my $ar_name = Mojo::File->new( $File::Find::name )->abs2rel($base);
+                    warn "Adding $File::Find::name as $ar_name";
+                    $zip->addFile( $File::Find::name => "$ar_name" );
+                    }
+            },
+        follow_skip => 1, # no symlinks or anything
+        no_chdir => 1,
+    }, "$base" );
+    open my $fh, '>', \my $memory;
+    $zip->writeToFileHandle( $fh );
+    my $fn = strftime "notekeeper-export-%Y-%m-%d-%H-%M-%S.zip", gmtime;
+    $c->res->headers->content_disposition(qq{attachment; filename="$fn"});
+    $c->res->headers->content_type('application/zip');
+    $c->render( data => $memory );
+}
+
 # User authentification
 
 {
@@ -1044,6 +1074,8 @@ post '/pin/*fn'   => sub($c) { \&update_pinned( $c, 1, 0 ) };
 post '/unpin/*fn' => sub($c) { \&update_pinned( $c, 0, 0 ) };
 post '/htmx-pin/*fn'   => sub($c) { \&update_pinned( $c, 1, 1 ) };
 post '/htmx-unpin/*fn' => sub($c) { \&update_pinned( $c, 0, 1 ) };
+
+get  '/export-archive' => \&export_archive;
 
 # Session handling
 get '/login' => sub ($c) { $c->render(template => 'login') };
@@ -1254,6 +1286,12 @@ htmx.onLoad(function(elt){
         data-bs-toggle="dropdown"><%= "\N{BUST IN SILHOUETTE}" %></div>
 
     <div class="dropdown-menu dropdown-menu-end dropdown-menu-right">
+    <div class="dropdown-item">
+      <a id="btn-export"
+        hx-boost="false"
+        href="<%= url_for('/export-archive')%>"
+        class="btn btn-secondary" id="export">Export notes</a>
+    </div>
     <div class="dropdown-item">
       <form id="form-logout" method="POST" action="<%= url_for( "/logout" ) %>">
       <button name="logout"
