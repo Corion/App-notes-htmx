@@ -339,6 +339,13 @@ get  '/new' => sub( $c ) {
         $note //= find_note( $session, $fn );
         $note->body( $body );
     }
+    if( my $body_html = $c->param('body-html')) {
+        $note //= find_note( $session, $fn );
+        my $turndown = Text::HTML::Turndown->new();
+        $turndown->use('Text::HTML::Turndown::GFM');
+        my $body = $turndown->turndown($body_html);
+        $note->body( $body );
+    }
     if( $note ) {
         save_note( $session, $note, $fn );
     }
