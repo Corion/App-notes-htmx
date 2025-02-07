@@ -342,7 +342,7 @@ get  '/new' => sub( $c ) {
         $fn =    clean_fragment( $title ) # derive a filename from the title
               || 'untitled'; # we can't title a note "0", but such is life
 
-        $fn = find_name( $fn ); # find a filename that is not yet used
+        $fn = find_name( "$fn.markdown" ); # find a filename that is not yet used
         $note //= find_or_create_note( $session, $fn );
         $note->frontmatter->{title} = $title;
 
