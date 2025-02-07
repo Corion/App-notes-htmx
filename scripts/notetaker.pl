@@ -290,10 +290,22 @@ get  '/new' => sub( $c ) {
     return login_detour($c) unless $c->is_user_authenticated;
 
     my $session = get_session( $c );
-    my $fn = $session->tempnote();
 
     # We'll create a file here, no matter whether there is content or not
     my $note;
+    my $fn;
+    if( my $title = $c->param('title')) {
+        # Save note to new title
+        $fn =    clean_fragment( $title ) # derive a filename from the title
+              || 'untitled'; # we can't title a note "0", but such is life
+
+        $fn = find_name( $fn ); # find a filename that is not yet used
+        $note //= find_or_create_note( $session, $fn );
+        $note->frontmatter->{title} = $title;
+
+    } else {
+        $fn = $session->tempnote();
+    }
 
     if( my $t = $c->param('template')) {
         my $template = find_note($session, $t);
