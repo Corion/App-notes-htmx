@@ -133,6 +133,49 @@ sub render_filter($c) {
     $c->render('documents');
 }
 
+sub render_setup($c) {
+    return login_detour($c) unless $c->is_user_authenticated;
+    $c->session(expiration => 86400);
+
+my $url = $c->url_for('/new')->to_abs;
+my $js = <<'JS' =~ s/\s+/ /gr;
+ javascript:(
+   function(){
+       const title = document.title;
+       const selection = window.getSelection();
+       let selectedText;
+       if (selection.rangeCount > 0) {
+         range = selection.getRangeAt(0);
+         const clonedSelection = range.cloneContents();
+         const div = document.createElement('div');
+         div.appendChild(clonedSelection);
+         selectedText = div.innerHTML;
+       } else {
+         selectedText = '';
+       };
+
+    const url = document.location.href;
+    const label = '#saved_from_browser';
+    const content = `${selectedText}<p id="attribution">from <a href="${url}">${title}</a></p>`;
+    document.location.href = "%s?"
+                              + ([
+                                 `title=${encodeURIComponent(title)}`,
+                                 `body-html=${encodeURIComponent(content)}`,
+                                 `label=${encodeURIComponent(label)}`,
+                                ].join("&"));
+   })();
+JS
+    my $bookmarklet = sprintf $js, $url;
+
+    my $filter = fetch_filter( $c );
+    stash_filter( $c, $filter );
+    $c->stash( show_filter => !!$c->param('show-filter') );
+    $c->stash( bookmarklet => $bookmarklet);
+    $c->stash( moniker => filter_moniker( $filter ));
+    my $sidebar = $c->param('sidebar');
+    $c->stash( sidebar => $sidebar );
+    $c->render('setup');
+}
 
 sub match_text( $filter, $note ) {
        ( $note->body // '' ) =~ /\Q$filter\E/i
@@ -1095,6 +1138,7 @@ post '/htmx-pin/*fn'   => sub($c) { \&update_pinned( $c, 1, 1 ) };
 post '/htmx-unpin/*fn' => sub($c) { \&update_pinned( $c, 0, 1 ) };
 
 get  '/export-archive' => \&export_archive;
+get '/setup' => \&render_setup;
 
 # Session handling
 get '/login' => sub ($c) { $c->render(template => 'login') };
@@ -1258,6 +1302,36 @@ htmx.onLoad(function(elt){
 % }
 </div>
 
+@@ setup.html.ep
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+%=include 'htmx-header'
+
+<title>Notekeeper - Setup</title>
+</head>
+<body
+    hx-boost="true"
+    id="body"
+    hx-ext="morphdom-swap"
+    hx-swap="morphdom"
+>
+%=include('navbar', type => 'documents', colors => $colors, labels => $labels, show_filter => $show_filter);
+<div class="container-fluid" id="container">
+<div class="row flex-nowrap">
+    <div class="col-auto px-0">
+%=include 'sidebar', labels => $labels, filter => $filter,
+    </div>
+    <main class="col">
+    <h1>Clip anything on the web</h1>
+    <p>Drag <a href="<%= $bookmarklet %>">this link</a> to your bookmarks to clip the current selection
+    as a new note</p>
+    </main>
+</div>
+</body>
+</html>
+
 @@navbar.html.ep
 <nav class="navbar navbar-expand-lg sticky-top bd-navbar bg-light">
 <div class="container-fluid">
@@ -1306,6 +1380,10 @@ htmx.onLoad(function(elt){
 
     <div class="dropdown-menu dropdown-menu-end dropdown-menu-right">
     <div class="dropdown-item">
+      <a href="<%= url_for('/setup') %>"
+          class="btn btn-secondary" id="setup">⚙</a>
+    </div>
+    <div class="dropdown-item">
       <a id="btn-export"
         hx-boost="false"
         href="<%= url_for('/export-archive')%>"
@@ -1316,6 +1394,7 @@ htmx.onLoad(function(elt){
       <button name="logout"
           class="btn btn-secondary" id="logout">Log '<%= $user->{user} %>' out</button>
       </form>
+    </div>
     </div>
     </li>
 % }
