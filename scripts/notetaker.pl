@@ -342,7 +342,9 @@ get  '/new' => sub( $c ) {
         $fn =    clean_fragment( $title ) # derive a filename from the title
               || 'untitled'; # we can't title a note "0", but such is life
 
-        $fn = find_name( "$fn.markdown" ); # find a filename that is not yet used
+        $fn = $session->document_directory . '/' . $fn . ".markdown";
+        $fn = basename( find_name( $fn )); # find a filename that is not yet used
+
         $note //= find_or_create_note( $session, $fn );
         $note->frontmatter->{title} = $title;
 
@@ -501,8 +503,14 @@ sub move_note( $source_name, $target_name ) {
 
   my $new_name = find_name( $target_name );
 
-Using the basic name of C<$target_name>, finds a suitable filename that does
+Using the base name of C<$target_name>, finds a suitable filename that does
 not exist for that user.
+
+C<$target_name> must include the directory.
+
+Returns the full (free) name of the file
+
+This subroutine would be subject to race conditions.
 
 =cut
 
@@ -518,6 +526,9 @@ sub find_name( $target_name ) {
     };
 
     # Yes, this has the potential for race conditions, but we don't
+    # To reduce the amount of race conditions, either create the filename here
+    # or don't even return the filename but also an open filehandle to
+    # directly write to that file, much like tempfile()
     while( -f $target_name ) {
         # maybe add todays date or something to prevent endless collisions?!
         $target_name = sprintf "%s/%s (%d).markdown", $target_directory, $base_name, $count++;
