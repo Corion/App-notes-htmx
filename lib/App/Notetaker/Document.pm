@@ -46,4 +46,24 @@ sub save_to( $self, $fn ) {
     $f->spew( $tfm->document_string, 'UTF-8' );
 }
 
+sub add_label( $self, @labels ) {
+    $self->update_labels( 1, \@labels );
+}
+
+sub remove_label( $self, @labels ) {
+    $self->update_labels( undef, \@labels );
+}
+
+sub update_labels( $self, $add, $labels ) {
+    my $l = $self->frontmatter->{labels} // [];
+    my %labels;
+    @labels{ $l->@* } = (1) x $l->@*;
+    if( $add ) {
+        @labels{ $labels->@* } = (1) x $labels->@*;
+    } else {
+        delete @labels{ $labels->@* }
+    }
+    $self->frontmatter->{labels}->@* = sort { fc($a) cmp fc($b) } keys %labels;
+}
+
 1;

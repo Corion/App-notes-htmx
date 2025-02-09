@@ -375,8 +375,7 @@ get  '/new' => sub( $c ) {
     }
     if( my $c = $c->param('label')) {
         $note //= find_note( $session, $fn );
-        $note->frontmatter->{labels} //= [];
-        push $note->frontmatter->{labels}->@*, $c;
+        $note->add_label( $c );
     }
     if( my $body = $c->param('body-markdown')) {
         $note //= find_note( $session, $fn );
@@ -838,8 +837,6 @@ sub add_label( $c, $inline ) {
     my $v = $c->param('status');
 
     my $note = find_or_create_note( $session, $fn );
-    my $l = $note->frontmatter->{labels} // [];
-    @labels{ $l->@* } = (1) x $l->@*;
 
     my $status;
     if ( defined $v ) {
@@ -848,13 +845,7 @@ sub add_label( $c, $inline ) {
         $status = 1;
     };
 
-    if( $status ) {
-        $labels{ $label } = $status;
-    } else {
-        delete $labels{ $label }
-    }
-
-    $note->frontmatter->{labels} = [sort { fc($a) cmp fc($b) } keys %labels];
+    $note->update_labels( $status, [$label] );
     $note->save_to( $session->clean_filename( $fn ));
 
     $c->stash(note => $note);
@@ -875,10 +866,8 @@ sub delete_label( $c, $inline ) {
     my $note = find_or_create_note( $session, $fn );
     my $remove = $c->param('delete');
 
-    if( my $l = $note->frontmatter->{labels} ) {
-        $l->@* = grep { $_ ne $remove } $l->@*;
-        $note->save_to( $session->clean_filename( $fn ));
-    }
+    $note->remove_label( $remove );
+    $note->save_to( $session->clean_filename( $fn ));
 
     if( $inline ) {
         $c->stash( labels => $note->frontmatter->{labels} );
