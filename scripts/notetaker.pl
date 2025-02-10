@@ -270,6 +270,20 @@ sub get_templates( $session ) {
     get_documents(  $session, { label => 'Template' } )
 }
 
+sub get_users($session, $filter={}, $include_self=1) {
+    return
+        grep {
+               ($filter->{user}  ? match_username( $filter->{user}, $_ )   : 1)
+            && (!$include_self   ? $_->{user} ne $session->username        : 1)
+        }
+        map {
+            if( $_ =~ /(\w+)\.yaml\z/ ) {
+                load_account( $1 )
+            }
+        }
+        glob "$user_directory/*.yaml"
+}
+
 sub find_note( $session, $fn ) {
     my $filename = $session->clean_filename( $fn );
 
