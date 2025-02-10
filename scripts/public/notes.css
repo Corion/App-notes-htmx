@@ -159,3 +159,7 @@ a.editable {
 .sidebar-current {
     background-color: green;
 }
+
+.svg_icon {
+    width: 1em;
+}
