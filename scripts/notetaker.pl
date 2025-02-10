@@ -34,6 +34,8 @@ plugin 'HTMX';
 
 my %sessions;
 
+my $user_directory = 'users';
+
 sub get_session( $c ) {
     my $user = $c->current_user;
     return $sessions{ $user->{user} }
@@ -966,7 +968,6 @@ sub export_archive( $c ) {
 # User authentification
 
 {
-    my $user_directory = 'users';
     sub plaintext($password, $hash) {
         return $password eq $hash;
     }
