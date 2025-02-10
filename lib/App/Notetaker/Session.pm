@@ -29,7 +29,6 @@ has 'colors' => (
 
 sub _make_bucket( $start, $end, $name=undef ) {
     my $d = Date::Period::Human->new({ lang => 'en' });
-    use Data::Dumper; warn Dumper [$start, $end];
     return +{
         vis => $name // $d->human_readable( $start ),
         start => timestamp( $start ),
