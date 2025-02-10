@@ -140,6 +140,10 @@ sub render_setup($c) {
     $c->session(expiration => 86400);
 
 my $url = $c->url_for('/new')->to_abs;
+    # Consider using the fetch API
+    # opening a fresh window/tab
+    # and window.location as the fallback
+    # Maybe blindly return to the website using ".back()" ?!
 my $js = <<'JS' =~ s/\s+/ /gr;
  javascript:(
    function(){
