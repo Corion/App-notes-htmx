@@ -337,6 +337,14 @@ sub display_note( $c, $note ) {
     $c->stash( edit_field => undef);
     $c->stash( field_properties => \%field_properties);
 
+    # no filtering yet
+    my %shared_with;
+    my @users = get_users( $session, { user => $filter }, undef);
+    $shared_with{ $_ } = 1 for (keys $note->shared->%*);
+    delete $shared_with{ $session->username };
+    $c->stash( all_users => \@users );
+    $c->stash( shared_with => \%shared_with );
+
     $c->render('note');
 };
 
@@ -590,11 +598,76 @@ sub copy_note( $c ) {
     }
 }
 
+# This is slightly inefficient as it recreates all symlinks on every sharing
+# change
+sub share_note( $c, $inline=0 ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
+    my $session = get_session( $c );
+    my $fn = $c->param('fn');
+    my $note = find_note( $session, $fn );
+
+    if( $note ) {
+        # remove all old symlinks to this note
+        for my $user (keys $note->shared->%*) {
+            my $info = load_account($user);
+            if( $info ) {
+                # User still exists, so remove the symlink to the note
+                if( my $base = $info->{notes}
+                    and $note->shared->{ $user }) {
+                    my $symlink = $base . "/" . $note->shared->{ $user };
+                    say "Removing/recreating symlink '$symlink'";
+                    unlink $symlink or warn "Couldn't remove symlink '$symlink': $!";
+                }
+            }
+        }
+
+        my $user_share_fn = Mojo::File->new( $session->document_directory . "/" . $fn )->to_abs;
+
+        my @shared_with = $c->every_param('share')->@*;
+
+        # now set up the new symlinks to @shared_with
+        my $abs = Mojo::File->new( $session->document_directory . "/" . $note->filename )->to_abs;
+        $note->shared->%* = ();
+        for my $username (@shared_with) {
+            if( my $info = load_account( $username )) {
+                if( $info->{notes}) {
+                    my $symlink_name = find_name( $info->{notes} . "/" . $abs->basename );
+                    $symlink_name = Mojo::File->new( $symlink_name )->to_abs;
+
+                    # Update the note on disk with the new user list
+                    $note->shared->{ $username } = $symlink_name->basename;
+
+                    say "Sharing this to $username as $symlink_name";
+                    symlink( $user_share_fn => $symlink_name );
+                } else {
+                    say "User '$username' has no notes directory configured"
+                }
+            } else {
+                say "No user '$username' to share with?!";
+            }
+        }
+
+        save_note( $session, $note, $fn );
+    }
+
+    # Display the note, at least until we know how to discriminate from where
+    # the sharing UI had been invoked
+    if( $inline ) {
+        $c->stash( note => $note );
+        $c->render('edit-share');
+    } else {
+        $c->redirect_to( $c->url_for('/note/') . $fn);
+    }
+}
+
 post '/note/*fn' => \&save_note_body;
 post '/note/' => \&save_note_body; # we make up a filename then
 post '/delete/*fn' => \&delete_note;
 post '/archive/*fn' => \&archive_note;
 post '/copy/*fn' => \&copy_note;
+post '/htmx-update-share/*fn' => sub( $c ) { share_note( $c, 0 ) };
+post '/update-share/*fn' => sub( $c ) { share_note( $c, 0 ) };
 
 sub edit_field( $c, $note, $field_name ) {
     return login_detour($c) unless $c->is_user_authenticated;
@@ -917,6 +990,32 @@ sub delete_label( $c, $inline ) {
     }
 }
 
+sub edit_share( $c, $inline ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
+    my $session = get_session( $c );
+    my $note = find_note( $session, $c->param('fn') );
+    my $filter = $c->param('share-filter') // '';
+    $filter =~ s![/\\]!!g;
+
+    my %shared_with;
+    my @users = get_users( $session, { user => $filter }, undef);
+    $shared_with{ $_ } = 1 for (keys $note->shared->%*);
+    delete $shared_with{ $session->username };
+
+    $c->stash( shared_with => \%shared_with );
+    $c->stash( all_users => \@users );
+    $c->stash( note => $note );
+    $c->stash( user_filter => $filter );
+
+    if( $inline ) {
+        $c->render('edit-share');
+
+    } else {
+        $c->render('filter-edit-share');
+    }
+}
+
 sub stash_filter( $c, $filter ) {
     my $session = get_session( $c );
     $c->stash( filter => $filter );
@@ -1154,6 +1253,11 @@ post '/htmx-add-label/*fn' => sub($c) { add_label( $c, 1 ); };
 get  '/delete-label/*fn' => sub( $c ) { delete_label( $c, 0 ); };
 get  '/htmx-delete-label/*fn' => sub( $c ) { delete_label( $c, 1 ); };
 get  '/select-filter' => \&select_filter;
+
+get  '/htmx-share-menu/*fn' => sub( $c ) { edit_share( $c, 0 ) };
+get  '/edit-share/*fn' => sub( $c ) { edit_share( $c, 0 ) };
+post '/edit-share/*fn' => sub( $c ) { edit_share($c, 0 ) };
+post '/htmx-edit-share/*fn' => sub( $c ) { edit_share( $c, 1 ) };
 
 post '/pin/*fn'   => sub($c) { \&update_pinned( $c, 1, 0 ) };
 post '/unpin/*fn' => sub($c) { \&update_pinned( $c, 0, 0 ) };
@@ -1547,6 +1651,16 @@ htmx.onLoad(function(elt){
             hx-swap="outerHTML"
         >Set color</a>
     </div>
+
+    <div id="action-share">
+    <!-- pop up the sharing selector like a context menu -->
+        <a
+        --href="<%= url_for('/share/') . $note->filename %>"
+         class="btn btn-secondary"
+        >
+%= include 'menu-edit-share', note => $note, all_users => $all_users, shared_with => $shared_with, user_filter => ''
+        </a>
+    </div>
     <div id="action-copy">
         <form action="<%= url_for('/copy/' . $note->filename ) %>" method="POST"
         ><button class="btn btn-secondary" type="submit">&#xFE0E;⎘</button>
@@ -1815,6 +1929,88 @@ htmx.onLoad(function(elt){
     <input type="text" name="new-label" id="new-label" value="" placeholder="New label" autofocus />
     </span>
 </form>
+
+@@menu-edit-share.html.ep
+<div class="dropup" id="dropdown-share" hx-trigger="show.bs.dropdown"
+  hx-get="<%= url_with( '/htmx-share-menu/' . $note->filename ) %>"
+  hx-target="find .dropdown-menu"
+  hx-disinherit="hx-target"
+  >
+    <button type="button" class="btn btn-secondary dropdown-toggle hide-toggle"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            aria-haspopup="true"
+            data-bs-auto-close="outside"
+      ><div class="svg_icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" style="fill:#0273a2"><title>Share</title><path d="M163.1,314c84.5,0,153.1,68.5,153.1,153.1c0,84.5-68.5,153.1-153.1,153.1C78.5,620.1,10,551.6,10,467C10,382.5,78.5,314,163.1,314z"></path><path d="M835,7.8c84.5,0,153.1,68.5,153.1,153.1c0,84.5-68.6,153.1-153.1,153.1c-84.5,0-153-68.5-153-153.1C682,76.4,750.5,7.8,835,7.8z"></path><path d="M836.9,686c84.5,0,153.1,68.5,153.1,153.1s-68.6,153.1-153.1,153.1c-84.5,0-153-68.5-153-153.1C683.9,754.5,752.4,686,836.9,686z"></path><path d="M165.3,504l-31.2-69.3l707.2-318l31.1,69.3L165.3,504z"></path><path d="M119.5,488.4l36.8-66.4l733.2,405.8l-36.8,66.4L119.5,488.4z"></path>
+            </svg>
+        </div>
+    </button>
+
+    <div class="dropdown-menu">
+%=include 'filter-edit-share', note => $note, all_users => $all_users, user_filter => $user_filter, shared_with => $shared_with
+    </div>
+</div>
+
+@@filter-edit-share.html.ep
+% my $url = url_for( "/update-share/" . $note->filename );
+% my $htmx_url = url_for( "/htmx-update-share/" . $note->filename );
+<div class="dropdown-item">Share note with</div>
+%=include 'edit-share-filterbox', url => $url, htmx_url => $htmx_url, note => $note, all_users => $all_users, user_filter => $user_filter, shared_with => $shared_with
+%=include 'edit-share', note => $note, all_users => $all_users, user_filter => $user_filter, shared_with => $shared_with
+
+@@edit-share-filterbox.html.ep
+<form action="<%= $url %>" method="POST" id="share-filter-form"
+ class="form-inline dropdown-item"
+ hx-target="#share-edit-list"
+ hx-swap="outerHTML"
+ hx-post="<%= $htmx_url %>"
+>
+    <div class="form-group">
+        <div class="input-group input-group-unstyled has-feedback inner-addon right-addon">
+        <i class="glyphicon glyphicon-search form-control-feedback input-group-addon">x</i>
+        <input name="share-filter" type="text" class="form-control"
+            style="width: 30%;"
+            placeholder="User name"
+            autofocus="true"
+            value="<%= $user_filter %>"
+            id="share-filter"
+            hx-post="<%= $htmx_url %>"
+            hx-trigger="input delay:200ms changed, keyup[key=='Enter']"
+        >
+        </div>
+        <button class="nojs btn btn-default">Filter</button>
+    </div>
+</form>
+
+@@edit-share.html.ep
+<div id="share-edit-list">
+<form action="<%= url_for( "/update-share/" . $note->filename ) %>" method="POST"
+  id="share-edit-list"
+>
+  <button class="nojs btn btn-default" type="submit">Share</button>
+% my $idx = 1;
+% for my $user (sort {
+%                        ($shared_with->{$b->{user}} // 0) <=> ($shared_with->{$a->{user}} // 0)
+%                    ||  fc($a->{name}) cmp fc($b->{name})
+%                    } ($all_users->@*)) {
+%   my $name = "user-" . $idx++;
+    <span class="edit-label dropdown-item">
+    <input type="checkbox" name="share"
+           id="<%= $name %>"
+           value="<%= $user->{user} %>"
+           hx-post="<%= url_with( '/htmx-update-share/' . $note->filename ) %>"
+           hx-trigger="change"
+           hx-swap="none"
+           hx-target="this"
+           <%== $shared_with->{$user->{user}} ? 'checked' : ''%>
+    />
+    <label for="<%= $name %>" style="width: 100%"><%= $user->{name} %></label>
+    </span>
+%   $idx++;
+% }
+</form>
+</div>
 
 @@select-filter.html.ep
 <div id="form-filter-2">

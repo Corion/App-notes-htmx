@@ -22,6 +22,23 @@ has 'filename' => (
     is => 'rw',
 );
 
+=head2 C<< ->shared >>
+
+  $note->shared->{ $user } = $target_lint;
+
+For each user that this note has been shared with, the name of the symlink
+that this note is shared under.
+
+Later, once we move this to a database, this will likely change to an entry
+in a table of shared notes, but for now, this keeps the names of symlinks
+and the name of the symlink target (this note) together.
+
+=cut
+
+sub shared( $self ) {
+    return $self->frontmatter->{shared} //= {}
+}
+
 sub from_file( $class, $fn ) {
     my $f = Mojo::File->new($fn);
     my $body = $f->slurp('UTF-8');
@@ -42,6 +59,12 @@ sub save_to( $self, $fn ) {
         data_text => $self->body,
         frontmatter_hashref => $self->frontmatter,
     );
+
+    # Clean up empty shared entries:
+    if( my $s = $self->frontmatter->{ shared }) {
+        delete $self->frontmatter->{shared}
+            if ! $s->%*;
+    }
 
     $f->spew( $tfm->document_string, 'UTF-8' );
 }
