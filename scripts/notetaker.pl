@@ -202,6 +202,10 @@ sub match_label( $filter, $note ) {
     grep { $_ eq $filter } ($note->frontmatter->{labels} // [])->@*
 }
 
+sub match_username( $filter, $user ) {
+    grep { $_ =~ /\Q$filter\E/i } ([$user->{user}, $user->{name}])->@*
+}
+
 sub match_field_range( $filter, $field, $note ) {
     my $val = $note->frontmatter->{ $field } // '';
         (!$filter->{ start } || $filter->{ start } le $val)
