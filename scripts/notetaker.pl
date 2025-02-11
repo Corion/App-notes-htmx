@@ -494,6 +494,7 @@ sub delete_note( $c ) {
         # Save undo data?!
         $c->stash( undo => '/undelete/' . $note->filename );
         $note->frontmatter->{deleted} = timestamp(time);
+        remove_note_symlinks( $note );
         save_note( $session, $note, $fn );
         move_note( $session->document_directory . "/" . $note->filename  => $session->document_directory . "/deleted/" . $note->filename );
     }
@@ -598,6 +599,24 @@ sub copy_note( $c ) {
     }
 }
 
+sub remove_note_symlinks( $note ) {
+    # remove all old symlinks to this note
+    for my $user (keys $note->shared->%*) {
+        my $info = load_account($user);
+        if( $info ) {
+            # User still exists, so remove the symlink to the note
+            if( my $base = $info->{notes}
+                and $note->shared->{ $user }) {
+                my $symlink = $base . "/" . $note->shared->{ $user };
+                say "Removing/recreating symlink '$symlink'";
+                unlink $symlink or warn "Couldn't remove symlink '$symlink': $!";
+            }
+        }
+    }
+    $note->shared->%* = ();
+    return $note;
+}
+
 # This is slightly inefficient as it recreates all symlinks on every sharing
 # change
 sub share_note( $c, $inline=0 ) {
@@ -615,19 +634,7 @@ sub share_note( $c, $inline=0 ) {
     }
 
     if( $note ) {
-        # remove all old symlinks to this note
-        for my $user (keys $note->shared->%*) {
-            my $info = load_account($user);
-            if( $info ) {
-                # User still exists, so remove the symlink to the note
-                if( my $base = $info->{notes}
-                    and $note->shared->{ $user }) {
-                    my $symlink = $base . "/" . $note->shared->{ $user };
-                    say "Removing/recreating symlink '$symlink'";
-                    unlink $symlink or warn "Couldn't remove symlink '$symlink': $!";
-                }
-            }
-        }
+        remove_note_symlinks( $note );
 
         my @shared_with = $c->every_param('share')->@*;
 
