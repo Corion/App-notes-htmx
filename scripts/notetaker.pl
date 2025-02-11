@@ -607,6 +607,13 @@ sub share_note( $c, $inline=0 ) {
     my $fn = $c->param('fn');
     my $note = find_note( $session, $fn );
 
+    my $user_share_fn = Mojo::File->new( $session->document_directory . "/" . $fn )->to_abs;
+    if( -l $user_share_fn ) {
+        # If it is a symlink, we can't share it further, or edit the sharing
+        $c->redirect_to( $c->url_for('/note/') . $fn);
+        return
+    }
+
     if( $note ) {
         # remove all old symlinks to this note
         for my $user (keys $note->shared->%*) {
@@ -621,8 +628,6 @@ sub share_note( $c, $inline=0 ) {
                 }
             }
         }
-
-        my $user_share_fn = Mojo::File->new( $session->document_directory . "/" . $fn )->to_abs;
 
         my @shared_with = $c->every_param('share')->@*;
 
