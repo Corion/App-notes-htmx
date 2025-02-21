@@ -94,7 +94,7 @@ Both values will be returned in the C< created > key as a subhash.
 =cut
 
 sub fetch_filter( $c ) {
-    my @include = $c->all_params('folder');
+    my @include = $c->every_param('folder')->@*;
     my $filter = {
         maybe text  => $c->param('q'),
         maybe label => $c->param('label'),
@@ -1456,16 +1456,20 @@ htmx.onLoad(function(elt){
 @@documents.html.ep
 <div id="documents" class="">
 % my %sections;
-% my %section_title = (qw(pinned Pinned default Notes));
+% my %section_title = (qw(pinned Pinned default Notes deleted Deleted archived Archived));
 % for my $note ($documents->@*) {
-%     my $section = 'default';;
-%     if( $note->frontmatter->{pinned} ) {
+%     my $section = 'default';
+%     if( $note->frontmatter->{archived} ) {
+%         $section = 'archived';
+%     } elsif( $note->frontmatter->{deleted} ) {
+%         $section = 'deleted';
+%     } elsif( $note->frontmatter->{pinned} ) {
 %         $section = 'pinned';
 %     }
 %     $sections{ $section } //= [];
 %     push $sections{ $section }->@*, $note;
 % };
-% for my $section (qw(pinned default)) {
+% for my $section (qw(pinned default archived deleted)) {
 %     if( $sections{ $section }) {
     <h5><%= $section_title{ $section } %></h5>
     <div class="documents grid-layout">
