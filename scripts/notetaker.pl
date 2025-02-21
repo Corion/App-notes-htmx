@@ -54,6 +54,45 @@ sub date_range_visual( $range ) {
     return qq{between $s and $e};
 }
 
+=head2 C<< fetch_filter >>
+
+  my $filter = fetch_filter( $c );
+
+Fetches the current filter settings from the request in C< $c > and returns
+it as a hashref.
+
+The current keys are:
+
+=over 4
+
+=item B<q>
+
+The search term
+
+=item B<folder>
+
+The folders to also include. Valid values are C<archived> and C<deleted>.
+
+=item B<label>
+
+The note label
+
+=item B<color>
+
+The note color, formatted as C< #xxxxxx >
+
+=item B<created.start>
+
+=item B<created.end>
+
+The note creation date, must be before C<.end> and after C<.start>.
+
+Both values will be returned in the C< created > key as a subhash.
+
+=back
+
+=cut
+
 sub fetch_filter( $c ) {
     my @include = $c->all_params('folder');
     my $filter = {
