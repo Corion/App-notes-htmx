@@ -1535,20 +1535,20 @@ htmx.onLoad(function(elt){
     </li>
     <li class="nav-item"><a href="<%= url_for( "/" )%>">index</a></li>
     <li class="nav-item">
-      <div id="form-filter-2">
-      <form id="form-filter-instant" method="GET" action="<%= url_with( "/" )->query({ "show-filter" => 1 }) %>">
+      <div id="form-filter">
 % if( $show_filter ) {
 %=include('select-filter', types => [], colors => $colors, labels => $labels, moniker => $moniker, created_buckets => $created_buckets)
 % } else {
 %# We already have a selection
+      <form id="form-filter-instant-small" method="GET" action="<%= url_with( "/" )->query({ "show-filter" => 1 }) %>">
         <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
             placeholder="Search"
             hx-get="<%= url_with( "/" )->query( 'show-filter'=>1 ) %>"
             hx-trigger="focus"
             hx-target="#body"
         />
-% }
       </form>
+% }
       </div>
     </li>
     </ul>
