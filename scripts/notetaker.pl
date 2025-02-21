@@ -55,12 +55,14 @@ sub date_range_visual( $range ) {
 }
 
 sub fetch_filter( $c ) {
+    my @include = $c->all_params('folder');
     my $filter = {
         maybe text  => $c->param('q'),
         maybe label => $c->param('label'),
         maybe color => $c->param('color'),
         maybe created_start => $c->param('created.start'),
         maybe created_end   => $c->param('created.end'),
+        maybe include       => (@include ? \@include : () ),
     };
     if( $filter->{color} ) {
         $filter->{color} =~ /#[0-9a-f]{6}/
