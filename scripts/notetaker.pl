@@ -1723,12 +1723,13 @@ htmx.onLoad(function(elt){
 @@display-text.html.ep
 <div id="note-<%= $field_name %>" class="<%= $class %>">
 % if( defined $value && $value ne '' ) {
-    <%= $value %>
     <a href="<%= url_for( "/edit-$field_name/" . $note->filename ) %>"
     hx-get="<%= url_for( "/htmx-edit-$field_name/" . $note->filename ) %>"
     hx-target="closest div"
     hx-swap="innerHTML"
-    >&#x270E;</a>
+    >
+    <%= $value %>
+    &#x270E;</a>
 % } else {
     <a class="editable"
        href="<%= url_for( "/edit-$field_name/" . $note->filename ) %>"
