@@ -2083,14 +2083,15 @@ htmx.onLoad(function(elt){
 
 @@select-filter.html.ep
 <div id="form-filter-2">
-      <form id="form-filter-instant" method="GET" action="<%= url_for( "/" ) %>">
+      <form id="form-filter-instant" method="GET" action="<%= url_for( "/" ) %>"
+            hx-get="<%= url_with( "/filter" ) %>"
+            hx-target="#documents"
+            hx-swap="outerHTML"
+            hx-trigger="change target:input, input delay:200ms changed, keyup[key=='Enter'], load"
+      >
         <div class="input-group">
         <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
             placeholder="<%== $moniker %>"
-            hx-get="<%= url_with( "/filter" ) %>"
-            hx-trigger="input delay:200ms changed, keyup[key=='Enter'], load"
-            hx-target="#documents"
-            hx-swap="outerHTML"
             autofocus
         />
         <span class="input-group-append">
@@ -2101,7 +2102,6 @@ htmx.onLoad(function(elt){
 % }
         </span>
         </div>
-      </form>
 <!-- (note) types (images, lists, ...) -->
 % if( $types->@* ) {
 <div>
@@ -2136,5 +2136,20 @@ htmx.onLoad(function(elt){
     <a href="<%= url_with('/')->query({ 'created.start' => $t->{start}, 'created.end' => $t->{end} }) %>"><%= $t->{vis} %></a>
 %    }
 </div>
+<div>
+<h2>Also search</h2>
+% my $include = $filter->{include} // [];
+% my $deleted = grep { $_ eq 'deleted' } $include->@*;
+% my $archived = grep { $_ eq 'archived' } $include->@*;
+<label class="form-check-label" for="archived">Archived notes</label>
+<input class="form-check-input" type="checkbox" name="folder" value="archived" id="archived" <%= $archived ? 'checked' : '' %>
+    hx-trigger="change"
+/>
+<label  class="form-check-label" for="deleted">Deleted notes</label>
+<input  class="form-check-input" type="checkbox" name="folder" value="deleted" id="deleted" <%= $deleted ? 'checked' : '' %>
+    hx-trigger="change"
+/>
+</div>
 %}
+      </form>
 </div>
