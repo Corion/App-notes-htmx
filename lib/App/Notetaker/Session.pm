@@ -64,9 +64,12 @@ sub init( $self, $document_directory = $self->document_directory ) {
     mkdir $self->document_directory . "/archived"; # so we can always attach media
 }
 
-sub documents( $self, $document_directory = $self->document_directory ) {
-    #warn "Loading '" . $self->document_directory . "/*.markdown'";
-    return glob $self->document_directory . "/*.markdown";
+sub documents( $self, %options ) {
+    my $document_directory = $options{ document_directory } // $self->document_directory;
+    my $include = $options{ include } // [];
+
+    unshift @include, '.';
+    return map { glob "$document_directory/$_/*.markdown" } @include;
 }
 
 sub clean_filename( $self, $fn ) {
