@@ -1585,7 +1585,9 @@ htmx.onLoad(function(elt){
 <meta charset="utf-8">
 %=include 'htmx-header'
 
-<title><%= $note->frontmatter->{title} %> - notekeeper</title>
+% my $title = $note->frontmatter->{title} // '';
+% $title = 'untitled' if length $title == 0;
+<title><%= $title %> - notekeeper</title>
 </head>
 <body
     hx-boost="true"
