@@ -1752,6 +1752,7 @@ htmx.onLoad(function(elt){
 >
     <input type="text" name="<%= $field_name %>" id="note-input-text-<%= $field_name %>" value="<%= $value %>"
         autofocus
+        onfocus="this.select()"
     />
     <button type="submit" class="nojs">Save</button>
 <!--
