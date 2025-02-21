@@ -68,8 +68,8 @@ sub documents( $self, %options ) {
     my $document_directory = $options{ document_directory } // $self->document_directory;
     my $include = $options{ include } // [];
 
-    unshift @include, '.';
-    return map { glob "$document_directory/$_/*.markdown" } @include;
+    unshift $include->@*, '.';
+    return map { glob "$document_directory/$_/*.markdown" } $include->@*;
 }
 
 sub clean_filename( $self, $fn ) {

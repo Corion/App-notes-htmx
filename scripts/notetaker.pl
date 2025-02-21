@@ -311,7 +311,7 @@ sub get_documents($session, $filter={}) {
             $stat{ $note } = (stat($_))[9]; # most-recent changed;
             $note
         }
-        $session->documents
+        $session->documents( include => $filter->{include} )
 }
 
 # Ugh - we are conflating display and data...
