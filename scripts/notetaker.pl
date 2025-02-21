@@ -79,6 +79,14 @@ sub fetch_filter( $c ) {
     return $filter
 }
 
+=head2 C<< filter_moniker( $filter ) >>
+
+  my $description = filter_moniker( fetch_filter( $c ));
+
+Returns an (English) textual description of the current filter.
+
+=cut
+
 sub filter_moniker( $filter ) {
     my ($attr, $location, $created);
     if( $filter->{label} ) {
