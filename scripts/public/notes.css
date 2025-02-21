@@ -104,6 +104,11 @@ nav ul li {
     z-index: 1;
 }
 
+/* Move our UI above the clickable links */
+#btn-new {
+    z-index: 2;
+}
+
 #single-note {
     display: flex;
 }

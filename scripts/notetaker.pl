@@ -1373,7 +1373,7 @@ htmx.onLoad(function(elt){
 %=include "documents", documents => $documents
     </main>
 </div>
-<div class="dropup position-fixed bottom-0 end-0 rounded-circle m-5">
+<div id="btn-new" class="dropup position-fixed bottom-0 end-0 rounded-circle m-5">
   <div class="btn-group">
     <a class="btn btn-success btn-lg"
        href="<%= url_with('/new' ) %>"
