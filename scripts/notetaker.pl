@@ -2107,7 +2107,11 @@ htmx.onLoad(function(elt){
 <div>
 <h2>Types</h2>
 %    for my $t ($types->@*) {
-    <a href="<%= url_with('/')->query({ type => $t }) %>"><%= $t %></a>
+    <a href="<%= url_with('/')->query({ type => $t }) %>"
+       hx-disinherit="*"
+       hx-target="#body"
+       hx-get="<%= url_with('/')->query({ type => $t }) %>"
+    ><%= $t %></a>
 %    }
 </div>
 %}
@@ -2115,7 +2119,11 @@ htmx.onLoad(function(elt){
 <div>
 <h2>Labels</h2>
 %    for my $l ($labels->@*) {
-    <a href="<%= url_with('/')->query({ label => $l }) %>"><%= $l %></a>
+    <a href="<%= url_with('/')->query({ label => $l }) %>"
+       hx-disinherit="*"
+       hx-target="#body"
+       hx-get="<%= url_with('/')->query({ label => $l }) %>"
+    ><%= $l %></a>
 %    }
 </div>
 %}
@@ -2124,7 +2132,11 @@ htmx.onLoad(function(elt){
 <div>
 <h2>Colors</h2>
 %    for my $l ($colors->@*) {
-    <a href="<%= url_with('/')->query({ color => $l }) %>"><span class="color-circle" style="background-color:<%== $l %>;">&nbsp;</span></a>
+    <a href="<%= url_with('/')->query({ color => $l }) %>"
+       hx-disinherit="*"
+       hx-target="#body"
+       hx-get="<%= url_with('/')->query({ color => $l }) %>"
+    ><span class="color-circle" style="background-color:<%== $l %>;">&nbsp;</span></a>
 %    }
 </div>
 %}
@@ -2133,7 +2145,11 @@ htmx.onLoad(function(elt){
 <div>
 <h2>Created</h2>
 %    for my $t ($created_buckets->@*) {
-    <a href="<%= url_with('/')->query({ 'created.start' => $t->{start}, 'created.end' => $t->{end} }) %>"><%= $t->{vis} %></a>
+    <a href="<%= url_with('/')->query({ 'created.start' => $t->{start}, 'created.end' => $t->{end} }) %>"
+       hx-disinherit="*"
+       hx-target="#body"
+       hx-get="<%= url_with('/')->query({ 'created.start' => $t->{start}, 'created.end' => $t->{end} }) %>"
+    ><%= $t->{vis} %></a>
 %    }
 </div>
 <div>
