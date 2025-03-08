@@ -1120,6 +1120,9 @@ sub update_pinned( $c, $pinned, $inline ) {
     }
 }
 
+# We also want to export the current filter as an archive
+# so export_archive should take a list of documents/a filter
+# Also, we currently don't export the attached files/images...
 sub export_archive( $c ) {
     return login_detour($c) unless $c->is_user_authenticated;
 
