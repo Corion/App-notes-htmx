@@ -1383,7 +1383,7 @@ sub as_html( $c, $doc, %options ) {
 __DATA__
 @@ htmx-header.html.ep
 <meta htmx.config.allowScriptTags="true">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
 <link rel="stylesheet" href="<%= url_for( "/bootstrap.5.3.3.min.css" ) %>" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 <link rel="stylesheet" href="<%= url_for( "/notes.css" )%>" />
 <script src="<%= url_for( "/bootstrap.5.3.3.min.js")%>"></script>
@@ -1700,7 +1700,7 @@ htmx.onLoad(function(elt){
     <div class="edited-date"><%= $note->frontmatter->{updated} %></div>
 </div>
 </div>
-<div id="actionbar" class="navbar mt-auto fixed-bottom bg-light">
+-<div id="actionbar" class="navbar mt-auto fixed-bottom bg-light">
     <div id="action-attach">
         <a href="<%= url_for( "/attach-image/" . $note->filename ) %>"
             class="btn btn-secondary"
