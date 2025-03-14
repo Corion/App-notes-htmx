@@ -873,16 +873,6 @@ sub update_note_title( $c, $autosave=0 ) {
     #}
 }
 
-sub capture_image( $c ) {
-    return login_detour($c) unless $c->is_user_authenticated;
-
-    my $session = get_session( $c );
-    my $note = find_note( $session, $c->param('fn') );
-    $c->stash( field_name => 'image' );
-    $c->stash( note => $note );
-    $c->render('attach-image');
-}
-
 # XXX create note subdirectory
 # XXX save image to attachments/ subdirectory
 # XXX create thumbnail for image / reduce resolution/quality
@@ -1298,7 +1288,6 @@ get  '/htmx-edit-title/*fn' => sub( $c ) { edit_note_title( $c, 1 ) };
 post '/edit-title/*fn' => \&update_note_title;
 post '/edit-title' => \&update_note_title; # empty note
 get  '/display-title/*fn' => \&display_note_title;
-get  '/attach-image/*fn' => \&capture_image;
 post '/upload-image/*fn' => \&attach_image;
 get  '/attach-audio/*fn' => \&capture_audio;
 post '/upload-audio/*fn' => \&attach_audio;
@@ -1700,13 +1689,20 @@ htmx.onLoad(function(elt){
     <div class="edited-date"><%= $note->frontmatter->{updated} %></div>
 </div>
 </div>
--<div id="actionbar" class="navbar mt-auto fixed-bottom bg-light">
+<div id="actionbar" class="navbar mt-auto fixed-bottom bg-light">
     <div id="action-attach">
-        <a href="<%= url_for( "/attach-image/" . $note->filename ) %>"
-            class="btn btn-secondary"
-            hx-get="<%= url_for( "/attach-image/" . $note->filename ) %>"
-            hx-swap="outerHTML"
-        >Add Image</a>
+        <form action="<%= url_for( "/upload-image/" . $note->filename ) %>" method="POST"
+            enctype='multipart/form-data'
+            hx-trigger="input from: find #upload-image"
+        >
+            <label for="upload-image">&#128247;</label>
+            <input id="upload-image" type="file" accept="image/*"
+                   name="image" id="capture-image-image"
+                   style="display: none"
+                   capture="environment"
+            />
+            <button type="submit" class="nojs">Upload</button>
+        </form>
     </div>
     <div id="action-attach-audio">
 %=include('attach-audio', note => $note, field_name => 'audio' );
@@ -1822,25 +1818,6 @@ htmx.onLoad(function(elt){
 % }
     >x</a>
 -->
-</form>
-
-@@attach-image.html.ep
-<form action="<%= url_for( "/upload-$field_name/" . $note->filename ) %>" method="POST"
-    enctype='multipart/form-data'
-    hx-trigger="input from: find #upload-<%=$field_name%>"
->
-    <label for="upload-<%=$field_name%>">Upload image</label>
-    <input id="upload-<%=$field_name%>" type="file" accept="image/*"
-           name="<%= $field_name %>" id="capture-image-<%= $field_name %>"
-           capture="environment"
-    />
-    <button type="submit" class="nojs">Upload</button>
-    <a href="<%= url_for( "/note/" . $note->filename ) %>"
-       hx-get="xxx-display-actions"
-       hx-target="xxx"
-       hx-swap="innerHTML"
-       hx-trigger="blur from:#note-input-text-<%= $field_name %>"
-    >x</a>
 </form>
 
 @@attach-audio.html.ep
