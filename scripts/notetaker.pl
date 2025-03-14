@@ -898,7 +898,7 @@ sub attach_image( $c ) {
     return if $filename !~ /\.(jpg|jpeg|png|webp|dng|heic)\z/i;
     $image->move_to($session->document_directory . "/$filename");
     $note->body( $note->body . "\n![$filename]($filename)\n" );
-    save_note( $session, $note, $session->document_directory . "/" . $note->filename );
+    save_note( $session, $note, $note->filename );
     $c->redirect_to($c->url_for('/note/' . $note->filename ));
 }
 
