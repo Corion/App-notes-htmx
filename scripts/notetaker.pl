@@ -410,7 +410,7 @@ get '/index.html' => \&render_index;
 get '/' => \&render_index;
 get '/filter' => \&render_filter;
 
-get  '/new' => sub( $c ) {
+any  '/new' => sub( $c ) {
     return login_detour($c) unless $c->is_user_authenticated;
 
     my $session = get_session( $c );
@@ -463,6 +463,11 @@ get  '/new' => sub( $c ) {
     if( my $body = $c->param('body-markdown')) {
         $note //= find_note( $session, $fn );
         $note->body( $body );
+    }
+    if( my $image = $c->param('image')) {
+        $note //= find_note( $session, $fn );
+        my $image = $c->param('image');
+        attach_image_impl( $session, $note, $image );
     }
     if( my $body_html = $c->param('body-html')) {
         $note //= find_note( $session, $fn );
@@ -877,17 +882,22 @@ sub update_note_title( $c, $autosave=0 ) {
 # XXX save image to attachments/ subdirectory
 # XXX create thumbnail for image / reduce resolution/quality
 # XXX convert image to jpeg in the process, or webp or whatever
+
+sub attach_image_impl( $session, $note, $image ) {
+    my $filename = "attachments/" . clean_fragment( $image->filename );
+    # Check that we have some kind of image file according to the name
+    return if $filename !~ /\.(jpg|jpeg|png|webp|dng|heic)\z/i;
+    $image->move_to($session->document_directory . "/$filename");
+    $note->body( $note->body . "\n![$filename]($filename)\n" );
+}
+
 sub attach_image( $c ) {
     return login_detour($c) unless $c->is_user_authenticated;
 
     my $session = get_session( $c );
     my $note = find_note( $session, $c->param('fn') );
     my $image = $c->param('image');
-    my $filename = "attachments/" . clean_fragment( $image->filename );
-    # Check that we have some kind of image file according to the name
-    return if $filename !~ /\.(jpg|jpeg|png|webp|dng|heic)\z/i;
-    $image->move_to($session->document_directory . "/$filename");
-    $note->body( $note->body . "\n![$filename]($filename)\n" );
+    attach_image_impl( $session, $note, $image );
     save_note( $session, $note, $note->filename );
     $c->redirect_to($c->url_for('/note/' . $note->filename ));
 }
@@ -1416,6 +1426,20 @@ htmx.onLoad(function(elt){
 </div>
 <div id="btn-new" class="dropup position-fixed bottom-0 end-0 rounded-circle m-5">
   <div class="btn-group">
+    <div class="btn btn-success btn-lg">
+        <form action="<%= url_for( "/new" ) %>" method="POST"
+            enctype='multipart/form-data'
+            hx-trigger="input from: find #upload-image"
+        >
+            <label for="upload-image">&#128247;</label>
+            <input id="upload-image" type="file" accept="image/*"
+                   name="image" id="capture-image-image"
+                   style="display: none"
+                   capture="environment"
+            />
+            <button type="submit" class="nojs">Upload</button>
+        </form>
+    </div>
     <a class="btn btn-success btn-lg"
        href="<%= url_with('/new' ) %>"
     ><i class="fa-solid fa-plus">+</i>
