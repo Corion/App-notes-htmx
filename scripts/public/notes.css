@@ -168,3 +168,15 @@ a.editable {
 .svg_icon {
     width: 1em;
 }
+
+@media print {
+    .noprint {
+        display: none !important;
+    }
+
+    ..note-container {
+        width: 100%;
+        max-width: 100%;
+        box-shadow: none;
+    }
+}

@@ -1424,7 +1424,7 @@ htmx.onLoad(function(elt){
 %=include "documents", documents => $documents
     </main>
 </div>
-<div id="btn-new" class="dropup position-fixed bottom-0 end-0 rounded-circle m-5">
+<div id="btn-new" class="dropup position-fixed bottom-0 end-0 rounded-circle m-5 noprint">
   <div class="btn-group">
     <div class="btn btn-success btn-lg">
         <form action="<%= url_for( "/new" ) %>" method="POST"
@@ -1541,7 +1541,7 @@ htmx.onLoad(function(elt){
 </html>
 
 @@navbar.html.ep
-<nav class="navbar navbar-expand-lg sticky-top bd-navbar bg-light">
+<nav class="navbar navbar-expand-lg sticky-top bd-navbar bg-light noprint">
 <div class="container-fluid">
 % if( $type eq 'documents' ) {
     <ul class="navbar-nav me-auto">
@@ -1672,8 +1672,7 @@ htmx.onLoad(function(elt){
 %               : '';
 %=include 'display-labels', labels => $note->frontmatter->{labels}, note => $note
 <div class="single-note"<%== $bgcolor %>>
-<div>Filename: <%= $note->filename %></div>
-<div id="editor-switch" class="nav nav-tabs">
+<div id="editor-switch" class="nav nav-tabs noprint">
 % my $active = $editor eq 'html' ? ' active' : '';
     <div class="nav-item"><a class="nav-link<%= $active %>" href="<%= url_with()->query({ editor => 'html' }) %>">HTML</a></div>
 %    $active = $editor eq 'markdown' ? ' active' : '';
@@ -1713,7 +1712,7 @@ htmx.onLoad(function(elt){
     <div class="edited-date"><%= $note->frontmatter->{updated} %></div>
 </div>
 </div>
-<div id="actionbar" class="navbar mt-auto fixed-bottom bg-light">
+<div id="actionbar" class="navbar mt-auto fixed-bottom bg-light noprint">
     <div id="action-attach">
         <form action="<%= url_for( "/upload-image/" . $note->filename ) %>" method="POST"
             enctype='multipart/form-data'
