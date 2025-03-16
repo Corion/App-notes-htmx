@@ -133,7 +133,7 @@ a.editable {
     text-decoration: none;
 }
 
-.xcontainer > textarea {
+.note-container > textarea {
   /* box-sizing: border-box; /* fit parent width */
   flex: 1;
   height: 100%;

@@ -1687,7 +1687,7 @@ htmx.onLoad(function(elt){
 % } else {
 %=include "display-text", field_name => 'title', value => $note->frontmatter->{title}, class => 'title', reload => 1
 % }
-<div class="xcontainer" style="height:400px">
+<div class="note-container" style="height:400px">
 % if( $editor eq 'markdown' ) {
 <textarea name="body-markdown" id="note-textarea" autofocus
     hx-post="<%= url_for( $doc_url ) %>"
