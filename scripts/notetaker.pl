@@ -1741,13 +1741,6 @@ htmx.onLoad(function(elt){
 % my %labels; $labels{ $_ } = 1 for ($note->frontmatter->{labels} // [])->@*;
 %= include 'menu-edit-labels', note => $note, labels => \%labels, label_filter => ''
     </div>
-    <div id="action-color">
-        <a href="<%= url_for( "/edit-color/" . $note->filename ) %>"
-            hx-get="<%= url_for( "/edit-color/" . $note->filename ) %>"
-            hx-swap="outerHTML"
-        >Set color</a>
-    </div>
-
     <div id="action-copy">
         <form action="<%= url_for('/copy/' . $note->filename ) %>" method="POST"
         ><button class="btn btn-secondary" type="submit">&#xFE0E;⎘</button>
@@ -1766,6 +1759,65 @@ htmx.onLoad(function(elt){
 </div>
 </body>
 </html>
+
+@@html-actions.html.ep
+      <button onclick="changeBlock('h1')">XL</button>
+      <button onclick="changeBlock('h2')">L</button>
+      <button onclick="changeBlock('p')">M</button>
+      <button onclick="changeBlock('small')">S</button>
+
+      <button onclick="applyFormat('strong')"><b>B</b></button>
+      <button onclick="applyFormat('em')"><i>I</i></button>
+      <button onclick="applyFormat('u')"><u>U</u></button>
+      <button onclick="applyURL()">🔗</button>
+
+@@edit-actions.html.ep
+    <div id="action-color">
+%=include('edit-color', value => $note->frontmatter->{color}, field_name => 'color');
+    </div>
+
+      <!--
+      <div class="dropdown">
+        <button onclick="toggleDropdown('textColorDropdown')">Color</button>
+        <div id="textColorDropdown" class="dropdown-content">
+          <div class="swatch-grid">
+            <button class="color-swatch" style="background: #000000;" onmousedown="event.preventDefault();"
+              onclick="applyTextColor('#000000'); toggleDropdown('textColorDropdown')"></button>
+            <button class="color-swatch" style="background: #FF3B30;" onmousedown="event.preventDefault();"
+              onclick="applyTextColor('#FF3B30'); toggleDropdown('textColorDropdown')"></button>
+            <button class="color-swatch" style="background: #FF9500;" onmousedown="event.preventDefault();"
+              onclick="applyTextColor('#FF9500'); toggleDropdown('textColorDropdown')"></button>
+            <button class="color-swatch" style="background: #FFCC00;" onmousedown="event.preventDefault();"
+              onclick="applyTextColor('#FFCC00'); toggleDropdown('textColorDropdown')"></button>
+            <button class="color-swatch" style="background: #4CD964;" onmousedown="event.preventDefault();"
+              onclick="applyTextColor('#4CD964'); toggleDropdown('textColorDropdown')"></button>
+            <button class="color-swatch" style="background: #5AC8FA;" onmousedown="event.preventDefault();"
+              onclick="applyTextColor('#5AC8FA'); toggleDropdown('textColorDropdown')"></button>
+            <button class="color-swatch" style="background: #007AFF;" onmousedown="event.preventDefault();"
+              onclick="applyTextColor('#007AFF'); toggleDropdown('textColorDropdown')"></button>
+            <button class="color-swatch" style="background: #5856D6;" onmousedown="event.preventDefault();"
+              onclick="applyTextColor('#5856D6'); toggleDropdown('textColorDropdown')"></button>
+          </div>
+        </div>
+      </div>
+      -->
+
+@@editor-toolbar.html.ep
+    <div id="toolbar" class="no-print">
+<div id="editor-switch" class="nav nav-pills">
+% my $active = $editor eq 'markdown' ? ' active' : '';
+    <div class="nav-item"><a class="nav-link<%= $active %>" href="<%= url_with()->query({ editor => 'markdown' }) %>">Markdown</a></div>
+%    $active = $editor eq 'html' ? ' active' : '';
+    <div class="nav-item"><a class="nav-link<%= $active %>" href="<%= url_with()->query({ editor => 'html' }) %>">HTML</a></div>
+</div>
+
+%= include('edit-actions')
+% if( $editor eq 'html' ) {
+      <div id="splitbar-html">|</div>
+%= include('html-actions')
+% }
+      <div id="splitbar">|</div>
+    </div>
 
 @@login.html.ep
 <!DOCTYPE html>
