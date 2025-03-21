@@ -1432,8 +1432,8 @@ htmx.onLoad(function(elt){
             enctype='multipart/form-data'
             hx-trigger="change"
         >
-            <label for="upload-image">&#128247;</label>
-            <input id="upload-image" type="file" accept="image/*"
+            <label for="upload-image-new">&#128247;</label>
+            <input id="upload-image-new" type="file" accept="image/*"
                    name="image" id="capture-image-image"
                    style="display: none"
                    capture="environment"
