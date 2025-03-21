@@ -1606,6 +1606,9 @@ htmx.onLoad(function(elt){
         class="btn btn-secondary" id="export">Export notes</a>
     </div>
     <div class="dropdown-item">
+    <a class="nav-link" href="https://github.com/Corion/App-notes-htmx" target="_blank">Github</a>
+    </div>
+    <div class="dropdown-item">
       <form id="form-logout" method="POST" action="<%= url_for( "/logout" ) %>">
       <button name="logout"
           class="btn btn-secondary" id="logout">Log '<%= $user->{user} %>' out</button>
@@ -1680,12 +1683,6 @@ htmx.onLoad(function(elt){
 %               : '';
 %=include 'display-labels', labels => $note->frontmatter->{labels}, note => $note
 <div class="single-note"<%== $bgcolor %>>
-<div id="editor-switch" class="nav nav-tabs noprint">
-% my $active = $editor eq 'html' ? ' active' : '';
-    <div class="nav-item"><a class="nav-link<%= $active %>" href="<%= url_with()->query({ editor => 'html' }) %>">HTML</a></div>
-%    $active = $editor eq 'markdown' ? ' active' : '';
-    <div class="nav-item"><a class="nav-link<%= $active %>" href="<%= url_with()->query({ editor => 'markdown' }) %>">Markdown</a></div>
-</div>
 % my $doc_url = '/note/' . $note->filename;
 <form action="<%= url_for( $doc_url ) %>" method="POST">
 <button class="nojs" name="save" type="submit">Save</button>
