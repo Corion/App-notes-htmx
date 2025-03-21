@@ -1579,6 +1579,9 @@ htmx.onLoad(function(elt){
     <ul class="navbar-nav ms-auto" >
     <li class="nav-item">
     <a href="https://github.com/Corion/App-notes-htmx" target="_blank">Github</a>
+    <li class="nav-item" id="action-share">
+    <!-- pop up the sharing selector like a context menu -->
+%= include 'menu-edit-share', note => $note, all_users => $all_users, shared_with => $shared_with, user_filter => ''
     </li>
 
 % if( $user ) {
@@ -1741,15 +1744,6 @@ htmx.onLoad(function(elt){
         >Set color</a>
     </div>
 
-    <div id="action-share">
-    <!-- pop up the sharing selector like a context menu -->
-        <a
-        --href="<%= url_for('/share/') . $note->filename %>"
-         class="btn btn-secondary"
-        >
-%= include 'menu-edit-share', note => $note, all_users => $all_users, shared_with => $shared_with, user_filter => ''
-        </a>
-    </div>
     <div id="action-copy">
         <form action="<%= url_for('/copy/' . $note->filename ) %>" method="POST"
         ><button class="btn btn-secondary" type="submit">&#xFE0E;⎘</button>
