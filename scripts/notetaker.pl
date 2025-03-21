@@ -1430,7 +1430,7 @@ htmx.onLoad(function(elt){
     <div class="btn btn-success btn-lg">
         <form action="<%= url_for( "/new" ) %>" method="POST"
             enctype='multipart/form-data'
-            hx-trigger="input from: find #upload-image"
+            hx-trigger="change"
         >
             <label for="upload-image">&#128247;</label>
             <input id="upload-image" type="file" accept="image/*"
