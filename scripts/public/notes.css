@@ -1,3 +1,7 @@
+.nojs {
+    // we will add rules using JS to this later
+}
+
 nav {
     display: flex;
     align-items: center;

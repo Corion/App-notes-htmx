@@ -1394,9 +1394,17 @@ __DATA__
 <script src="<%= url_for( "/app-notekeeper.js" )%>"></script>
 <script>
 //htmx.logAll();
-htmx.onLoad(function(elt){
-    elt.querySelectorAll('.nojs').forEach(e => e.remove());
-})
+
+// Hide all nodes that have the 'nojs' class
+window.addEventListener('DOMContentLoaded', function() {
+    for (let r of window.document.styleSheets[1].cssRules) {
+        console.log(r);
+        if( r.selectorText === '.nojs' ) {
+            r.style.display = 'none';
+            break;
+        }
+    };
+});
 </script>
 
 @@ index.html.ep
