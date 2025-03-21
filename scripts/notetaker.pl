@@ -1589,7 +1589,7 @@ htmx.onLoad(function(elt){
     <div class="dropdown-menu dropdown-menu-end dropdown-menu-right">
     <div class="dropdown-item">
       <a href="<%= url_for('/setup') %>"
-          class="btn btn-secondary" id="setup">⚙</a>
+          class="btn btn-secondary" id="setup">⚙ Setup</a>
     </div>
     <div class="dropdown-item">
       <a id="btn-export"
