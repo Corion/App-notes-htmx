@@ -1393,6 +1393,7 @@ __DATA__
 <script type="module" src="<%= url_for( "/morphdom-esm.2.7.4.js")%>"></script>
 <script src="<%= url_for( "/app-notekeeper.js" )%>"></script>
 <script>
+//htmx.logAll();
 htmx.onLoad(function(elt){
     elt.querySelectorAll('.nojs').forEach(e => e.remove());
 })
