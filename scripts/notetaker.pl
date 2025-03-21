@@ -2050,12 +2050,12 @@ htmx.onLoad(function(elt){
 </form>
 
 @@menu-edit-share.html.ep
-<div class="dropup" id="dropdown-share" hx-trigger="show.bs.dropdown"
+<div id="dropdown-share" hx-trigger="show.bs.dropdown"
   hx-get="<%= url_with( '/htmx-share-menu/' . $note->filename ) %>"
   hx-target="find .dropdown-menu"
   hx-disinherit="hx-target"
   >
-    <button type="button" class="btn btn-secondary dropdown-toggle hide-toggle"
+    <button type="button" class="btn btn-secondary dropdown dropdown-toggle hide-toggle"
             data-bs-toggle="dropdown"
             aria-expanded="false"
             aria-haspopup="true"
