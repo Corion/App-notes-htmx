@@ -1928,7 +1928,7 @@ htmx.onLoad(function(elt){
     <option>#00ff00</option>
     <option>#0000ff</option>
   </datalist>
-  <button type="submit">Set</button>
+  <button type="submit" class="nojs">Set</button>
 </form>
 
 @@display-labels.html.ep
