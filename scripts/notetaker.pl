@@ -1698,7 +1698,7 @@ htmx.onLoad(function(elt){
 <div id="note_html"
     hx-post="<%= url_for( $doc_url ) %>"
     hx-vals='js:{"body-html":htmx.find("#usercontent").innerHTML}'
-    hx-trigger="input"
+    hx-trigger="input delay:200ms"
     hx-swap="none"
     >
     <!-- This is untrusted content, so tell HTMX that -->
