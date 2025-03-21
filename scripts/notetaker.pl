@@ -1551,14 +1551,13 @@ window.addEventListener('DOMContentLoaded', function() {
 @@navbar.html.ep
 <nav class="navbar navbar-expand-lg sticky-top bd-navbar bg-light noprint">
 <div class="container-fluid d-flex">
-    <ul class="navbar-nav me-auto">
 % if( $type eq 'documents' ) {
-    <li class="nav-item">
+    <div class="nav-item">
         <a href="#" data-bs-target="#sidebar" data-bs-toggle="collapse"
                class="border rounded-3 p-1 text-decoration-none"><i class="bi bi-list bi-lg py-2 p-1"></i> Labels</a>
-    </li>
-    <li class="nav-item"><a href="<%= url_for( "/" )%>">index</a></li>
-    <li class="nav-item">
+    </div>
+    <div class="nav-item"><a href="<%= url_for( "/" )%>">index</a></div>
+    <div class="nav-item">
       <div id="form-filter">
 % if( $show_filter ) {
 %=include('select-filter', types => [], colors => $colors, labels => $labels, moniker => $moniker, created_buckets => $created_buckets)
@@ -1574,31 +1573,17 @@ window.addEventListener('DOMContentLoaded', function() {
       </form>
 % }
       </div>
-    </li>
+    </div>
 % } elsif( $type eq 'note' ) {
-    <li class="nav-item"><a href="<%= url_with( "/" ) %>"
+    <div class="nav-item"><a href="<%= url_with( "/" ) %>"
             hx-trigger="click, keyup[key=='Escape'] from:body"
         ><span class="rounded-circle fs-3">&#x2715;</span></a>
-    </li>
+    </div>
 %=include('editor-toolbar', editor => $editor)
-% }
-    </ul>
-
-    <ul class="navbar-nav ms-auto" >
-% if( $type eq 'note' ) {
-    <li class="nav-item" id="action-share">
-    <!-- pop up the sharing selector like a context menu -->
-%= include 'menu-edit-share', note => $note, all_users => $all_users, shared_with => $shared_with, user_filter => ''
-    </li>
-    <li class="nav-item" id="action-copy">
-        <form action="<%= url_for('/copy/' . $note->filename ) %>" method="POST"
-        ><button class="btn btn-secondary" type="submit">&#xFE0E;⎘</button>
-        </form>
-    </li>
 % }
 
 % if( $user ) {
-    <li class="nav-item dropdown">
+    <div class="nav-item dropdown">
     <div class="btn btn-secondary dropdown-toggle dropdown-menu-end"
         data-bs-toggle="dropdown">☰</div>
 
@@ -1607,6 +1592,18 @@ window.addEventListener('DOMContentLoaded', function() {
       <a href="<%= url_for('/setup') %>"
           class="btn btn-secondary" id="setup">⚙ Setup</a>
     </div>
+% if( $type eq 'note' ) {
+    <div class="dropdown-item" id="action-share">
+    <!-- pop up the sharing selector like a context menu -->
+%= include 'menu-edit-share', note => $note, all_users => $all_users, shared_with => $shared_with, user_filter => ''
+    </div>
+    <div class="dropdown-item" id="action-copy">
+        <form action="<%= url_for('/copy/' . $note->filename ) %>" method="POST"
+        ><button class="btn btn-secondary" type="submit">&#xFE0E;⎘ Copy note</button>
+        </form>
+    </div>
+% }
+
     <div class="dropdown-item">
       <a id="btn-export"
         hx-boost="false"
@@ -1623,9 +1620,8 @@ window.addEventListener('DOMContentLoaded', function() {
       </form>
     </div>
     </div>
-    </li>
+    </div>
 % }
-    </ul>
 </div>
 </nav>
 
@@ -1767,6 +1763,8 @@ window.addEventListener('DOMContentLoaded', function() {
 </html>
 
 @@html-actions.html.ep
+<div class="nav-item">
+<div id="toolbar">
       <button onclick="changeBlock('h1')">XL</button>
       <button onclick="changeBlock('h2')">L</button>
       <button onclick="changeBlock('p')">M</button>
@@ -1775,10 +1773,12 @@ window.addEventListener('DOMContentLoaded', function() {
       <button onclick="applyFormat('strong')"><b>B</b></button>
       <button onclick="applyFormat('em')"><i>I</i></button>
       <button onclick="applyFormat('u')"><u>U</u></button>
-      <button onclick="applyURL()">🔗</button>
+      <!-- <button onclick="applyURL()">🔗</button> -->
+      </div>
+</div>
 
 @@edit-actions.html.ep
-    <div id="action-color">
+    <div id="action-color" class="nav-item">
 %=include('edit-color', value => $note->frontmatter->{color}, field_name => 'color');
     </div>
 
@@ -1809,21 +1809,16 @@ window.addEventListener('DOMContentLoaded', function() {
       -->
 
 @@editor-toolbar.html.ep
-    <div id="toolbar" class="no-print">
-<div id="editor-switch" class="nav nav-pills">
-% my $active = $editor eq 'markdown' ? ' active' : '';
-    <div class="nav-item"><a class="nav-link<%= $active %>" href="<%= url_with()->query({ editor => 'markdown' }) %>">Markdown</a></div>
-%    $active = $editor eq 'html' ? ' active' : '';
-    <div class="nav-item"><a class="nav-link<%= $active %>" href="<%= url_with()->query({ editor => 'html' }) %>">HTML</a></div>
-</div>
-
+% my $active = $editor eq 'markdown' ? ' btn-primary' : '';
+    <div class="nav-item"><a class="btn <%= $active %>" href="<%= url_with()->query({ editor => 'markdown' }) %>">MD</a></div>
+%    $active = $editor eq 'html' ? ' btn-primary' : '';
+    <div class="nav-item"><a class="btn <%= $active %>" href="<%= url_with()->query({ editor => 'html' }) %>">HTML</a></div>
 %= include('edit-actions')
 % if( $editor eq 'html' ) {
-      <div id="splitbar-html">|</div>
+      <!-- <div id="splitbar-html">|</div> -->
 %= include('html-actions')
 % }
-      <div id="splitbar">|</div>
-    </div>
+    <div id="splitbar" class="nav-item flex-grow-1">&nbsp;</div>
 
 @@login.html.ep
 <!DOCTYPE html>
