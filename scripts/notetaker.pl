@@ -1543,9 +1543,9 @@ htmx.onLoad(function(elt){
 
 @@navbar.html.ep
 <nav class="navbar navbar-expand-lg sticky-top bd-navbar bg-light noprint">
-<div class="container-fluid">
-% if( $type eq 'documents' ) {
+<div class="container-fluid d-flex">
     <ul class="navbar-nav me-auto">
+% if( $type eq 'documents' ) {
     <li class="nav-item">
         <a href="#" data-bs-target="#sidebar" data-bs-toggle="collapse"
                class="border rounded-3 p-1 text-decoration-none"><i class="bi bi-list bi-lg py-2 p-1"></i> Labels</a>
