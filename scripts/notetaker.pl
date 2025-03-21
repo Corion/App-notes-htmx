@@ -1567,27 +1567,31 @@ htmx.onLoad(function(elt){
 % }
       </div>
     </li>
-    </ul>
 % } elsif( $type eq 'note' ) {
-    <ul>
-    <li><a href="<%= url_with( "/" ) %>"
+    <li class="nav-item"><a href="<%= url_with( "/" ) %>"
             hx-trigger="click, keyup[key=='Escape'] from:body"
         ><span class="rounded-circle fs-3">&#x2715;</span></a></li>
-    <!-- delete note -->
-    </ul>
+%=include('editor-toolbar', editor => $editor)
 % }
+    </ul>
+
     <ul class="navbar-nav ms-auto" >
-    <li class="nav-item">
-    <a href="https://github.com/Corion/App-notes-htmx" target="_blank">Github</a>
+% if( $type eq 'note' ) {
     <li class="nav-item" id="action-share">
     <!-- pop up the sharing selector like a context menu -->
 %= include 'menu-edit-share', note => $note, all_users => $all_users, shared_with => $shared_with, user_filter => ''
     </li>
+    <li class="nav-item" id="action-copy">
+        <form action="<%= url_for('/copy/' . $note->filename ) %>" method="POST"
+        ><button class="btn btn-secondary" type="submit">&#xFE0E;⎘</button>
+        </form>
+    </li>
+% }
 
 % if( $user ) {
     <li class="nav-item dropdown">
-    <div class="btn btn-secondary dropdown-toggle"
-        data-bs-toggle="dropdown"><%= "\N{BUST IN SILHOUETTE}" %></div>
+    <div class="btn btn-secondary dropdown-toggle dropdown-menu-end"
+        data-bs-toggle="dropdown">☰</div>
 
     <div class="dropdown-menu dropdown-menu-end dropdown-menu-right">
     <div class="dropdown-item">
