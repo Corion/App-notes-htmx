@@ -1914,13 +1914,11 @@ htmx.onLoad(function(elt){
 
 @@edit-color.html.ep
 <form action="<%= url_for( "/edit-color/" . $note->filename ) %>" method="POST"
-    hx-swap="outerHTML"
-    hx-target="#body"
+    id="form-edit-color"
+    hx-disinherit="*"
+    hx-trigger="change"
 >
   <input type="color" list="presetColors" value="<%= $value %>" name="color" id="edit-<%= $field_name %>"
-    hx-post="<%= url_for( "/edit-color/" . $note->filename ) %>"
-    hx-swap="outerHTML"
-    hx-target="#body"
   >
   <datalist id="presetColors">
     <option>#ff0000</option>
