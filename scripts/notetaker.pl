@@ -1398,7 +1398,6 @@ __DATA__
 // Hide all nodes that have the 'nojs' class
 window.addEventListener('DOMContentLoaded', function() {
     for (let r of window.document.styleSheets[1].cssRules) {
-        console.log(r);
         if( r.selectorText === '.nojs' ) {
             r.style.display = 'none';
             break;
