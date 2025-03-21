@@ -1571,7 +1571,8 @@ htmx.onLoad(function(elt){
 % } elsif( $type eq 'note' ) {
     <li class="nav-item"><a href="<%= url_with( "/" ) %>"
             hx-trigger="click, keyup[key=='Escape'] from:body"
-        ><span class="rounded-circle fs-3">&#x2715;</span></a></li>
+        ><span class="rounded-circle fs-3">&#x2715;</span></a>
+    </li>
 %=include('editor-toolbar', editor => $editor)
 % }
     </ul>
