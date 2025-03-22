@@ -1769,13 +1769,14 @@ window.addEventListener('DOMContentLoaded', function() {
       <button onclick="changeBlock('h1')">XL</button>
       <button onclick="changeBlock('h2')">L</button>
       <button onclick="changeBlock('p')">M</button>
+      <!--
       <button onclick="changeBlock('small')">S</button>
-
+      -->
       <button onclick="applyFormat('code')"><code>C</code></button>
       <button onclick="applyFormat('strong')"><b>B</b></button>
       <button onclick="applyFormat('em')"><i>I</i></button>
       <button onclick="applyFormat('u')"><u>U</u></button>
-      <!-- <button onclick="applyURL()">🔗</button> -->
+      <button onclick="applyURL()">🔗</button>
       </div>
 </div>
 
@@ -1783,32 +1784,6 @@ window.addEventListener('DOMContentLoaded', function() {
     <div id="action-color" class="nav-item">
 %=include('edit-color', value => $note->frontmatter->{color}, field_name => 'color');
     </div>
-
-      <!--
-      <div class="dropdown">
-        <button onclick="toggleDropdown('textColorDropdown')">Color</button>
-        <div id="textColorDropdown" class="dropdown-content">
-          <div class="swatch-grid">
-            <button class="color-swatch" style="background: #000000;" onmousedown="event.preventDefault();"
-              onclick="applyTextColor('#000000'); toggleDropdown('textColorDropdown')"></button>
-            <button class="color-swatch" style="background: #FF3B30;" onmousedown="event.preventDefault();"
-              onclick="applyTextColor('#FF3B30'); toggleDropdown('textColorDropdown')"></button>
-            <button class="color-swatch" style="background: #FF9500;" onmousedown="event.preventDefault();"
-              onclick="applyTextColor('#FF9500'); toggleDropdown('textColorDropdown')"></button>
-            <button class="color-swatch" style="background: #FFCC00;" onmousedown="event.preventDefault();"
-              onclick="applyTextColor('#FFCC00'); toggleDropdown('textColorDropdown')"></button>
-            <button class="color-swatch" style="background: #4CD964;" onmousedown="event.preventDefault();"
-              onclick="applyTextColor('#4CD964'); toggleDropdown('textColorDropdown')"></button>
-            <button class="color-swatch" style="background: #5AC8FA;" onmousedown="event.preventDefault();"
-              onclick="applyTextColor('#5AC8FA'); toggleDropdown('textColorDropdown')"></button>
-            <button class="color-swatch" style="background: #007AFF;" onmousedown="event.preventDefault();"
-              onclick="applyTextColor('#007AFF'); toggleDropdown('textColorDropdown')"></button>
-            <button class="color-swatch" style="background: #5856D6;" onmousedown="event.preventDefault();"
-              onclick="applyTextColor('#5856D6'); toggleDropdown('textColorDropdown')"></button>
-          </div>
-        </div>
-      </div>
-      -->
 
 @@editor-toolbar.html.ep
 % my $active = $editor eq 'markdown' ? ' btn-primary' : '';
