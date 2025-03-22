@@ -1696,7 +1696,7 @@ window.addEventListener('DOMContentLoaded', function() {
 % } else {
 %=include "display-text", field_name => 'title', value => $note->frontmatter->{title}, class => 'title', reload => 1
 % }
-<div class="note-container" style="height:400px">
+<div class="note-container">
 % if( $editor eq 'markdown' ) {
 <textarea name="body-markdown" id="note-textarea" autofocus
     hx-post="<%= url_for( $doc_url ) %>"

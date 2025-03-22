@@ -137,11 +137,16 @@ a.editable {
     text-decoration: none;
 }
 
+.note-container {
+    min-height: 400px;
+}
+
 .note-container > textarea {
   /* box-sizing: border-box; /* fit parent width */
   flex: 1;
   height: 100%;
   width: 100%;
+  min-height: 400px;
 }
 
 .color-circle {
