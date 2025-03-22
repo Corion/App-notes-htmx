@@ -184,3 +184,46 @@ a.editable {
         box-shadow: none;
     }
 }
+
+/* HTML editor toolbar */
+    #toolbar {
+      --position: sticky;
+      --position: -webkit-sticky;
+      --gap: 8px;
+      --top: 5px;
+      --padding: 0 10px;
+      --z-index: 9999;
+      --background-color: #f8f9fa;
+      --border-radius: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+      align-items: center;
+    }
+
+    #toolbar #splitbar {
+      margin-left: auto;
+    }
+
+    #toolbar input[type="file"] {
+      --display: none;
+    }
+
+
+    #toolbar button,
+    #toolbar label,
+    #toolbar select {
+      padding: 8px;
+      border: none;
+      background: none;
+      font-size: 16px;
+      cursor: pointer;
+      transition: opacity 0.2s
+    }
+
+    #toolbar button:hover,
+    #toolbar label:hover,
+    #toolbar select:hover {
+      background: #f0f0f0;
+      border-color: #bbb;
+    }
