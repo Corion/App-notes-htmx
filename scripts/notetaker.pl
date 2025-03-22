@@ -1771,6 +1771,7 @@ window.addEventListener('DOMContentLoaded', function() {
       <button onclick="changeBlock('p')">M</button>
       <button onclick="changeBlock('small')">S</button>
 
+      <button onclick="applyFormat('code')"><code>C</code></button>
       <button onclick="applyFormat('strong')"><b>B</b></button>
       <button onclick="applyFormat('em')"><i>I</i></button>
       <button onclick="applyFormat('u')"><u>U</u></button>
