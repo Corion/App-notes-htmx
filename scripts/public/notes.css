@@ -226,6 +226,14 @@ a.editable {
       transition: opacity 0.2s
     }
 
+    #toolbar button.toolbar-active,
+    #toolbar label.toolbar-active,
+    #toolbar select.toolbar-active {
+      background: #ddd;
+      border-color: #aaa;
+      border: 1px;
+    }
+
     #toolbar button:hover,
     #toolbar label:hover,
     #toolbar select:hover {

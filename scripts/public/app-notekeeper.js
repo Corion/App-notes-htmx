@@ -71,16 +71,14 @@ function setCaret(el, pos) {
     selection.addRange(range);
 }
 
-// Wrap only the selected portions of text nodes.
-// If selection is entirely within one text node, process it directly.
-function wrapRangeText(range, tagName, style, hook) {
+function selectedNodes(range, nodeFilter) {
     const textNodes = [];
     if (range.commonAncestorContainer.nodeType === Node.TEXT_NODE) {
         textNodes.push(range.commonAncestorContainer);
     } else {
         const walker = document.createTreeWalker(
             range.commonAncestorContainer,
-            NodeFilter.SHOW_TEXT,
+            nodeFilter,
             {
                 acceptNode: function (node) {
                     return range.intersectsNode(node)
@@ -94,6 +92,42 @@ function wrapRangeText(range, tagName, style, hook) {
             textNodes.push(node);
         }
     }
+    return textNodes
+}
+
+function hasAttr(node,tagName) {
+    const ref = node.closest ? node.closest(tagName) : node.parentNode.closest(tagName);
+    return ref !== null
+}
+
+function updateToolbar() {
+    const sel = window.getSelection();
+    const nodes = selectedNodes(sel.getRangeAt(0), NodeFilter.SHOW_ELEMENT);
+
+    const textAttrs = ['STRONG','CODE', 'EM', 'U'];
+
+    const state = {};
+    for (let n of nodes) {
+        for (let a of textAttrs) {
+            if( hasAttr(n, a)) {
+                state[a] ||= 1;
+            }
+        }
+    }
+    for (let a of textAttrs) {
+        const el = document.getElementById(`btn-${a}`);
+        if( state[a]) {
+            htmx.addClass(el, 'toolbar-active');
+        } else {
+            htmx.removeClass(el, 'toolbar-active');
+        }
+    }
+}
+
+// Wrap only the selected portions of text nodes.
+// If selection is entirely within one text node, process it directly.
+function wrapRangeText(range, tagName, style, hook) {
+    const textNodes = selectedNodes(range, NodeFilter.SHOW_TEXT);
 
     textNodes.forEach(function (textNode) {
         let start = 0, end = textNode.textContent.length;

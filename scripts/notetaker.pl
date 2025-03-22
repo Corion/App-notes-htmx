@@ -1714,6 +1714,8 @@ window.addEventListener('DOMContentLoaded', function() {
     <!-- This is untrusted content, so tell HTMX that -->
     <div id="usercontent"
         hx-disable="true"
+        onclick="javascript:updateToolbar()"
+        onkeyup="javascript:updateToolbar()"
         contentEditable="true"><%== $note_html %></div>
 </div>
 % }
@@ -1772,10 +1774,10 @@ window.addEventListener('DOMContentLoaded', function() {
       <!--
       <button onclick="changeBlock('small')">S</button>
       -->
-      <button onclick="applyFormat('code')"><code>C</code></button>
-      <button onclick="applyFormat('strong')"><b>B</b></button>
-      <button onclick="applyFormat('em')"><i>I</i></button>
-      <button onclick="applyFormat('u')"><u>U</u></button>
+      <button id="btn-CODE" onclick="applyFormat('code')"><code>C</code></button>
+      <button id="btn-STRONG" onclick="applyFormat('strong')"><b>B</b></button>
+      <button id="btn-EM" onclick="applyFormat('em')"><i>I</i></button>
+      <button id="btn-U" onclick="applyFormat('u')"><u>U</u></button>
       <button onclick="applyURL()">🔗</button>
       </div>
 </div>
