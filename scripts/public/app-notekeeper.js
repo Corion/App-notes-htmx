@@ -57,3 +57,136 @@ async function startRecording() {
     recordButton.addEventListener('click', toggleRecording );
     toggleRecording();
 }
+
+// HTML editor helpers
+// from Nash.html
+
+// Helper: Place the caret at a given element and offset.
+function setCaret(el, pos) {
+    const selection = window.getSelection();
+    const range = document.createRange();
+    range.setStart(el, pos);
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
+}
+
+// Wrap only the selected portions of text nodes.
+// If selection is entirely within one text node, process it directly.
+function wrapRangeText(range, tagName, style, hook) {
+    const textNodes = [];
+    if (range.commonAncestorContainer.nodeType === Node.TEXT_NODE) {
+        textNodes.push(range.commonAncestorContainer);
+    } else {
+        const walker = document.createTreeWalker(
+            range.commonAncestorContainer,
+            NodeFilter.SHOW_TEXT,
+            {
+                acceptNode: function (node) {
+                    return range.intersectsNode(node)
+                        ? NodeFilter.FILTER_ACCEPT
+                        : NodeFilter.FILTER_REJECT;
+                }
+            }
+        );
+        let node;
+        while (node = walker.nextNode()) {
+            textNodes.push(node);
+        }
+    }
+
+    textNodes.forEach(function (textNode) {
+        let start = 0, end = textNode.textContent.length;
+        if (textNode === range.startContainer) {
+            start = range.startOffset;
+        }
+        if (textNode === range.endContainer) {
+            end = range.endOffset;
+        }
+        if (start >= end) return;
+
+        const parent = textNode.parentNode;
+        const wrapper = document.createElement(tagName);
+        if (style) {
+            wrapper.style.cssText = style;
+        }
+        if (hook) {
+            hook(wrapper);
+        }
+        wrapper.textContent = textNode.textContent.substring(start, end);
+
+        const frag = document.createDocumentFragment();
+        const beforeText = textNode.textContent.substring(0, start);
+        const afterText = textNode.textContent.substring(end);
+        if (beforeText) {
+            frag.appendChild(document.createTextNode(beforeText));
+        }
+        frag.appendChild(wrapper);
+        if (afterText) {
+            frag.appendChild(document.createTextNode(afterText));
+        }
+        parent.replaceChild(frag, textNode);
+        const sel = document.getSelection();
+        sel.selectAllChildren(wrapper);
+    });
+}
+
+// Basic inline formatting: wraps the selection in the specified tag.
+function applyFormat(tagName) {
+    const selection = window.getSelection();
+    if (!selection.rangeCount || selection.isCollapsed) return;
+    const range = selection.getRangeAt(0);
+    const editor = document.getElementById('usercontent');
+    if (!editor.contains(range.commonAncestorContainer)) return;
+    wrapRangeText(range, tagName);
+    //selection.removeAllRanges();
+}
+
+// Apply inline url
+function applyURL() {
+    const selection = window.getSelection();
+    if (!selection.rangeCount || selection.isCollapsed) return;
+    const range = selection.getRangeAt(0);
+    const editor = document.getElementById('usercontent');
+    if (!editor.contains(range.commonAncestorContainer)) return;
+    const url = prompt("URL", range.toString());
+    if (!url) return;
+    wrapRangeText(range, 'a', null, function (element) {
+        element.href = url;
+    });
+    //selection.removeAllRanges();
+}
+
+// Convert the current block (direct child of #editor) to the chosen tag.
+function changeBlock(tag) {
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+    let node = selection.anchorNode;
+    const editor = document.getElementById('usercontent');
+    while (node && node.parentNode !== editor) {
+        node = node.parentNode;
+    }
+    if (!node || node === editor) return;
+    const newBlock = document.createElement(tag);
+    while (node.firstChild) {
+        if (
+            node.firstChild.nodeType === Node.ELEMENT_NODE &&
+            node.firstChild.matches('p') &&
+            tag.match(/^H[1-6]$/)
+        ) {
+            let child = node.firstChild;
+            while (child.firstChild) {
+                newBlock.appendChild(child.firstChild);
+            }
+            node.removeChild(child);
+        } else {
+            newBlock.appendChild(node.firstChild);
+        }
+    }
+    editor.replaceChild(newBlock, node);
+    const range = document.createRange();
+    range.selectNodeContents(newBlock);
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
+}
