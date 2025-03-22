@@ -1421,7 +1421,7 @@ window.addEventListener('DOMContentLoaded', function() {
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
 >
-%=include('navbar', type => 'documents', colors => $colors, labels => $labels, show_filter => $show_filter);
+%=include('navbar', type => 'documents', colors => $colors, labels => $labels, show_filter => $show_filter, note => undef, editor => undef, all_users => undef, shared_with => undef, );
 <div class="container-fluid" id="container">
 <div class="row flex-nowrap">
     <div class="col-auto px-0">
@@ -1533,7 +1533,7 @@ window.addEventListener('DOMContentLoaded', function() {
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
 >
-%=include('navbar', type => 'documents', colors => $colors, labels => $labels, show_filter => $show_filter);
+%=include('navbar', type => 'documents', colors => $colors, labels => $labels, show_filter => $show_filter, note => undef, editor => undef, all_users => undef, shared_with => undef, );
 <div class="container-fluid" id="container">
 <div class="row flex-nowrap">
     <div class="col-auto px-0">
