@@ -140,6 +140,7 @@ function applyFormat(tagName) {
     if (!editor.contains(range.commonAncestorContainer)) return;
     wrapRangeText(range, tagName);
     //selection.removeAllRanges();
+    htmx.trigger(editor, 'input');
 }
 
 // Apply inline url
@@ -155,6 +156,7 @@ function applyURL() {
         element.href = url;
     });
     //selection.removeAllRanges();
+    htmx.trigger(editor, 'input');
 }
 
 // Convert the current block (direct child of #editor) to the chosen tag.
@@ -189,4 +191,5 @@ function changeBlock(tag) {
     range.collapse(false);
     selection.removeAllRanges();
     selection.addRange(range);
+    htmx.trigger(editor, 'input');
 }
