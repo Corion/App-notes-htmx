@@ -1819,7 +1819,6 @@ window.addEventListener('DOMContentLoaded', function() {
       <!-- <div id="splitbar-html">|</div> -->
 %= include('html-actions')
 % }
-    <div id="splitbar" class="nav-item flex-grow-1">&nbsp;</div>
 
 @@login.html.ep
 <!DOCTYPE html>
