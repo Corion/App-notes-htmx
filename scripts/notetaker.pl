@@ -1580,6 +1580,11 @@ window.addEventListener('DOMContentLoaded', function() {
         ><span class="rounded-circle fs-3">&#x2715;</span></a>
     </div>
 %=include('editor-toolbar', editor => $editor)
+    <div id="splitbar" class="nav-item flex-grow-1">&nbsp;</div>
+    <div class="nav-item dropdown" id="action-share">
+    <!-- pop up the sharing selector like a context menu -->
+%= include 'menu-edit-share', note => $note, all_users => $all_users, shared_with => $shared_with, user_filter => ''
+    </div>
 % }
 
 % if( $user ) {
@@ -1593,10 +1598,6 @@ window.addEventListener('DOMContentLoaded', function() {
           class="btn btn-secondary" id="setup">⚙ Setup</a>
     </div>
 % if( $type eq 'note' ) {
-    <div class="dropdown-item" id="action-share">
-    <!-- pop up the sharing selector like a context menu -->
-%= include 'menu-edit-share', note => $note, all_users => $all_users, shared_with => $shared_with, user_filter => ''
-    </div>
     <div class="dropdown-item" id="action-copy">
         <form action="<%= url_for('/copy/' . $note->filename ) %>" method="POST"
         ><button class="btn btn-secondary" type="submit">&#xFE0E;⎘ Copy note</button>
