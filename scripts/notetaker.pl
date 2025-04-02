@@ -1549,7 +1549,7 @@ window.addEventListener('DOMContentLoaded', function() {
 </html>
 
 @@navbar.html.ep
-<nav class="navbar navbar-expand-lg sticky-top bd-navbar bg-light noprint">
+<nav class="navbar navbar-expand-lg sticky-top bd-navbar bg-body-tertiary noprint">
 <div class="container-fluid d-flex">
 % if( $type eq 'documents' ) {
     <div class="nav-item">
@@ -1724,7 +1724,7 @@ window.addEventListener('DOMContentLoaded', function() {
     <div class="edited-date"><%= $note->frontmatter->{updated} %></div>
 </div>
 </div>
-<div id="actionbar" class="navbar mt-auto fixed-bottom bg-light noprint">
+<div id="actionbar" class="navbar bg-body-tertiary mt-auto fixed-bottom noprint">
     <div id="action-attach">
         <form action="<%= url_for( "/upload-image/" . $note->filename ) %>" method="POST"
             enctype='multipart/form-data'
