@@ -1,13 +1,17 @@
 
 # Notekeeper - another Google Keep clone
 
+## Firefox Desktop with [masonry layout](https://developer.mozilla.org/de/docs/Web/CSS/CSS_grid_layout/Masonry_layout)
+
 ![Firefox with the experimental masonry layout](screenshots/firefox-masonry.png)
 
+## Firefox mobile
 
 ![Firefox mobile](screenshots/firefox-mobile-nomasonry.png)
 
-![Chromium](screenshots/chrome-new-from-template.png)
+## Chromium
 
+![Chromium](screenshots/chrome-new-from-template.png)
 
 # NAME
 
