@@ -12,7 +12,7 @@ use PerlX::Maybe;
 use charnames ':full';
 use YAML::PP::LibYAML 'LoadFile', 'DumpFile';
 use Text::ParseWords 'shellwords';
-use List::Util 'first';
+use List::Util 'first', 'reduce';
 
 use Crypt::Passphrase;
 use Crypt::Passphrase::Argon2;
@@ -454,7 +454,9 @@ any  '/new' => sub( $c ) {
 
     if( my $c = $c->param('color')) {
         $note //= find_note( $session, $fn );
+        my $text_color = contrast_bw( $c );
         $note->frontmatter->{color} = $c;
+        $note->frontmatter->{textcolor} = $text_color;
     }
     if( my $c = $c->param('label')) {
         $note //= find_note( $session, $fn );
@@ -793,15 +795,32 @@ sub edit_note_color( $c ) {
     edit_color_field( $c, $note, 'color' );
 }
 
+sub contrast_bw( $color ) {
+    # UTI-BT.601
+    my @weights = (.30,.59,.11);
+    my @colors = map { unpack 'H2' } ($color =~ /([a-f0-9]{2})/g);
+    my $luminosity = reduce { $a + $b } map { $weights[$_] * $colors[$_]} 0..2;
+    my $col;
+    if( $luminosity > 34 ) {
+        $col = "black";
+    } else {
+        $col = "white";
+    }
+    #warn "Luminosity: $luminosity -> $col";
+    return $col;
+}
+
 sub update_note_color( $c, $autosave=0 ) {
     return login_detour($c) unless $c->is_user_authenticated;
 
     my $session = get_session( $c );
     my $fn = $c->param('fn');
     my $color = $c->param('color');
+    my $text_color = contrast_bw( $color );
 
     my $note = find_or_create_note( $session, $fn );
     $note->frontmatter->{color} = $color;
+    $note->frontmatter->{textcolor} = $text_color;
     $note->save_to( $session->clean_filename( $fn ));
 
     if( $autosave ) {
@@ -1497,20 +1516,26 @@ window.addEventListener('DOMContentLoaded', function() {
 %     if( $sections{ $section }) {
     <h5><%= $section_title{ $section } %></h5>
     <div class="documents grid-layout">
-%         for my $doc ($sections{$section}->@*) {
-%             my $bgcolor = $doc->frontmatter->{color}
-%                           ? sprintf q{ style="background-color: %s;"}, $doc->frontmatter->{color}
-%                           : '';
-<div class="grid-item note position-relative"<%== $bgcolor %>
-       id="<%= $doc->filename %>">
-%=include 'note-pinned', note => $doc
-    <a href="<%= url_for( "/note/" . $doc->filename ) %>" class="title">
-    <div class="title-text"><%= $doc->frontmatter->{title} %></div>
+%         for my $note ($sections{$section}->@*) {
+% my $textcolor = $note->frontmatter->{textcolor}
+%               ? sprintf q{ color: %s;}, $note->frontmatter->{textcolor}
+%               : '';
+% my $bgcolor = $note->frontmatter->{color}
+%               ? sprintf q{ background-color: %s;}, $note->frontmatter->{color}
+%               : '';
+% my $style = $textcolor || $bgcolor
+%           ? sprintf q{ style="%s; %s;"}, $bgcolor, $textcolor
+%           : '';
+<div class="grid-item note position-relative"<%== $style %>
+       id="<%= $note->filename %>">
+%=include 'note-pinned', note => $note
+    <a href="<%= url_for( "/note/" . $note->filename ) %>" class="title">
+    <div class="title-text"><%= $note->frontmatter->{title} %></div>
     </a>
     <!-- list (some) tags -->
-    <div class="content" hx-disable="true"><%== $doc->{html} %></div>
+    <div class="content" hx-disable="true"><%== $note->{html} %></div>
     </a>
-%=include 'display-labels', labels => $doc->frontmatter->{labels}, note => $doc
+%=include 'display-labels', labels => $note->frontmatter->{labels}, note => $note
 </div>
 %         }
 </div>
@@ -1683,11 +1708,17 @@ window.addEventListener('DOMContentLoaded', function() {
 %=include('navbar', type => 'note', show_filter => $show_filter );
 
 <div id="note-container" class="container-flex">
-% my $bgcolor = $note->frontmatter->{color}
-%               ? sprintf q{ style="background-color: %s;"}, $note->frontmatter->{color}
+% my $textcolor = $note->frontmatter->{textcolor}
+%               ? sprintf q{ color: %s;}, $note->frontmatter->{textcolor}
 %               : '';
+% my $bgcolor = $note->frontmatter->{color}
+%               ? sprintf q{ background-color: %s;}, $note->frontmatter->{color}
+%               : '';
+% my $style = $textcolor || $bgcolor
+%           ? sprintf q{ style="%s; %s;"}, $textcolor, $bgcolor
+%           : '';
 %=include 'display-labels', labels => $note->frontmatter->{labels}, note => $note
-<div class="single-note"<%== $bgcolor %>>
+<div class="single-note"<%== $style %>>
 % my $doc_url = '/note/' . $note->filename;
 <form action="<%= url_for( $doc_url ) %>" method="POST">
 <button class="nojs" name="save" type="submit">Save</button>
