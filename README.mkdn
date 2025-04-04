@@ -1,5 +1,14 @@
 
-# Notekeeper - another Google Keep clone
+# Notekeeper - a markdown notetaker
+
+Closely positioned as another Google Keep clone
+
+# LIVE DEMO
+
+The live demo lives at
+[https://datenzoo.de/notes/](https://datenzoo.de/notes/) ( `demo:demo` )
+
+# Screenshots
 
 ## Firefox Desktop with [masonry layout](https://developer.mozilla.org/de/docs/Web/CSS/CSS_grid_layout/Masonry_layout)
 
@@ -17,11 +26,3 @@
 
 ![Dark mode](screenshots/dark-mode.png)
 
-# NAME
-
-App::Notetaker - a markdown notetaker
-
-# LIVE DEMO
-
-The live demo lives at
-[https://datenzoo.de/notes/](https://datenzoo.de/notes/) ( `demo:demo` )
