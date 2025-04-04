@@ -1730,6 +1730,7 @@ window.addEventListener('DOMContentLoaded', function() {
 <div class="note-container">
 % if( $editor eq 'markdown' ) {
 <textarea name="body-markdown" id="note-textarea" autofocus
+    style="color: inherit; background-color: inherit;"
     hx-post="<%= url_for( $doc_url ) %>"
     hx-trigger="#note-textarea, keyup delay:200ms changed"
     hx-swap="none"
