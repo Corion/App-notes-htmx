@@ -227,3 +227,18 @@ function changeBlock(tag) {
     selection.addRange(range);
     htmx.trigger(editor, 'input');
 }
+
+/* Handle dark mode */
+if ( window.matchMedia ) {
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-bs-theme', theme);
+    }
+    function updateTheme() {
+        const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        setTheme(theme);
+    }
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        updateTheme()
+    })
+    updateTheme()
+}
