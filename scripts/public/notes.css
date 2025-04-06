@@ -1,5 +1,8 @@
+/* This could be redone as
+   https://developer.mozilla.org/en-US/docs/Web/CSS/@media/scripting
+*/
 .nojs {
-    // we will add rules using JS to this later
+    /* we will add rules using JS to this later to hide such elements */
 }
 
 nav {
