@@ -2149,7 +2149,7 @@ window.addEventListener('DOMContentLoaded', function() {
             hx-get="<%= url_with( "/filter" ) %>"
             hx-target="#documents"
             hx-swap="outerHTML"
-            hx-trigger="change target:input, input delay:200ms changed, keyup[key=='Enter'], load"
+            hx-trigger="change find:input delay:200ms changed, input find:input delay:200ms changed, keyup[key=='Enter'], load"
       >
         <div class="input-group">
         <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
