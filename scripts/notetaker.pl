@@ -817,6 +817,16 @@ sub contrast_bw( $color ) {
     return $col;
 }
 
+sub light_dark( $color ) {
+    my $darkened = '#' . join '',
+                 map { sprintf "%02x", $_ }
+                 # maybe do weighted scaling with @weights?
+                 map { int((0+$_) * 0.7) }
+                 map { hex($_) } ($color =~ /([a-f0-9]{2})/g);
+
+    return ($color, $darkened)
+}
+
 sub update_note_color( $c, $autosave=0 ) {
     return login_detour($c) unless $c->is_user_authenticated;
 
@@ -1377,6 +1387,9 @@ post '/logout' => sub ($c) {
 app->helper(
     contrast_bw => sub($self,$color){ main::contrast_bw( $color ) },
 );
+app->helper(
+    light_dark => sub($self,$color){ main::light_dark( $color ) },
+);
 
 app->start;
 
@@ -1526,8 +1539,9 @@ window.addEventListener('DOMContentLoaded', function() {
     <h5><%= $section_title{ $section } %></h5>
     <div class="documents grid-layout">
 %         for my $note ($sections{$section}->@*) {
-% my $textcolor = sprintf q{ color: %s;}, contrast_bw( $note->frontmatter->{color});
-% my $bgcolor   = sprintf q{ background-color: %s;}, $note->frontmatter->{color};
+% my ($bgcolor, $bgcolor_dark) = light_dark($note->frontmatter->{color});
+% my $textcolor = sprintf q{ color: light-dark(%s, %s);}, contrast_bw( $bgcolor ), contrast_bw( $bgcolor_dark );
+% my $bgcolor   = sprintf q{ background-color: light-dark( %s, %s );}, $bgcolor, $bgcolor_dark ;
 % my $style     = sprintf q{ style="%s; %s;"}, $bgcolor, $textcolor;
 <div class="grid-item note position-relative"<%== $style %>
        id="<%= $note->filename %>">
@@ -1711,15 +1725,10 @@ window.addEventListener('DOMContentLoaded', function() {
 %=include('navbar', type => 'note', show_filter => $show_filter );
 
 <div id="note-container" class="container-flex">
-% my $textcolor = $note->frontmatter->{textcolor}
-%               ? sprintf q{ color: %s;}, $note->frontmatter->{textcolor}
-%               : '';
-% my $bgcolor = $note->frontmatter->{color}
-%               ? sprintf q{ background-color: %s;}, $note->frontmatter->{color}
-%               : '';
-% my $style = $textcolor || $bgcolor
-%           ? sprintf q{ style="%s; %s;"}, $textcolor, $bgcolor
-%           : '';
+% my ($bgcolor, $bgcolor_dark) = light_dark($note->frontmatter->{color});
+% my $textcolor = sprintf q{ color: light-dark(%s, %s);}, contrast_bw( $bgcolor ), contrast_bw( $bgcolor_dark );
+% my $bgcolor   = sprintf q{ background-color: light-dark( %s, %s );}, $bgcolor, $bgcolor_dark ;
+% my $style     = sprintf q{ style="%s; %s;"}, $bgcolor, $textcolor;
 %=include 'display-labels', labels => $note->frontmatter->{labels}, note => $note
 <div class="single-note"<%== $style %>>
 % my $doc_url = '/note/' . $note->filename;
