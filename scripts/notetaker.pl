@@ -1385,10 +1385,10 @@ post '/logout' => sub ($c) {
 };
 
 app->helper(
-    contrast_bw => sub($self,$color){ main::contrast_bw( $color ) },
+    contrast_bw => sub($self,$color){ contrast_bw( $color ) },
 );
 app->helper(
-    light_dark => sub($self,$color){ main::light_dark( $color ) },
+    light_dark => sub($self,$color){ light_dark( $color ) },
 );
 
 app->start;
