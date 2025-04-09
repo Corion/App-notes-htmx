@@ -362,6 +362,15 @@ sub display_note( $c, $note ) {
     return login_detour($c) unless $c->is_user_authenticated;
 
     $c->stash( note => $note );
+    my ($dark_color, $dark_textcolor);
+    if( !$note->frontmatter->{color}) {
+        $note->frontmatter->{color} = '#7f7f7f';
+    }
+
+    # generate the dark/dimmed colors here as well
+    # dim all colors by 20% (?)
+    # Should we do that in the template instead?!
+
     my $session = get_session( $c );
     my $filter = fetch_filter( $c );
 
@@ -454,9 +463,7 @@ any  '/new' => sub( $c ) {
 
     if( my $c = $c->param('color')) {
         $note //= find_note( $session, $fn );
-        my $text_color = contrast_bw( $c );
         $note->frontmatter->{color} = $c;
-        $note->frontmatter->{textcolor} = $text_color;
     }
     if( my $c = $c->param('label')) {
         $note //= find_note( $session, $fn );
@@ -816,11 +823,9 @@ sub update_note_color( $c, $autosave=0 ) {
     my $session = get_session( $c );
     my $fn = $c->param('fn');
     my $color = $c->param('color');
-    my $text_color = contrast_bw( $color );
 
     my $note = find_or_create_note( $session, $fn );
     $note->frontmatter->{color} = $color;
-    $note->frontmatter->{textcolor} = $text_color;
     $note->save_to( $session->clean_filename( $fn ));
 
     if( $autosave ) {
@@ -1369,6 +1374,10 @@ post '/logout' => sub ($c) {
     return $c->redirect_to($c->url_for('/'));
 };
 
+app->helper(
+    contrast_bw => sub($self,$color){ main::contrast_bw( $color ) },
+);
+
 app->start;
 
 # Make relative links actually relative to /note/ so that we can also
@@ -1517,15 +1526,9 @@ window.addEventListener('DOMContentLoaded', function() {
     <h5><%= $section_title{ $section } %></h5>
     <div class="documents grid-layout">
 %         for my $note ($sections{$section}->@*) {
-% my $textcolor = $note->frontmatter->{textcolor}
-%               ? sprintf q{ color: %s;}, $note->frontmatter->{textcolor}
-%               : '';
-% my $bgcolor = $note->frontmatter->{color}
-%               ? sprintf q{ background-color: %s;}, $note->frontmatter->{color}
-%               : '';
-% my $style = $textcolor || $bgcolor
-%           ? sprintf q{ style="%s; %s;"}, $bgcolor, $textcolor
-%           : '';
+% my $textcolor = sprintf q{ color: %s;}, contrast_bw( $note->frontmatter->{color});
+% my $bgcolor   = sprintf q{ background-color: %s;}, $note->frontmatter->{color};
+% my $style     = sprintf q{ style="%s; %s;"}, $bgcolor, $textcolor;
 <div class="grid-item note position-relative"<%== $style %>
        id="<%= $note->filename %>">
 %=include 'note-pinned', note => $note
