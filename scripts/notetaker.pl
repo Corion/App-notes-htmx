@@ -805,7 +805,7 @@ sub edit_note_color( $c ) {
 sub contrast_bw( $color ) {
     # UTI-BT.601
     my @weights = (.30,.59,.11);
-    my @colors = map { unpack 'H2' } ($color =~ /([a-f0-9]{2})/g);
+    my @colors = map { hex($_) } ($color =~ /([a-f0-9]{2})/g);
     my $luminosity = reduce { $a + $b } map { $weights[$_] * $colors[$_]} 0..2;
     my $col;
     if( $luminosity > 34 ) {
