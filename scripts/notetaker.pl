@@ -1539,7 +1539,7 @@ window.addEventListener('DOMContentLoaded', function() {
     <h5><%= $section_title{ $section } %></h5>
     <div class="documents grid-layout">
 %         for my $note ($sections{$section}->@*) {
-% my ($bgcolor, $bgcolor_dark) = light_dark($note->frontmatter->{color});
+% my ($bgcolor, $bgcolor_dark) = light_dark($note->frontmatter->{color} // '#cccccc');
 % my $textcolor = sprintf q{ color: light-dark(%s, %s);}, contrast_bw( $bgcolor ), contrast_bw( $bgcolor_dark );
 % my $bgcolor   = sprintf q{ background-color: light-dark( %s, %s );}, $bgcolor, $bgcolor_dark ;
 % my $style     = sprintf q{ style="%s; %s;"}, $bgcolor, $textcolor;
@@ -1725,7 +1725,7 @@ window.addEventListener('DOMContentLoaded', function() {
 %=include('navbar', type => 'note', show_filter => $show_filter );
 
 <div id="note-container" class="container-flex">
-% my ($bgcolor, $bgcolor_dark) = light_dark($note->frontmatter->{color});
+% my ($bgcolor, $bgcolor_dark) = light_dark($note->frontmatter->{color}  // '#cccccc');
 % my $textcolor = sprintf q{ color: light-dark(%s, %s);}, contrast_bw( $bgcolor ), contrast_bw( $bgcolor_dark );
 % my $bgcolor   = sprintf q{ background-color: light-dark( %s, %s );}, $bgcolor, $bgcolor_dark ;
 % my $style     = sprintf q{ style="%s; %s;"}, $bgcolor, $textcolor;
