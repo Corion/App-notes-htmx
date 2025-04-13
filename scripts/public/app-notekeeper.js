@@ -258,7 +258,7 @@ function unwrapRangeText(range, tagName, hook) {
     const newSelection = new Range();
     newSelection.selectNodeContents(middle);
     const startEl = newSelection.startContainer.firstChild;
-    const endEl = newSelection.endContainer.firstChild;
+    const endEl = newSelection.endContainer.lastChild;
     result.appendChild(middle);
     result.appendChild(rightSide);
 
@@ -273,8 +273,8 @@ function unwrapRangeText(range, tagName, hook) {
     const sel = document.getSelection();
     sel.removeAllRanges();
     const newR = new Range();
-    newR.setStart(startEl,0);
-    newR.setEnd(endEl,endEl.textContent.length);
+    newR.setStartBefore(startEl);
+    newR.setEndAfter(endEl);
     sel.addRange(newR);
 }
 
