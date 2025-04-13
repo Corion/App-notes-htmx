@@ -137,10 +137,12 @@ function wrapRangeText(range, tagName, style, hook) {
 
     textNodes.forEach(function (textNode) {
         let start = 0, end = textNode.textContent.length;
-        if (textNode === range.startContainer) {
+        let isFirst = textNode === range.startContainer;
+        let isLast = textNode === range.endContainer;
+        if (isFirst) {
             start = range.startOffset;
         }
-        if (textNode === range.endContainer) {
+        if (isLast) {
             end = range.endOffset;
         }
         if (start >= end) return;
@@ -166,13 +168,15 @@ function wrapRangeText(range, tagName, style, hook) {
             frag.appendChild(document.createTextNode(afterText));
         }
         parent.replaceChild(frag, textNode);
-        if( ! newSel.startContainer ) {
+        if( isFirst ) {
             newSel.setStartBefore(wrapper);
         }
-        newSel.setEndAfter( wrapper );
+        if( isLast ) {
+            newSel.setEndAfter( wrapper );
+        }
     });
     const sel = document.getSelection();
-    sel.setBaseAndExtent(range.startContainer, range.startOffset, range.endContainer, range.endOffset);
+    sel.setBaseAndExtent(newSel.startContainer, newSel.startOffset, newSel.endContainer, newSel.endOffset);
 }
 
 function lastTextElement(node) {
