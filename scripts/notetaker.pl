@@ -1407,6 +1407,8 @@ sub as_html( $c, $doc, %options ) {
         $body =~ s!($t)!<mark>$1</mark>!gi;
     };
 
+    # Markdown::Perl autoconverts (some) URL-like strings to links, even when
+    # they are already within a linking tag.
     my $html = $renderer->convert( $body );
     if( $options{ strip_links } ) {
         $html =~ s/<a\s+href=[^>]*?>//gsi;
