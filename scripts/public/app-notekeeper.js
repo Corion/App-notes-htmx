@@ -153,6 +153,31 @@ function lastTextElement(node) {
     return r.endContainer
 }
 
+// Mutator to remove all the tagName nodes from the tree
+function removeTag(tree, filter) {
+    const walker = document.createNodeIterator(
+        tree,
+        NodeFilter.SHOW_ELEMENT,
+        {
+            acceptNode: filter
+        }
+    );
+
+    // Replace a node by its guts
+    let node;
+    while (node = walker.nextNode()) {
+        const guts = node.childNodes;
+
+        // replace the node by its contained children
+        const frag = new DocumentFragment();
+        while (node.childNodes.length) {
+            frag.append(node.firstChild);
+        };
+        node.parentNode.replaceChild(frag, node);
+    }
+    return tree
+}
+
 // Remove a tag from the range, leaving only its contents in its place
 function unwrapRangeText(range, tagName, hook) {
 
@@ -161,7 +186,7 @@ function unwrapRangeText(range, tagName, hook) {
     if( upperTag.nodeType === Node.TEXT_NODE ) {
         upperTag = upperTag.parentNode;
     }
-    upperTag = upperTag.closest(tagName) || range.commonAncestorContainer;
+    upperTag = upperTag.closest(tagName) || upperTag;
 
     // If upperTag is the tag we want to eliminate
     // we need to include it in the selection and replace it
@@ -191,38 +216,9 @@ function unwrapRangeText(range, tagName, hook) {
     const middle = range.extractContents();
     const rightSide = rightRange.extractContents();
 
-    // Remove all the tagName nodes from the clone
-    const walker = document.createTreeWalker(
-        middle.getRootNode(),
-        NodeFilter.SHOW_ELEMENT,
-        {
-            acceptNode: function (node) {
-                return node.tagName == tagName
-            }
-        }
-    );
+    removeTag( middle.getRootNode(), (n) => { return n.tagName === tagName });
 
-    // We cannot remove node while we are standing on it with the walker
-    // so we empty them, push them into an array and append their guts
-    // so that the walker will step on those next...
-    let node;
-    const remove = [];
-    while (node = walker.nextNode()) {
-        const guts = node.childNodes;
-
-        // replace a node by its contained children
-        const frag = new DocumentFragment();
-        for (let g of guts) {
-            frag.appendChild(g);
-        };
-        node.after(frag);
-        remove.push(node);
-    }
-    for (let n of remove) {
-        n.parentNode.removeChild(n);
-    }
-
-    // now replace the node that we split up above with our new content
+    // now replace the node(s) that we split up above with our new content
     // This empties the ranges, so we need to build selection afterwards
     // again
     const result = new DocumentFragment();
