@@ -223,15 +223,25 @@ function unwrapRangeText(range, tagName, hook) {
             }
         }
     );
+
+    // We cannot remove node while we are standing on it with the walker
+    // so we empty them, push them into an array and append their guts
+    // so that the walker will step on those next...
     let node;
+    const remove = [];
     while (node = walker.nextNode()) {
         const guts = node.childNodes;
 
         // replace a node by its contained children
+        const frag = new DocumentFragment();
         for (let g of guts) {
-            node.before(g);
+            frag.appendChild(g);
         };
-        node.parentNode.removeChild(node);
+        node.after(frag);
+        remove.push(node);
+    }
+    for (let n of remove) {
+        n.parentNode.removeChild(n);
     }
 
     // now replace the node that we split up above with our new content
