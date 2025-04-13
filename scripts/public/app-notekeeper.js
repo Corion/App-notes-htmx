@@ -308,6 +308,7 @@ function toggleFormat(tagName) {
     } else {
         applyFormat( tagName, sel );
     }
+    updateToolbar();
 }
 
 // Apply inline url
