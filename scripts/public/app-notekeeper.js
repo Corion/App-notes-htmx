@@ -131,7 +131,6 @@ function updateToolbar() {
 // Wrap only the selected portions of text nodes.
 // If selection is entirely within one text node, process it directly.
 function wrapRangeText(range, tagName, style, hook) {
-    //const textNodes = selectedNodes(range, NodeFilter.SHOW_TEXT);
     const toWrap = range.extractContents();
     const wrapper = document.createElement(tagName);
     if (style) {
