@@ -68,7 +68,7 @@ my %module = (
         # Convert from and to HTML
         'Markdown::Perl'       => 0,
         'Text::HTML::Turndown' => 0,
-        'Text::FrontMatter::YAML' => 0,
+        'Text::FrontMatter::YAML' => '0.06',
         'Date::Period::Human' => 0,
 
         'Moo'                       => 2, # for some hashes-as-objects
