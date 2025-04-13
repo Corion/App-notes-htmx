@@ -1,0 +1,27 @@
+lib/App/Notetaker.pm
+lib/App/Notetaker/Document.pm
+lib/App/Notetaker/Session.pm
+lib/App/Notetaker/Utils.pm
+Makefile.PL
+MANIFEST			This list of files
+notes_demo/Archived_notes_should_not_appear_in_the_main_display.markdown
+notes_demo/deleted/A_red_note.markdown
+notes_demo/Fresh_note.markdown
+notes_demo/hello.markdown
+notes_demo/Implemented_features.markdown
+README
+README.mkdn
+scripts/imap2markdown.pl
+scripts/mail2markdown.pl
+scripts/notetaker.pl
+scripts/public/app-notekeeper.js
+scripts/public/bootstrap.5.3.3.min.css
+scripts/public/bootstrap.5.3.3.min.js
+scripts/public/debug.2.0.1.js
+scripts/public/htmx.2.0.4.min.js
+scripts/public/htmx.2.0.4.min.js.gz
+scripts/public/loading-states.2.0.1.js
+scripts/public/morphdom-esm.2.7.4.js
+scripts/public/notes.css
+scripts/public/ws.2.0.1.js
+users/demo.yaml
