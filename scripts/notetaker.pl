@@ -1821,7 +1821,6 @@ window.addEventListener('DOMContentLoaded', function() {
       <button id="btn-CODE" onclick="toggleFormat('code')"><code>C</code></button>
       <button id="btn-STRONG" onclick="toggleFormat('strong')"><b>B</b></button>
       <button id="btn-EM" onclick="toggleFormat('em')"><i>I</i></button>
-      <button id="btn-U" onclick="toggleFormat('u')"><u>U</u></button>
       <button onclick="applyURL()">🔗</button>
       </div>
 </div>
