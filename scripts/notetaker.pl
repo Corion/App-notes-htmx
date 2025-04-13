@@ -1818,10 +1818,10 @@ window.addEventListener('DOMContentLoaded', function() {
       <!--
       <button onclick="changeBlock('small')">S</button>
       -->
-      <button id="btn-CODE" onclick="applyFormat('code')"><code>C</code></button>
-      <button id="btn-STRONG" onclick="applyFormat('strong')"><b>B</b></button>
-      <button id="btn-EM" onclick="applyFormat('em')"><i>I</i></button>
-      <button id="btn-U" onclick="applyFormat('u')"><u>U</u></button>
+      <button id="btn-CODE" onclick="toggleFormat('code')"><code>C</code></button>
+      <button id="btn-STRONG" onclick="toggleFormat('strong')"><b>B</b></button>
+      <button id="btn-EM" onclick="toggleFormat('em')"><i>I</i></button>
+      <button id="btn-U" onclick="toggleFormat('u')"><u>U</u></button>
       <button onclick="applyURL()">🔗</button>
       </div>
 </div>
