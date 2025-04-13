@@ -133,6 +133,8 @@ function updateToolbar() {
 function wrapRangeText(range, tagName, style, hook) {
     const textNodes = selectedNodes(range, NodeFilter.SHOW_TEXT);
 
+    const newSel = new Range();
+
     textNodes.forEach(function (textNode) {
         let start = 0, end = textNode.textContent.length;
         if (textNode === range.startContainer) {
@@ -164,9 +166,13 @@ function wrapRangeText(range, tagName, style, hook) {
             frag.appendChild(document.createTextNode(afterText));
         }
         parent.replaceChild(frag, textNode);
-        const sel = document.getSelection();
-        sel.selectAllChildren(wrapper);
+        if( ! newSel.startContainer ) {
+            newSel.setStartBefore(wrapper);
+        }
+        newSel.setEndAfter( wrapper );
     });
+    const sel = document.getSelection();
+    sel.setBaseAndExtent(range.startContainer, range.startOffset, range.endContainer, range.endOffset);
 }
 
 function lastTextElement(node) {
