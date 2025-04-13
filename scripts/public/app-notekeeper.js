@@ -131,52 +131,20 @@ function updateToolbar() {
 // Wrap only the selected portions of text nodes.
 // If selection is entirely within one text node, process it directly.
 function wrapRangeText(range, tagName, style, hook) {
-    const textNodes = selectedNodes(range, NodeFilter.SHOW_TEXT);
+    //const textNodes = selectedNodes(range, NodeFilter.SHOW_TEXT);
+    const toWrap = range.extractContents();
+    const wrapper = document.createElement(tagName);
+    if (style) {
+        wrapper.style.cssText = style;
+    }
+    if (hook) {
+        hook(wrapper);
+    }
+    wrapper.appendChild(toWrap);
+    range.insertNode(wrapper);
 
-    const newSel = new Range();
-
-    textNodes.forEach(function (textNode) {
-        let start = 0, end = textNode.textContent.length;
-        let isFirst = textNode === range.startContainer;
-        let isLast = textNode === range.endContainer;
-        if (isFirst) {
-            start = range.startOffset;
-        }
-        if (isLast) {
-            end = range.endOffset;
-        }
-        if (start >= end) return;
-
-        const parent = textNode.parentNode;
-        const wrapper = document.createElement(tagName);
-        if (style) {
-            wrapper.style.cssText = style;
-        }
-        if (hook) {
-            hook(wrapper);
-        }
-        wrapper.textContent = textNode.textContent.substring(start, end);
-
-        const frag = document.createDocumentFragment();
-        const beforeText = textNode.textContent.substring(0, start);
-        const afterText = textNode.textContent.substring(end);
-        if (beforeText) {
-            frag.appendChild(document.createTextNode(beforeText));
-        }
-        frag.appendChild(wrapper);
-        if (afterText) {
-            frag.appendChild(document.createTextNode(afterText));
-        }
-        parent.replaceChild(frag, textNode);
-        if( isFirst ) {
-            newSel.setStartBefore(wrapper);
-        }
-        if( isLast ) {
-            newSel.setEndAfter( wrapper );
-        }
-    });
     const sel = document.getSelection();
-    sel.setBaseAndExtent(newSel.startContainer, newSel.startOffset, newSel.endContainer, newSel.endOffset);
+    sel.setBaseAndExtent(range.startContainer, range.startOffset, range.endContainer, range.endOffset);
 }
 
 function lastTextElement(node) {
