@@ -170,14 +170,12 @@ function wrapRangeText(range, tagName, style, hook) {
 }
 
 // Basic inline formatting: wraps the selection in the specified tag.
-function applyFormat(tagName) {
-    const selection = window.getSelection();
+function applyFormat(tagName, selection) {
     if (!selection.rangeCount || selection.isCollapsed) return;
     const range = selection.getRangeAt(0);
     const editor = document.getElementById('usercontent');
     if (!editor.contains(range.commonAncestorContainer)) return;
     wrapRangeText(range, tagName);
-    //selection.removeAllRanges();
     htmx.trigger(editor, 'input');
 }
 
