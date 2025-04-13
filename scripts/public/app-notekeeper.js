@@ -169,6 +169,99 @@ function wrapRangeText(range, tagName, style, hook) {
     });
 }
 
+function lastTextElement(node) {
+    const r = new Range();
+    r.selectNodeContents(node);
+    return r.endContainer
+}
+
+// Remove a tag from the range, leaving only its contents in its place
+function unwrapRangeText(range, tagName, hook) {
+
+    // find upper-containing-tag
+    let upperTag = range.commonAncestorContainer;
+    if( upperTag.nodeType === Node.TEXT_NODE ) {
+        upperTag = upperTag.parentNode;
+    }
+    upperTag = upperTag.closest(tagName) || range.commonAncestorContainer;
+
+    // If upperTag is the tag we want to eliminate
+    // we need to include it in the selection and replace it
+    const replaceContainer = upperTag.tagName === tagName;
+
+    // allRange points to the first and last text node within upperTag
+    const allRange = new Range();
+    allRange.selectNodeContents(upperTag);
+
+    const leftRange = new Range();
+    if( replaceContainer ) {
+        leftRange.setStartBefore(allRange.startContainer, 0);
+    } else {
+        leftRange.setStart(allRange.startContainer, 0);
+    }
+    leftRange.setEnd(range.startContainer, range.startOffset);
+
+    const rightRange = new Range();
+    rightRange.setStart(range.endContainer, range.endOffset);
+    if( replaceContainer ) {
+        rightRange.setEndAfter( allRange.endContainer, allRange.endOffset);
+    } else {
+        rightRange.setEnd( allRange.endContainer, allRange.endOffset);
+    }
+
+    const leftSide = leftRange.extractContents();
+    const middle = range.extractContents();
+    const rightSide = rightRange.extractContents();
+
+    // Remove all the tagName nodes from the clone
+    const walker = document.createTreeWalker(
+        middle.getRootNode(),
+        NodeFilter.SHOW_ELEMENT,
+        {
+            acceptNode: function (node) {
+                return node.tagName == tagName
+            }
+        }
+    );
+    let node;
+    while (node = walker.nextNode()) {
+        const guts = node.childNodes;
+
+        // replace a node by its contained children
+        for (let g of guts) {
+            node.before(g);
+        };
+        node.parentNode.removeChild(node);
+    }
+
+    // now replace the node that we split up above with our new content
+    // This empties the ranges, so we need to build selection afterwards
+    // again
+    const result = new DocumentFragment();
+    result.appendChild(leftSide);
+    const newSelection = new Range();
+    newSelection.selectNodeContents(middle);
+    const startEl = newSelection.startContainer.firstChild;
+    const endEl = newSelection.endContainer.firstChild;
+    result.appendChild(middle);
+    result.appendChild(rightSide);
+
+    if ( replaceContainer ) {
+        upperTag.parentNode.replaceChild(result, upperTag);
+    } else {
+        allRange.insertNode(result);
+    }
+
+    // reconstruct the previous text selection. We use the text elements
+    // that we saved above, as these persist their identity
+    const sel = document.getSelection();
+    sel.removeAllRanges();
+    const newR = new Range();
+    newR.setStart(startEl,0);
+    newR.setEnd(endEl,endEl.textContent.length);
+    sel.addRange(newR);
+}
+
 // Basic inline formatting: wraps the selection in the specified tag.
 function applyFormat(tagName, selection) {
     if (!selection.rangeCount || selection.isCollapsed) return;
@@ -177,6 +270,28 @@ function applyFormat(tagName, selection) {
     if (!editor.contains(range.commonAncestorContainer)) return;
     wrapRangeText(range, tagName);
     htmx.trigger(editor, 'input');
+}
+
+// Basic inline formatting: removes the specified tag from the selection
+function removeFormat(tagName, selection) {
+    if (!selection.rangeCount || selection.isCollapsed) return;
+    const range = selection.getRangeAt(0);
+    const editor = document.getElementById('usercontent');
+    if (!editor.contains(range.commonAncestorContainer)) return;
+    unwrapRangeText(range, tagName);
+    htmx.trigger(editor, 'input');
+}
+
+function toggleFormat(tagName) {
+    const sel = window.getSelection();
+    const state = activeAttributes( sel.getRangeAt(0));
+    tagName = tagName.toUpperCase();
+
+    if( state[ tagName ]) {
+        removeFormat( tagName, sel );
+    } else {
+        applyFormat( tagName, sel );
+    }
 }
 
 // Apply inline url
