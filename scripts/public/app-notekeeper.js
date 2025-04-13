@@ -100,11 +100,9 @@ function hasAttr(node,tagName) {
     return ref !== null
 }
 
-function updateToolbar() {
-    const sel = window.getSelection();
-    const nodes = selectedNodes(sel.getRangeAt(0), NodeFilter.SHOW_ELEMENT);
-
-    const textAttrs = ['STRONG','CODE', 'EM', 'U'];
+const textAttrs = ['STRONG','CODE', 'EM', 'U', 'H1'];
+function activeAttributes(range) {
+    const nodes = selectedNodes(range, NodeFilter.SHOW_ELEMENT);
 
     const state = {};
     for (let n of nodes) {
@@ -114,6 +112,12 @@ function updateToolbar() {
             }
         }
     }
+    return state
+}
+
+function updateToolbar() {
+    const sel = window.getSelection();
+    const state = activeAttributes( sel.getRangeAt(0));
     for (let a of textAttrs) {
         const el = document.getElementById(`btn-${a}`);
         if( state[a]) {
