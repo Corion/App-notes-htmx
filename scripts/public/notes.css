@@ -159,6 +159,13 @@ a.editable {
     border-radius: 50%;
 }
 
+.pin-location {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    z-index: 2;
+}
+
 .pinned {
     transform: rotate(-45deg);
     font-weight: bold;
