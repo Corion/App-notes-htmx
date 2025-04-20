@@ -159,16 +159,40 @@ a.editable {
     border-radius: 50%;
 }
 
-.pin-location {
+.note-ui {
     position: absolute;
     top: 0px;
     left: 0px;
+    width: 100%;
     z-index: 2;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+}
+
+.pin-location {
+    flex: stretch;
 }
 
 .pinned {
     transform: rotate(-45deg);
     font-weight: bold;
+}
+
+/* Mark external links as "open in new window */
+a.pop-out {
+  flex: stretch;
+  content: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAQElEQVR42qXKwQkAIAxDUUdxtO6/RBQkQZvSi8I/pL4BoGw/XPkh4XigPmsUgh0626AjRsgxHTkUThsG2T/sIlzdTsp52kSS1wAAAABJRU5ErkJggg==);
+  margin: 0 3px 0 5px;
+  /*
+      position: absolute;
+      z-index: 2; /* so it's even above the in-app link*/
+      top: 0;
+      right: 0;
+*/
+  width: 16px;
+  height: 16px;
+  text-decoration: inherit;
 }
 
 .label:not(:hover) .delete-label {
@@ -185,21 +209,11 @@ a.editable {
 }
 
 .svg_icon {
-    width: 1em;
-/* Mark external links as "open in new window */
-a.pop-out {
-  content: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAQElEQVR42qXKwQkAIAxDUUdxtO6/RBQkQZvSi8I/pL4BoGw/XPkh4XigPmsUgh0626AjRsgxHTkUThsG2T/sIlzdTsp52kSS1wAAAABJRU5ErkJggg==);
-  margin: 0 3px 0 5px;
-  /* &::after { */
-      position: absolute;
-      z-index: 2; /* so it's even above the in-app link*/
-      top: 0;
-      right: 0;
-      width: 16px;
-      height: 16px;
-  /* } */
-  /* ... */
-  text-decoration: inherit;
+  width: 1em;
+  max-height: 1.5em;
+  display: inline-block;
+  position: relative;
+  vertical-align: bottom;
 }
 
 .htmx-indicator{

@@ -1547,10 +1547,12 @@ window.addEventListener('DOMContentLoaded', function() {
 % my $style     = sprintf q{ style="%s; %s;"}, $bgcolor, $textcolor;
 <div class="grid-item note position-relative"<%== $style %>
        id="<%= $note->filename %>">
+    <div class="note-ui">
+        <a href="<%= url_for( "/note/" . $note->filename ) %>" class="pop-out"
+            target="_blank"
+        >pop-out</a>
 %=include 'note-pinned', note => $note
-    <a href="<%= url_for( "/note/" . $note->filename ) %>" class="pop-out"
-        target="_blank"
-    >x</a>
+    </div>
     <a href="<%= url_for( "/note/" . $note->filename ) %>" class="title">
     <div class="title-text"><%= $note->frontmatter->{title} %></div>
     </a>
@@ -1692,7 +1694,7 @@ window.addEventListener('DOMContentLoaded', function() {
 </div>
 
 @@note-pinned.html.ep
-    <div class="pin-location position-absolute top-0 end-0">
+    <div class="pin-location">
 % if( $note->frontmatter->{pinned} ) {
     <form method="POST" action="<%= url_with('/unpin/'.$note->filename) %>"
         hx-post="<%= url_with('/htmx-unpin/'.$note->filename) %>"
