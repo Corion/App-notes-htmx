@@ -1548,6 +1548,9 @@ window.addEventListener('DOMContentLoaded', function() {
 <div class="grid-item note position-relative"<%== $style %>
        id="<%= $note->filename %>">
 %=include 'note-pinned', note => $note
+    <a href="<%= url_for( "/note/" . $note->filename ) %>" class="pop-out"
+        target="_blank"
+    >x</a>
     <a href="<%= url_for( "/note/" . $note->filename ) %>" class="title">
     <div class="title-text"><%= $note->frontmatter->{title} %></div>
     </a>

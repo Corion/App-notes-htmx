@@ -179,6 +179,23 @@ a.editable {
 
 .svg_icon {
     width: 1em;
+/* Mark external links as "open in new window */
+a.pop-out {
+  content: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAQElEQVR42qXKwQkAIAxDUUdxtO6/RBQkQZvSi8I/pL4BoGw/XPkh4XigPmsUgh0626AjRsgxHTkUThsG2T/sIlzdTsp52kSS1wAAAABJRU5ErkJggg==);
+  margin: 0 3px 0 5px;
+  /* &::after { */
+      position: absolute;
+      z-index: 2; /* so it's even above the in-app link*/
+      top: 0;
+      right: 0;
+      width: 16px;
+      height: 16px;
+  /* } */
+  /* ... */
+  text-decoration: inherit;
+}
+
+.htmx-indicator{
 }
 
 @media print {
