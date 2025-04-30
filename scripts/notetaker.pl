@@ -1154,6 +1154,17 @@ sub update_pinned( $c, $pinned, $inline ) {
     }
 }
 
+sub generate_archive( $dir, @notes ) {
+    my $base = Mojo::File->new( $dir );
+    my $zip = Archive::Zip->new();
+    for my $note (@notes) {
+        my $fn = join "/", $dir, $note->filename;
+        my $ar_name = $note->filename;
+        $zip->addFile( $fn => $ar_name );
+    }
+    return $zip
+}
+
 # We also want to export the current filter as an archive
 # so export_archive should take a list of documents/a filter
 # Also, we currently don't export the attached files/images...
@@ -1161,21 +1172,13 @@ sub export_archive( $c ) {
     return login_detour($c) unless $c->is_user_authenticated;
 
     my $session = get_session( $c );
+    my $f = fetch_filter( $c );
+
+    my @notes = get_documents( $session, $f );
 
     my $base = Mojo::File->new( $session->document_directory());
-    my $zip = Archive::Zip->new();
-    warn "Archiving $base";
-    File::Find::find( {
-        wanted => sub {
-                if( -f $File::Find::name ) {
-                    my $ar_name = Mojo::File->new( $File::Find::name )->abs2rel($base);
-                    warn "Adding $File::Find::name as $ar_name";
-                    $zip->addFile( $File::Find::name => "$ar_name" );
-                    }
-            },
-        follow_skip => 1, # no symlinks or anything
-        no_chdir => 1,
-    }, "$base" );
+
+    my $zip = generate_archive( $base, @notes );
     open my $fh, '>', \my $memory;
     $zip->writeToFileHandle( $fh );
     my $fn = strftime "notekeeper-export-%Y-%m-%d-%H-%M-%S.zip", gmtime;
