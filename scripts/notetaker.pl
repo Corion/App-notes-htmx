@@ -1443,12 +1443,23 @@ __DATA__
 
 // Hide all nodes that have the 'nojs' class
 window.addEventListener('DOMContentLoaded', function() {
-    for (let r of window.document.styleSheets[1].cssRules) {
+    const sheet = window.document.styleSheets[1];
+    let removeRules = [];
+    let index = 0;
+    for (let r of sheet.cssRules) {
         if( r.selectorText === '.nojs' ) {
             r.style.display = 'none';
-            break;
+
+        } else if( r.selectorText === '.jsonly' ) {
+            // Reverse order so we can delete without shifting the array indices
+            removeRules.unshift( index );
         }
+        index++;
     };
+
+    for (let i of removeRules ) {
+        sheet.removeRule(i);
+    }
 });
 </script>
 
@@ -1845,9 +1856,9 @@ window.addEventListener('DOMContentLoaded', function() {
 
 @@editor-toolbar.html.ep
 % my $active = $editor eq 'markdown' ? ' btn-primary' : '';
-    <div class="nav-item"><a class="btn <%= $active %>" href="<%= url_with()->query({ editor => 'markdown' }) %>">MD</a></div>
+    <div class="nav-item jsonly"><a class="btn <%= $active %>" href="<%= url_with()->query({ editor => 'markdown' }) %>">MD</a></div>
 %    $active = $editor eq 'html' ? ' btn-primary' : '';
-    <div class="nav-item"><a class="btn <%= $active %>" href="<%= url_with()->query({ editor => 'html' }) %>">HTML</a></div>
+    <div class="nav-item jsonly"><a class="btn <%= $active %>" href="<%= url_with()->query({ editor => 'html' }) %>">HTML</a></div>
 %= include('edit-actions')
 % if( $editor eq 'html' ) {
       <!-- <div id="splitbar-html">|</div> -->

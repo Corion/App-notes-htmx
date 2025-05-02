@@ -5,6 +5,11 @@
     /* we will add rules using JS to this later to hide such elements */
 }
 
+.jsonly {
+    /* we will remove these rules using JS to this later to show such elements */
+    display: none;
+}
+
 nav {
     display: flex;
     align-items: center;
