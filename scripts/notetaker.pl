@@ -510,6 +510,11 @@ sub save_note( $session, $note, $fn ) {
         if ! $note->frontmatter->{created};
     $note->frontmatter->{created} //= timestamp( $ts );
     $note->frontmatter->{updated} = timestamp( $ts );
+
+    # Update username/version
+    $note->frontmatter->{version} = timestamp( $ts );
+    $note->frontmatter->{author} = $session->username;
+
     $note->save_to( $session->clean_filename( $fn ));
 }
 
@@ -527,6 +532,14 @@ sub save_note_body( $c ) {
     my $note = find_or_create_note( $session, $fn );
 
     my $p = $c->req->params()->to_hash;
+
+    if( $p->{version} ne $note->frontmatter->{"version"}) {
+        warn "(Unhandled) edit conflict loses information.";
+
+        warn sprintf "new: %s - %s - %s", $note->filename, $p->{"version"}, $p->{"author"};
+        warn sprintf "old: %s - %s - %s", $note->filename, $note->frontmatter->{"version"}, $note->frontmatter->{"author"};
+    }
+
     my $body;
     if( exists $p->{'body-markdown'}) {
         $body = $p->{'body-markdown'};
@@ -1727,6 +1740,12 @@ window.addEventListener('DOMContentLoaded', function() {
 % }
     </div>
 
+@@ note-version.html.ep
+<input id="note-version" type="hidden" name="version" value="<%= $note->frontmatter->{version} %>"
+    hx-swap-oob="true" />
+<input id="note-author" type="hidden" name="author" value="<%= $note->frontmatter->{author} %>"
+    hx-swap-oob="true" />
+
 @@ note.html.ep
 <!DOCTYPE html>
 <html>
@@ -1762,6 +1781,7 @@ window.addEventListener('DOMContentLoaded', function() {
 %=include "display-text", field_name => 'title', value => $note->frontmatter->{title}, class => 'title', reload => 1
 % }
 <div class="note-container">
+%=include "note-version", note => $note
 % if( $editor eq 'markdown' ) {
 <textarea name="body-markdown" id="note-textarea" autofocus
     style="color: inherit; background-color: inherit;"
