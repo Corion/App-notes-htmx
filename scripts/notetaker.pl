@@ -1715,14 +1715,12 @@ window.addEventListener('DOMContentLoaded', function() {
 % if( $note->frontmatter->{pinned} ) {
     <form method="POST" action="<%= url_with('/unpin/'.$note->filename) %>"
         hx-post="<%= url_with('/htmx-unpin/'.$note->filename) %>"
-        --hx-swap="closest div"
         hx-target="#documents"
         hx-swap="outerHTML transition:true"
     ><button type="submit" class="pinned"><%= "\N{PUSHPIN}" %></bold></button></form>
 % } else {
     <form method="POST" action="<%= url_with('/pin/'.$note->filename) %>"
         hx-post="<%= url_with('/htmx-pin/'.$note->filename) %>"
-        --hx-swap="closest div"
         hx-target="#documents"
         hx-swap="outerHTML transition:true"
     ><button type="submit" class="unpinned"><%= "\N{PUSHPIN}" %>&#xfe0e;</button></form>
