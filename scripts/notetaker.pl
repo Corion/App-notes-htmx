@@ -1883,7 +1883,7 @@ window.addEventListener('DOMContentLoaded', function() {
 %= include('html-actions')
 % }
 
-@@login.html.ep
+@@ login.html.ep
 <!DOCTYPE html>
 <html>
 <head>
@@ -1898,12 +1898,18 @@ window.addEventListener('DOMContentLoaded', function() {
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
 >
-<h1>Log into notekeeper</h1>
-  <div id="container" class="grid-container" hx-history-elt>
+  <div class="container" id="container" hx-history-elt>
+      <h1>Log into notekeeper</h1>
       <form action="<%= url_for( '/login' )%>" method="POST">
-          <input type="text" autofocus name="username" value="" text="Username" />
-          <input type="password" name="password" value="" text="Password" />
-          <button type="submit">Log in</button>
+        <div class="form mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input class="form-control" type="text" autofocus name="username" value="" text="Username" id="username" required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="password" class="form-label">Password</label>
+            <input class="form-control" type="password" name="password" value="" text="Password" id="login-password"/>
+        </div>
+        <button class="btn btn-primary btn-lg" type="submit">Log in</button>
       </form>
   </div>
 </body>
