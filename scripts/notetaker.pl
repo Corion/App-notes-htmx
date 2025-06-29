@@ -1212,8 +1212,12 @@ sub export_archive( $c ) {
     );
     sub load_account ($u) {
         $u =~ s![\\/]!!g;
-        my $fn = "$user_directory/$u.yaml";
+        opendir my $dh, $user_directory
+            or die "Couldn't read user directory '$user_directory': $!";
+        # Search case-insensitively for the login name/file in $user_directory
+        (my $fn) = grep { (fc $_) eq ((fc $u).'.yaml') } readdir $dh;
         try {
+            $fn = "$user_directory/$fn";
             if( -f $fn and -r $fn ) {
                 # libyaml still calls exit() in random situations
                 return LoadFile( $fn );
