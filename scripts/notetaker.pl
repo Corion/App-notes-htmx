@@ -75,7 +75,7 @@ The folders to also include. Valid values are C<archived> and C<deleted>.
 
 =item B<label>
 
-The note label
+The note label (multiple allowed)
 
 =item B<color>
 
@@ -96,8 +96,8 @@ Both values will be returned in the C< created > key as a subhash.
 sub fetch_filter( $c ) {
     my @include = $c->every_param('folder')->@*;
     my $filter = {
+              label => $c->every_param('label'),
         maybe text  => $c->param('q'),
-        maybe label => $c->param('label'),
         maybe color => $c->param('color'),
         maybe created_start => $c->param('created.start'),
         maybe created_end   => $c->param('created.end'),
@@ -130,8 +130,8 @@ Returns an (English) textual description of the current filter.
 
 sub filter_moniker( $filter ) {
     my ($attr, $location, $created);
-    if( $filter->{label} ) {
-        $location = "in '$filter->{label}'"
+    if( $filter->{label} && $filter->{label}->@* ) {
+        $location = "in " . join ", ", map { "'$_'" } $filter->{label}->@*
     }
     if( $filter->{color} ) {
         #$location = qq{<span class="color-circle" style="background-color:$filter->{color};">&nbsp;</span> notes};
@@ -247,8 +247,9 @@ sub match_color( $filter, $note ) {
     ($note->frontmatter->{color} // '') eq $filter
 }
 
-sub match_label( $filter, $note ) {
-    grep { $_ eq $filter } ($note->frontmatter->{labels} // [])->@*
+sub match_label( $labels, $note ) {
+    my %l = map { $_ => 1 } $labels->@*;
+    grep { $l{ $_ } } ($note->frontmatter->{labels} // [])->@*
 }
 
 sub match_username( $filter, $user ) {
@@ -277,7 +278,7 @@ sub get_documents($session, $filter={}) {
         grep {
                ($filter->{text}  ? match_terms( $filter->{text}, $_ )   : 1)
             && ($filter->{color} ? match_color( $filter->{color}, $_ ) : 1)
-            && ($filter->{label} ? match_label( $filter->{label}, $_ ) : 1)
+            && ($filter->{label} && $filter->{label}->@* ? match_label( $filter->{label}, $_ ) : 1)
             && ($filter->{created} ? match_range( $filter, 'created', $_ ) : 1)
             && ($filter->{updated} ? match_range( $filter, 'updated', $_ ) : 1)
         }
@@ -316,7 +317,7 @@ sub get_documents($session, $filter={}) {
 
 # Ugh - we are conflating display and data...
 sub get_templates( $session ) {
-    get_documents(  $session, { label => 'Template' } )
+    get_documents(  $session, { label => ['Template'] } )
 }
 
 sub get_users($session, $filter={}, $include_self=1) {
@@ -465,9 +466,13 @@ any  '/new' => sub( $c ) {
         $note //= find_note( $session, $fn );
         $note->frontmatter->{color} = $c;
     }
-    if( my $c = $c->param('label')) {
-        $note //= find_note( $session, $fn );
-        $note->add_label( $c );
+    if( my $c = $c->every_param('label')) {
+        if( $c->@* ) {
+            $note //= find_note( $session, $fn );
+            for my $l ($c->@*) {
+                $note->add_label( $l );
+            }
+        }
     }
     if( my $body = $c->param('body-markdown')) {
         $note //= find_note( $session, $fn );
