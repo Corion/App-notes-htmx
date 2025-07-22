@@ -2217,6 +2217,7 @@ window.addEventListener('DOMContentLoaded', function() {
             hx-get="<%= url_with( "/filter" ) %>"
             hx-target="#documents"
             hx-swap="outerHTML"
+            hx-replace-url="true"
             hx-trigger="change find:input delay:200ms changed, input find:input delay:200ms changed, keyup[key=='Enter'], load"
       >
         <div class="input-group">
