@@ -1268,12 +1268,21 @@ app->hook(
         my $user = $c->is_user_authenticated ? $c->current_user : undef;
         $c->stash(user => $user);
         return $c;
-    }
+    },
+
+    #after_dispatch => sub( $c ) {
+    #    warn $c->res->as_string;
+    #},
 );
 
 # If we are behind a reverse proxy, prepend our path
 if ( my $path = $ENV{MOJO_REVERSE_PROXY} ) {
     my $path_uri = Mojo::URL->new($path);
+
+    # Set the path for our cookie to (only) our app
+    $path =~ s!/$!!;
+    app->sessions->cookie_path( $path );
+
     my @path_parts = grep /\S/, split m{/}, $path_uri->path;
     app->hook( before_dispatch => sub( $c ) {
         my $url = $c->req->url;
@@ -1313,6 +1322,8 @@ sub login_detour( $c ) {
         # Only set a new return_to path if we don't have one already
         $c->session( return_to => $c->req->url->to_abs );
     }
+
+    # warn $c->req->to_string;
 
     # Make the redirect URL relative
 
