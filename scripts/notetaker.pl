@@ -1665,7 +1665,7 @@ window.addEventListener('DOMContentLoaded', function() {
       <form id="form-filter-instant-small" method="GET" action="<%= url_with( "/" )->query({ "show-filter" => 1 }) %>">
         <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
             placeholder="Search"
-            hx-get="<%= url_with( "/" )->query( 'show-filter'=>1 ) %>"
+            hx-get="<%= url_with( "/" )->query( 'show-filter'=>1 )->query({ q => undef }) %>"
             hx-trigger="focus"
             hx-target="#body"
         />
@@ -2225,7 +2225,7 @@ window.addEventListener('DOMContentLoaded', function() {
 @@select-filter.html.ep
 <div id="form-filter-2">
       <form id="form-filter-instant" method="GET" action="<%= url_for( "/" ) %>"
-            hx-get="<%= url_with( "/filter" ) %>"
+            hx-get="<%= url_with( "/filter" )->query({ q => undef }) %>"
             hx-target="#documents"
             hx-swap="outerHTML"
             hx-replace-url="true"
