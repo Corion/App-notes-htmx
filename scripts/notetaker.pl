@@ -1666,7 +1666,7 @@ window.addEventListener('DOMContentLoaded', function() {
         <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
             placeholder="Search"
             hx-get="<%= url_with( "/" )->query( 'show-filter'=>1 )->query({ q => undef }) %>"
-            hx-trigger="focus"
+            hx-trigger="focus delay:200ms, changed delay:100ms"
             hx-target="#body"
         />
       </form>
