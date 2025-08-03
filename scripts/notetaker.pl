@@ -2239,7 +2239,9 @@ window.addEventListener('DOMContentLoaded', function() {
         <span class="input-group-append">
 % if ( keys $filter->%* ) {
             <a class="btn btn-white border-start-0 border" type="button"
-            href="<%= url_for('/')->query('show-filter'=>1) %>"
+            href="<%= url_for('/')->query('show-filter'=>1)->query({ q => undef }) %>"
+            hx-disinherit="*"
+            hx-target="#body"
             >x</a>
 % }
         </span>
