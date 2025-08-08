@@ -67,7 +67,8 @@ The current keys are:
 
 =item B<q>
 
-The search term
+The search term, parsed into whitespace separated tokens. Parsing is done
+using C<shellwords()>, so you can embed whitespaces by using quotes.
 
 =item B<folder>
 
@@ -95,9 +96,13 @@ Both values will be returned in the C< created > key as a subhash.
 
 sub fetch_filter( $c ) {
     my @include = $c->every_param('folder')->@*;
+
+    my $text = $c->param('q');
+    my $terms = [shellwords( $text )];
     my $filter = {
               label => $c->every_param('label'),
-        maybe text  => $c->param('q'),
+        maybe text  => $terms,
+        maybe text_as_typed  => $text,
         maybe color => $c->param('color'),
         maybe created_start => $c->param('created.start'),
         maybe created_end   => $c->param('created.end'),
@@ -238,8 +243,7 @@ sub match_text( $filter, $note ) {
 }
 
 # Does an AND match
-sub match_terms( $text, $note ) {
-    my $terms = [shellwords( $text )];
+sub match_terms( $terms, $note ) {
     return ! defined ( first { ! match_text( $_, $note ) } $terms->@* );
 }
 
@@ -1437,10 +1441,11 @@ sub as_html( $c, $doc, %options ) {
         disallowed_html_tags => ['script','a','object'],
     );
     my $body = $doc->body;
-    if( my $w = $options{ search } ) {
-        my @t = shellwords($w);
-        my $t = join "|", map { quotemeta $_ } shellwords( $w );
-        $body =~ s!($t)!<mark>$1</mark>!gi;
+    if( my $w = $options{ search }) {
+        if( my @t = $w->@* ) {
+            my $t = join "|", map { quotemeta $_ } grep { length $_ } @t;
+            $body =~ s!($t)!<mark>$1</mark>!gi;
+        }
     };
 
     # Markdown::Perl autoconverts (some) URL-like strings to links, even when
@@ -1663,7 +1668,7 @@ window.addEventListener('DOMContentLoaded', function() {
 % } else {
 %# We already have a selection
       <form id="form-filter-instant-small" method="GET" action="<%= url_with( "/" )->query({ "show-filter" => 1 }) %>">
-        <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
+        <input id="text-filter" name="q" value="<%= $filter->{text_as_typed}//'' %>"
             placeholder="Search"
             hx-get="<%= url_with( "/" )->query( 'show-filter'=>1 )->query({ q => undef }) %>"
             hx-trigger="focus delay:200ms, changed delay:100ms"
@@ -2232,7 +2237,7 @@ window.addEventListener('DOMContentLoaded', function() {
             hx-trigger="change find:input delay:200ms changed, input find:input delay:200ms changed, keyup[key=='Enter'], load"
       >
         <div class="input-group">
-        <input id="text-filter" name="q" value="<%= $filter->{text}//'' %>"
+        <input id="text-filter" name="q" value="<%= $filter->{text_as_typed}//'' %>"
             placeholder="<%== $moniker %>"
             autofocus
         />
