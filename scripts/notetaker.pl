@@ -70,6 +70,10 @@ The current keys are:
 The search term, parsed into whitespace separated tokens. Parsing is done
 using C<shellwords()>, so you can embed whitespaces by using quotes.
 
+The search term can also contain C<#foo> to search for label C<#foo>.
+That word will then be returned as a C<text_or_label> C<foo>
+instead.
+
 =item B<folder>
 
 The folders to also include. Valid values are C<archived> and C<deleted>.
@@ -120,6 +124,12 @@ sub fetch_filter( $c ) {
     if( my $v = delete $filter->{created_end} ) {
         $filter->{created} //= {};
         $filter->{created}->{end} = $v;
+    }
+
+    # Restructure the query in the filter text:
+    if( my @labels = grep { /^#/ } $filter->{ text }->@* ) {
+        $filter->{ text }->@* = grep { !/^#/ } $filter->{ text }->@*;
+        $filter->{ text_or_label } = \@labels;
     }
 
     return $filter
@@ -247,6 +257,14 @@ sub match_terms( $terms, $note ) {
     return ! defined ( first { ! match_text( $_, $note ) } $terms->@* );
 }
 
+# Search either a test substring #foo, or a label foo
+sub match_text_or_label( $text_or_label, $note ) {
+    return ! defined ( first { ! (  match_label_substring( $_, $note )
+                                 || match_text( "#".$_, $note )
+                                 )
+                             } $text_or_label->@* );
+}
+
 sub match_color( $filter, $note ) {
     ($note->frontmatter->{color} // '') eq $filter
 }
@@ -254,6 +272,12 @@ sub match_color( $filter, $note ) {
 sub match_label( $labels, $note ) {
     my %l = map { $_ => 1 } $labels->@*;
     grep { $l{ $_ } } ($note->frontmatter->{labels} // [])->@*
+}
+
+# Match a label substring, case-insensitively
+sub match_label_substring( $label, $note ) {
+    $label =~ s/^#//;
+    grep { /\Q$label\E/i } ($note->frontmatter->{labels} // [])->@*
 }
 
 sub match_username( $filter, $user ) {
@@ -280,7 +304,8 @@ sub get_documents($session, $filter={}) {
     #%$colors = ();
     return
         grep {
-               ($filter->{text}  ? match_terms( $filter->{text}, $_ )   : 1)
+               ($filter->{text}  ? match_terms( $filter->{text}, $_ )  : 1)
+            && ($filter->{text_or_label} && $filter->{text_or_label}->@* ? match_text_or_label( $filter->{text_or_label}, $_ )  : 1)
             && ($filter->{color} ? match_color( $filter->{color}, $_ ) : 1)
             && ($filter->{label} && $filter->{label}->@* ? match_label( $filter->{label}, $_ ) : 1)
             && ($filter->{created} ? match_range( $filter, 'created', $_ ) : 1)
