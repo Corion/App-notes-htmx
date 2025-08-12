@@ -343,3 +343,7 @@ if ( window.matchMedia ) {
     })
     updateTheme()
 }
+function htmxNavigation( elt ) {
+}
+
+htmx.onLoad(htmxNavigation);
