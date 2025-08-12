@@ -343,7 +343,31 @@ if ( window.matchMedia ) {
     })
     updateTheme()
 }
+
+function hotkeyHandler( evt ) {
+    evt = evt || window.event;
+
+    if( evt.ctrlKey ) return;
+    if( evt.altKey ) return;
+    if( evt.metaKey ) return;
+
+    if (evt.key == 's') {
+        if ((evt.target instanceof HTMLTextAreaElement) || (evt.target instanceof HTMLInputElement)) return;
+        let searchBox = htmx.find('#text-filter');
+        if( searchBox ) {
+            searchBox.focus();
+            evt.stopPropagation();
+            return false;
+        }
+    } else if (evt.key == 'Escape') {
+        // hide search bar?!
+    } else { console.log( evt.key ) };
+}
+
+/* Called for every page/fragment loaded by HTMX */
 function htmxNavigation( elt ) {
+    /* Set up the hotkeys for the current page */
+    document.onkeydown = hotkeyHandler;
 }
 
 htmx.onLoad(htmxNavigation);
