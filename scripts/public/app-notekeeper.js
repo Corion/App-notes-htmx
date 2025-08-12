@@ -361,7 +361,9 @@ function hotkeyHandler( evt ) {
         }
     } else if (evt.key == 'Escape') {
         // hide search bar?!
-    } else { console.log( evt.key ) };
+    } else {
+        // console.log( evt.key )
+    };
 }
 
 /* Called for every page/fragment loaded by HTMX */
