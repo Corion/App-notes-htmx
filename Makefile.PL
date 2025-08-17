@@ -50,6 +50,8 @@ my %module = (
     },
 
     PREREQ_PM => {
+        'experimental' => 0.036,
+        'stable'       => 0.036,
         'Carp' => 0,
         'PerlX::Maybe' => 0,
         'Mojolicious' => 8,
@@ -68,7 +70,7 @@ my %module = (
         # Convert from and to HTML
         'Markdown::Perl'       => 0,
         'Text::HTML::Turndown' => 0,
-        'Text::FrontMatter::YAML' => '0.06',
+        'Text::FrontMatter::YAML' => '0.07',
         'Date::Period::Human' => 0,
 
         'Moo'                       => 2, # for some hashes-as-objects
