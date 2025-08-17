@@ -1,5 +1,17 @@
 
-# Notekeeper - a markdown notetaker
+# Notekeeper - another Google Keep clone
+
+![Firefox with the experimental masonry layout](screenshots/firefox-masonry.png)
+
+
+![Firefox mobile](screenshots/firefox-mobile-nomasonry.png)
+
+![Chromium](screenshots/chrome-new-from-template.png)
+
+
+# NAME
+
+App::Notetaker - a markdown notetaker
 
 Closely positioned as another Google Keep clone
 
@@ -8,21 +20,25 @@ Closely positioned as another Google Keep clone
 The live demo lives at
 [https://datenzoo.de/notes/](https://datenzoo.de/notes/) ( `demo:demo` )
 
-# Screenshots
+\# LIVE DEMO
 
-## Firefox Desktop with [masonry layout](https://developer.mozilla.org/de/docs/Web/CSS/CSS_grid_layout/Masonry_layout)
+The live demo lives at
+\[https://datenzoo.de/notes/\](https://datenzoo.de/notes/) ( \`demo:demo\` )
 
-![Firefox with the experimental masonry layout](screenshots/firefox-masonry.png)
+\# Screenshots
 
-## Firefox mobile
+\## Firefox Desktop with \[masonry layout\](https://developer.mozilla.org/de/docs/Web/CSS/CSS\_grid\_layout/Masonry\_layout)
 
-![Firefox mobile](screenshots/firefox-mobile-nomasonry.png)
+!\[Firefox with the experimental masonry layout\](screenshots/firefox-masonry.png)
 
-## Chromium
+\## Firefox mobile
 
-![Chromium](screenshots/chrome-new-from-template.png)
+!\[Firefox mobile\](screenshots/firefox-mobile-nomasonry.png)
 
-## Dark Mode
+\## Chromium
 
-![Dark mode](screenshots/dark-mode.png)
+!\[Chromium\](screenshots/chrome-new-from-template.png)
 
+\## Dark Mode
+
+!\[Dark mode\](screenshots/dark-mode.png)
