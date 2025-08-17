@@ -2000,17 +2000,6 @@ window.addEventListener('DOMContentLoaded', function() {
         onfocus="this.select()"
     />
     <button type="submit" class="nojs">Save</button>
-<!--
-    <a href="<%= url_for( "/note/" . $note->filename ) %>"
-% if( $field_properties->{ reload } ) {
-       hx-post="<%= url_for( "/edit-display" )%>-<%= $field_name %>/<%= $note->filename %>"
-% } else {
-       hx-get="<%= url_for( "/display" )%>-<%= $field_name %>/<%= $note->filename %>"
-       hx-target="#note-<%= $field_name %>"
-       hx-swap="innerHTML"
-% }
-    >x</a>
--->
 </form>
 
 @@attach-audio.html.ep
