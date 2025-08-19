@@ -26,6 +26,16 @@ has 'filename' => (
     is => 'ro',
 );
 
+sub deleted( $self ) {
+    my $fn = $self->filename;
+    $self->path =~ m!^deleted/!;
+}
+
+sub archived( $self ) {
+    my $fn = $self->filename;
+    $self->path =~ m!^archived/!;
+}
+
 =head2 C<< ->shared >>
 
   $note->shared->{ $user } = $target_lint;
