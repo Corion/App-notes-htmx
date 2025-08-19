@@ -23,7 +23,7 @@ has 'path' => (
 );
 
 has 'filename' => (
-    is => 'rw',
+    is => 'ro',
 );
 
 =head2 C<< ->shared >>
