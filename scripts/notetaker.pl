@@ -1289,11 +1289,6 @@ $session_store->default_expiration(0); # cookies are forever
 
 app->hook(
     before_render => sub ($c, $args) {
-        if( $c->is_user_authenticated ) {
-# say "User is authenticated";
-        } else {
-# say "Need login";
-        };
         my $user = $c->is_user_authenticated ? $c->current_user : undef;
         $c->stash(user => $user);
         return $c;
