@@ -570,8 +570,8 @@ sub save_note_body( $c ) {
     if( $p->{version} ne $note->frontmatter->{"version"}) {
         warn "(Unhandled) edit conflict loses information.";
 
-        warn sprintf "new: %s - %s - %s", $note->filename, $p->{"version"}, $p->{"author"};
-        warn sprintf "old: %s - %s - %s", $note->filename, $note->frontmatter->{"version"}, $note->frontmatter->{"author"};
+        warn sprintf "new: %s - %s - %s", $note->path, $p->{"version"}, $p->{"author"};
+        warn sprintf "old: %s - %s - %s", $note->path, $note->frontmatter->{"version"}, $note->frontmatter->{"author"};
     }
 
     my $body;
@@ -602,11 +602,11 @@ sub delete_note( $c ) {
 
     if( $note ) {
         # Save undo data?!
-        $c->stash( undo => '/undelete/' . $note->filename );
+        $c->stash( undo => '/undelete/' . $note->path );
         $note->frontmatter->{deleted} = timestamp(time);
         remove_note_symlinks( $note );
         save_note( $session, $note, $fn );
-        move_note( $session->document_directory . "/" . $note->filename  => $session->document_directory . "/deleted/" . $note->filename );
+        move_note( $session->document_directory . "/" . $note->path  => $session->document_directory . "/deleted/" . $note->filename );
     }
 
     # Can we keep track of current filters and restore them here?
@@ -623,10 +623,10 @@ sub archive_note( $c ) {
 
     if( $note ) {
         # Save undo data?!
-        $c->stash( undo => '/unarchive/' . $note->filename );
+        $c->stash( undo => '/unarchive/' . $note->path );
         $note->frontmatter->{archived} = timestamp(time);
         save_note( $session, $note, $fn );
-        move_note( $session->document_directory . "/" . $note->filename  => $session->document_directory . "/archived/" . $note->filename );
+        move_note( $session->document_directory . "/" . $note->path  => $session->document_directory . "/archived/" . $note->filename );
     }
 
     # Can we keep track of current filters and restore them here?
@@ -697,7 +697,7 @@ sub copy_note( $c ) {
 
     if( $note ) {
         # Save undo data?!
-        $c->stash( undo => '/uncopy/' . $note->filename );
+        $c->stash( undo => '/uncopy/' . $note->path );
         my $filename = $session->clean_filename( $fn );
         my $new_name = basename( find_name( $filename ));
         $note->frontmatter->{created} = timestamp(time);
@@ -979,8 +979,8 @@ sub attach_image( $c ) {
     my $note = find_note( $session, $c->param('fn') );
     my $image = $c->param('image');
     attach_image_impl( $session, $note, $image );
-    save_note( $session, $note, $note->filename );
-    $c->redirect_to($c->url_for('/note/' . $note->filename ));
+    save_note( $session, $note, $note->path );
+    $c->redirect_to($c->url_for('/note/' . $note->path ));
 }
 
 # Maybe, capture media?!
@@ -1013,8 +1013,8 @@ sub attach_audio( $c ) {
     my $filename = "attachments/" . $fn;
     $media->move_to($session->document_directory . "/$filename");
     $note->body( $note->body . "\n![$filename]($filename)\n" );
-    $note->save_to( $session->document_directory . "/" . $note->filename );
-    $c->redirect_to($c->url_for('/note/' . $note->filename ));
+    $note->save_to( $session->document_directory . "/" . $note->path );
+    $c->redirect_to($c->url_for('/note/' . $note->path ));
 }
 
 sub edit_labels( $c, $inline ) {
@@ -1205,8 +1205,8 @@ sub generate_archive( $dir, @notes ) {
     my $base = Mojo::File->new( $dir );
     my $zip = Archive::Zip->new();
     for my $note (@notes) {
-        my $fn = join "/", $dir, $note->filename;
-        my $ar_name = $note->filename;
+        my $fn = join "/", $dir, $note->path;
+        my $ar_name = $note->path;
         $zip->addFile( $fn => $ar_name );
     }
     return $zip
@@ -1620,16 +1620,16 @@ window.addEventListener('DOMContentLoaded', function() {
 <div class="grid-item note position-relative"<%== $style %>
        id="<%= $note->filename %>">
     <div class="note-ui">
-    <a href="<%= url_for( "/note/" . $note->filename ) %>" class="title">
+    <a href="<%= url_for( "/note/" . $note->path ) %>" class="title">
     <div class="title-text"><%= $note->frontmatter->{title} %></div>
     </a>
-        <a href="<%= url_for( "/note/" . $note->filename ) %>" class="pop-out"
+        <a href="<%= url_for( "/note/" . $note->path ) %>" class="pop-out"
             target="_blank"
         >pop-out</a>
 %=include 'note-pinned', note => $note
     </div>
     <!-- list (some) tags -->
-    <a href="<%= url_for( "/note/" . $note->filename ) %>" class="title-cover">
+    <a href="<%= url_for( "/note/" . $note->path ) %>" class="title-cover">
     &nbsp;
     </a>
     <div class="content" hx-disable="true"><%== $note->{html} %></div>
@@ -1723,7 +1723,7 @@ window.addEventListener('DOMContentLoaded', function() {
     </div>
 % if( $type eq 'note' ) {
     <div class="dropdown-item" id="action-copy">
-        <form action="<%= url_for('/copy/' . $note->filename ) %>" method="POST"
+        <form action="<%= url_for('/copy/' . $note->path ) %>" method="POST"
         ><button class="btn btn-secondary" type="submit">&#xFE0E;⎘ Copy note</button>
         </form>
     </div>
@@ -1771,14 +1771,14 @@ window.addEventListener('DOMContentLoaded', function() {
 @@note-pinned.html.ep
     <div class="pin-location">
 % if( $note->frontmatter->{pinned} ) {
-    <form method="POST" action="<%= url_with('/unpin/'.$note->filename) %>"
-        hx-post="<%= url_with('/htmx-unpin/'.$note->filename) %>"
+    <form method="POST" action="<%= url_with('/unpin/'.$note->path) %>"
+        hx-post="<%= url_with('/htmx-unpin/'.$note->path) %>"
         hx-target="#documents"
         hx-swap="outerHTML transition:true"
     ><button type="submit" class="pinned"><%= "\N{PUSHPIN}" %></bold></button></form>
 % } else {
-    <form method="POST" action="<%= url_with('/pin/'.$note->filename) %>"
-        hx-post="<%= url_with('/htmx-pin/'.$note->filename) %>"
+    <form method="POST" action="<%= url_with('/pin/'.$note->path) %>"
+        hx-post="<%= url_with('/htmx-pin/'.$note->path) %>"
         hx-target="#documents"
         hx-swap="outerHTML transition:true"
     ><button type="submit" class="unpinned"><%= "\N{PUSHPIN}" %>&#xfe0e;</button></form>
@@ -1817,7 +1817,7 @@ window.addEventListener('DOMContentLoaded', function() {
 % my $style     = sprintf q{ style="%s; %s;"}, $bgcolor, $textcolor;
 %=include 'display-labels', labels => $note->frontmatter->{labels}, note => $note
 <div class="single-note"<%== $style %>>
-% my $doc_url = '/note/' . $note->filename;
+% my $doc_url = '/note/' . $note->path;
 <form action="<%= url_for( $doc_url ) %>" method="POST">
 <button class="nojs" name="save" type="submit">Save</button>
 % if( $edit_field and $edit_field eq 'title' ) {
@@ -1857,7 +1857,7 @@ window.addEventListener('DOMContentLoaded', function() {
 </div>
 <div id="actionbar" class="navbar bg-body-tertiary mt-auto fixed-bottom noprint">
     <div id="action-attach">
-        <form action="<%= url_for( "/upload-image/" . $note->filename ) %>" method="POST"
+        <form action="<%= url_for( "/upload-image/" . $note->path ) %>" method="POST"
             enctype='multipart/form-data'
             hx-trigger="change"
         >
@@ -1878,17 +1878,17 @@ window.addEventListener('DOMContentLoaded', function() {
 %= include 'menu-edit-labels', note => $note, labels => \%labels, label_filter => ''
     </div>
     <div id="action-copy">
-        <form action="<%= url_for('/copy/' . $note->filename ) %>" method="POST"
+        <form action="<%= url_for('/copy/' . $note->path ) %>" method="POST"
         ><button class="btn btn-secondary" type="submit">&#xFE0E;⎘</button>
         </form>
     </div>
     <div id="action-archive">
-        <form action="<%= url_for('/archive/' . $note->filename ) %>" method="POST"
+        <form action="<%= url_for('/archive/' . $note->path ) %>" method="POST"
         ><button class="btn btn-secondary" type="submit">&#xFE0E;&#x1f5c3;</button>
         </form>
     </div>
     <div id="action-delete">
-        <form action="<%= url_for('/delete/' . $note->filename ) %>" method="POST"
+        <form action="<%= url_for('/delete/' . $note->path ) %>" method="POST"
         ><button class="btn btn-secondary" type="submit">&#xFE0E;&#x1F5D1;</button>
         </form>
     </div>
@@ -1963,8 +1963,8 @@ window.addEventListener('DOMContentLoaded', function() {
 @@display-text.html.ep
 <div id="note-<%= $field_name %>" class="<%= $class %>">
 % if( defined $value && $value ne '' ) {
-    <a href="<%= url_for( "/edit-$field_name/" . $note->filename ) %>"
-    hx-get="<%= url_for( "/htmx-edit-$field_name/" . $note->filename ) %>"
+    <a href="<%= url_for( "/edit-$field_name/" . $note->path ) %>"
+    hx-get="<%= url_for( "/htmx-edit-$field_name/" . $note->path ) %>"
     hx-target="closest div"
     hx-swap="innerHTML"
     >
@@ -1972,9 +1972,9 @@ window.addEventListener('DOMContentLoaded', function() {
     &#x270E;</a>
 % } else {
     <a class="editable"
-       href="<%= url_for( "/edit-$field_name/" . $note->filename ) %>"
+       href="<%= url_for( "/edit-$field_name/" . $note->path ) %>"
 %#     if( !$reload ) {
-       hx-get="<%= url_for( "/htmx-edit-$field_name/" . $note->filename ) %>"
+       hx-get="<%= url_for( "/htmx-edit-$field_name/" . $note->path ) %>"
        hx-target="closest div"
        hx-swap="innerHTML"
 %#     }
@@ -1983,7 +1983,7 @@ window.addEventListener('DOMContentLoaded', function() {
 </div>
 
 @@edit-text.html.ep
-<form action="<%= url_for( "/edit-$field_name/" . $note->filename ) %>" method="POST"
+<form action="<%= url_for( "/edit-$field_name/" . $note->path ) %>" method="POST"
 % if( $field_properties->{ reload } ) {
     hx-trigger="blur from:#note-input-text-<%= $field_name %>"
 % } else {
@@ -2000,7 +2000,7 @@ window.addEventListener('DOMContentLoaded', function() {
 @@attach-audio.html.ep
 <div id="audio-recorder" >
     <button class="btn btn-primary" id="button-record" onclick="startRecording()">&#x1F399;</button>
-    <form action="<%= url_with( "/upload-audio/" . $note->filename ) %>"
+    <form action="<%= url_with( "/upload-audio/" . $note->path ) %>"
           style="display: none;"
           method="POST"
           enctype="multipart/form-data"
@@ -2018,7 +2018,7 @@ window.addEventListener('DOMContentLoaded', function() {
 </div>
 
 @@edit-color.html.ep
-<form action="<%= url_for( "/edit-color/" . $note->filename ) %>" method="POST"
+<form action="<%= url_for( "/edit-color/" . $note->path ) %>" method="POST"
     id="form-edit-color"
     hx-disinherit="*"
     hx-trigger="change"
@@ -2047,8 +2047,8 @@ window.addEventListener('DOMContentLoaded', function() {
     <div class="label badge rounded-pill bg-secondary" ><%= $label %>
 %# Yeah, this should be a FORM, but I can't get it to play nice with Bootstrap
     <a class="delete-label"
-        href="<%= url_with('/delete-label/' . $note->filename)->query(delete=> $label) %>"
-        hx-get="<%= url_with('/htmx-delete-label/' . $note->filename)->query(delete=> $label) %>"
+        href="<%= url_with('/delete-label/' . $note->path)->query(delete=> $label) %>"
+        hx-get="<%= url_with('/htmx-delete-label/' . $note->path)->query(delete=> $label) %>"
     >
         &#10006;
     </a>
@@ -2059,7 +2059,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
 @@menu-edit-labels.html.ep
 <div class="dropup" id="dropdown-labels" hx-trigger="show.bs.dropdown"
-  hx-get="<%= url_with( '/htmx-label-menu/' . $note->filename ) %>"
+  hx-get="<%= url_with( '/htmx-label-menu/' . $note->path ) %>"
   hx-target="find .dropdown-menu"
   hx-disinherit="hx-target"
   >
@@ -2077,8 +2077,8 @@ window.addEventListener('DOMContentLoaded', function() {
 </div>
 
 @@filter-edit-labels.html.ep
-% my $url = url_for( "/edit-labels/" . $note->filename );
-% my $htmx_url = url_for( "/htmx-edit-labels/" . $note->filename );
+% my $url = url_for( "/edit-labels/" . $note->path );
+% my $htmx_url = url_for( "/htmx-edit-labels/" . $note->path );
 <div class="dropdown-item">Label note</div>
 <form action="<%= $url %>" method="GET" id="label-filter-form"
  class="form-inline dropdown-item"
@@ -2106,7 +2106,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
 @@edit-labels.html.ep
 <div id="label-edit-list">
-<form action="<%= url_for( "/update-labels/" . $note->filename ) %>" method="POST"
+<form action="<%= url_for( "/update-labels/" . $note->path ) %>" method="POST"
   id="label-set-list"
 >
   <button class="nojs btn btn-default" type="submit">Set</button>
@@ -2118,7 +2118,7 @@ window.addEventListener('DOMContentLoaded', function() {
     <input type="checkbox" name="<%= $name %>"
            id="<%= $name %>"
            value="<%= $label %>"
-           hx-post="<%= url_with( '/htmx-update-labels/' . $note->filename ) %>"
+           hx-post="<%= url_with( '/htmx-update-labels/' . $note->path ) %>"
            hx-trigger="change"
            hx-swap="none"
            hx-target="this"
@@ -2135,7 +2135,7 @@ window.addEventListener('DOMContentLoaded', function() {
 %# This needs a rework with the above
   <!-- Here, we also need a non-JS solution ... -->
 % if( defined $new_name and length($new_name)) {
-%    my $url = url_for("/add-label/" . $note->filename )->query( "new-label" => $new_name );
+%    my $url = url_for("/add-label/" . $note->path )->query( "new-label" => $new_name );
 <a id="create-label" href=" <%= $url %>"
    hx-get="<%= $url %>"
    hx-swap="outerHTML"
@@ -2143,8 +2143,8 @@ window.addEventListener('DOMContentLoaded', function() {
 % }
 
 @@create-label.html.ep
-<form id="create-label" action="<%= url_for( "/add-label/" . $note->filename ) %>" method="POST"
-    hx-post="<%= url_for( "/add-label/" . $note->filename ) %>"
+<form id="create-label" action="<%= url_for( "/add-label/" . $note->path ) %>" method="POST"
+    hx-post="<%= url_for( "/add-label/" . $note->path ) %>"
     hx-swap="outerHTML"
 >
   <button type="submit">Set</button>
@@ -2156,7 +2156,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
 @@menu-edit-share.html.ep
 <div id="dropdown-share" hx-trigger="show.bs.dropdown"
-  hx-get="<%= url_with( '/htmx-share-menu/' . $note->filename ) %>"
+  hx-get="<%= url_with( '/htmx-share-menu/' . $note->path ) %>"
   hx-target="find .dropdown-menu"
   hx-disinherit="hx-target"
   >
@@ -2177,8 +2177,8 @@ window.addEventListener('DOMContentLoaded', function() {
 </div>
 
 @@filter-edit-share.html.ep
-% my $url = url_for( "/update-share/" . $note->filename );
-% my $htmx_url = url_for( "/htmx-update-share/" . $note->filename );
+% my $url = url_for( "/update-share/" . $note->path );
+% my $htmx_url = url_for( "/htmx-update-share/" . $note->path );
 <div class="dropdown-item">Share note with</div>
 %=include 'edit-share-filterbox', url => $url, htmx_url => $htmx_url, note => $note, all_users => $all_users, user_filter => $user_filter, shared_with => $shared_with
 %=include 'edit-share', note => $note, all_users => $all_users, user_filter => $user_filter, shared_with => $shared_with
@@ -2209,7 +2209,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
 @@edit-share.html.ep
 <div id="share-edit-list">
-<form action="<%= url_for( "/update-share/" . $note->filename ) %>" method="POST"
+<form action="<%= url_for( "/update-share/" . $note->path ) %>" method="POST"
   id="share-edit-list"
 >
   <button class="nojs btn btn-default" type="submit">Share</button>
@@ -2223,7 +2223,7 @@ window.addEventListener('DOMContentLoaded', function() {
     <input type="checkbox" name="share"
            id="<%= $name %>"
            value="<%= $user->{user} %>"
-           hx-post="<%= url_with( '/htmx-update-share/' . $note->filename ) %>"
+           hx-post="<%= url_with( '/htmx-update-share/' . $note->path ) %>"
            hx-trigger="change"
            hx-swap="none"
            hx-target="this"

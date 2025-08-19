@@ -18,6 +18,10 @@ has 'body' => (
     is => 'rw'
 );
 
+has 'path' => (
+    is => 'ro',
+);
+
 has 'filename' => (
     is => 'rw',
 );
@@ -48,7 +52,7 @@ sub from_file( $class, $fn, $document_directory ) {
 
     my $path = $f->abs2rel( $document_directory );
     $class->new( {
-        (path => $f),
+        (path => $path),
         (filename => $f->basename),
         (frontmatter => $tfm->frontmatter_hashref // {}),
         (body => $tfm->data_text),
