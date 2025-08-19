@@ -39,14 +39,16 @@ sub shared( $self ) {
     return $self->frontmatter->{shared} //= {}
 }
 
-sub from_file( $class, $fn ) {
+sub from_file( $class, $fn, $document_directory ) {
     my $f = Mojo::File->new($fn);
     my $body = $f->slurp('UTF-8');
     my $tfm = Text::FrontMatter::YAML->new(
         document_string => $body,
     );
 
+    my $path = $f->abs2rel( $document_directory );
     $class->new( {
+        (path => $f),
         (filename => $f->basename),
         (frontmatter => $tfm->frontmatter_hashref // {}),
         (body => $tfm->data_text),

@@ -337,7 +337,7 @@ sub get_documents($session, $filter={}) {
             $stat{ $b } <=> $stat{ $a }
         }
         map {
-            my $note = App::Notetaker::Document->from_file( $_ );
+            my $note = App::Notetaker::Document->from_file( $_, $session->document_directory );
             $stat{ $note } = (stat($_))[9]; # most-recent changed;
             $note
         }
@@ -367,7 +367,7 @@ sub find_note( $session, $fn ) {
     my $filename = $session->clean_filename( $fn );
 
     if( -f $filename ) {
-        return App::Notetaker::Document->from_file( $filename );
+        return App::Notetaker::Document->from_file( $filename, $session->document_directory );
     };
     return;
 }
@@ -376,7 +376,7 @@ sub find_or_create_note( $session, $fn ) {
     my $filename = $session->clean_filename( $fn );
 
     if( -f $filename ) {
-        return App::Notetaker::Document->from_file( $filename );
+        return App::Notetaker::Document->from_file( $filename, $session->document_directory );
     } else {
         return App::Notetaker::Document->new(
             filename => basename($filename),
