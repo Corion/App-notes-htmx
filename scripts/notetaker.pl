@@ -947,6 +947,7 @@ sub update_note_title( $c, $autosave=0 ) {
         my $final_name = move_note( $session->clean_filename( $fn ) => $session->document_directory . "/$new_fn.markdown");
         $fn = basename($final_name);
         $note->filename( $fn );
+        $note->path( $final_name );
     }
 
     #if( $autosave ) {

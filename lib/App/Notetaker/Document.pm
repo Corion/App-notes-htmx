@@ -19,11 +19,11 @@ has 'body' => (
 );
 
 has 'path' => (
-    is => 'ro',
+    is => 'rw',
 );
 
 has 'filename' => (
-    is => 'ro',
+    is => 'rw',
 );
 
 sub deleted( $self ) {
