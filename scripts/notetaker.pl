@@ -1419,6 +1419,7 @@ post '/htmx-unpin/*fn' => sub($c) { \&update_pinned( $c, 0, 1 ) };
 
 get  '/export-archive' => \&export_archive;
 get '/setup' => \&render_setup;
+get '/pwa' => 'pwa';
 
 # Session handling
 get '/login' => sub ($c) { $c->render(template => 'login') };
@@ -2302,3 +2303,34 @@ __DATA__
 %}
       </form>
 </div>
+
+@@pwa.html.ep
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Home (PWA)</title>
+%=include('htmx-header');
+    <script type="text/javascript" src="app.js"></script>
+    <script>
+    // test standalone mode
+    window.addEventListener('load', function() {
+        console.log(window.IS_STANDALONE);
+        // hydrate with the documents, and bar etc.
+        htmx.ajax("GET", "/", "body")
+    });
+    </script>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+
+    <!-- theme browser bar -->
+    <meta name="theme-color" content="#000000">
+
+    <!-- don't forget a manifest ! -->
+    <link rel="manifest" href="manifest.json">
+
+    <!-- apple touch icon ! -->
+    <link rel="apple-touch-icon" href="/example.png">
+</head>
+<body>
+</body>
+</html>
