@@ -26,6 +26,14 @@ has 'filename' => (
     is => 'rw',
 );
 
+has 'labels' => (
+    is => 'ro',
+);
+
+sub BUILD( $self, $args ) {
+    $args->{labels} = App::Notetaker::LabelSet->new( labels => $self->frontmatter->{labels} );
+}
+
 sub deleted( $self ) {
     my $fn = $self->filename;
     $self->path =~ m!^deleted/!;
@@ -59,18 +67,24 @@ sub from_file( $class, $fn, $document_directory ) {
     my $tfm = Text::FrontMatter::YAML->new(
         document_string => $body,
     );
+    my $l = (($tfm->frontmatter_hashref // {})->{labels}) // [];
 
     my $path = $f->abs2rel( $document_directory );
+
     $class->new( {
         (path => $path),
         (filename => $f->basename),
         (frontmatter => $tfm->frontmatter_hashref // {}),
+        (labels => App::Notetaker::LabelSet->new(labels => $l)),
         (body => $tfm->data_text),
     } );
 }
 
 sub save_to( $self, $fn ) {
     my $f = Mojo::File->new($fn);
+
+    $self->frontmatter->{labels} = $self->labels->labels;
+
     my $tfm = Text::FrontMatter::YAML->new(
         data_text => $self->body,
         frontmatter_hashref => $self->frontmatter,
@@ -86,23 +100,11 @@ sub save_to( $self, $fn ) {
 }
 
 sub add_label( $self, @labels ) {
-    $self->update_labels( 1, \@labels );
+    $self->labels->add( @labels );
 }
 
 sub remove_label( $self, @labels ) {
-    $self->update_labels( undef, \@labels );
-}
-
-sub update_labels( $self, $add, $labels ) {
-    my $l = $self->frontmatter->{labels} // [];
-    my %labels;
-    @labels{ $l->@* } = (1) x $l->@*;
-    if( $add ) {
-        @labels{ $labels->@* } = (1) x $labels->@*;
-    } else {
-        delete @labels{ $labels->@* }
-    }
-    $self->frontmatter->{labels}->@* = sort { fc($a) cmp fc($b) } keys %labels;
+    $self->labels->remove( @labels );
 }
 
 1;

@@ -18,8 +18,8 @@ has 'document_directory' => (
 );
 
 has 'labels' => (
-    is => 'ro',
-    default => sub { {} },
+    is => 'lazy',
+    default => sub { App::Notetaker::LabelSet->new() },
 );
 
 has 'colors' => (

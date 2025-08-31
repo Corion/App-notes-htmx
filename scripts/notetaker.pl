@@ -19,6 +19,7 @@ use Crypt::Passphrase::Argon2;
 
 use App::Notetaker::Document;
 use App::Notetaker::Session;
+use App::Notetaker::LabelSet;
 use App::Notetaker::Utils 'timestamp';
 
 use Markdown::Perl;
@@ -43,6 +44,7 @@ sub get_session( $c ) {
     my $s = App::Notetaker::Session->new(
         username => $user->{user},
         document_directory => $user->{notes},
+        labels => App::Notetaker::LabelSet->new(),
     );
     return $sessions{ $user->{user} } = $s;
 }
@@ -269,15 +271,16 @@ sub match_color( $filter, $note ) {
     ($note->frontmatter->{color} // '') eq $filter
 }
 
+# Match a label as the entire string, case-insensitively
 sub match_label( $labels, $note ) {
-    my %l = map { $_ => 1 } $labels->@*;
-    grep { $l{ $_ } } ($note->frontmatter->{labels} // [])->@*
+    my %l = map { fc $_ => 1 } $labels->@*;
+    grep { $l{ fc($_) } } ($note->labels->labels)->@*
 }
 
 # Match a label substring, case-insensitively
 sub match_label_substring( $label, $note ) {
     $label =~ s/^#//;
-    grep { /\Q$label\E/i } ($note->frontmatter->{labels} // [])->@*
+    grep { /\Q$label\E/i } ($note->labels->labels)->@*
 }
 
 sub match_username( $filter, $user ) {
@@ -315,9 +318,7 @@ sub get_documents($session, $filter={}) {
             my $n = $_;
 
             # While we're at it, also read in all labels
-            if( $n->frontmatter->{labels}) {
-                $labels->{ $_ } = 1 for $n->frontmatter->{labels}->@*;
-            }
+            $labels->add( $n->labels->labels->@* );
 
             # While we're at it, also read in all used colors
             $colors->{ $n->frontmatter->{color} } = 1
@@ -479,8 +480,7 @@ any  '/new' => sub( $c ) {
         my $f = $template->{frontmatter};
         for my $k (keys $f->%*) {
             if( $k eq 'labels' ) {
-                # Strip 'template' designation
-                $note->frontmatter->{labels} = [ grep { $_ ne 'Template' } $f->{labels}->@* ];
+                $note->labels->remove('Template');
 
             } elsif(     $k ne 'created'
                 and $k ne 'updated') {
@@ -1023,18 +1023,15 @@ sub edit_labels( $c, $inline ) {
     my $note = find_note( $session, $c->param('fn') );
     my $filter = $c->param('label-filter');
 
-    my %labels;
-    @labels{ keys $session->labels->%* } = (undef) x keys $session->labels->%*;
-    $labels{ $_ } = 1 for ($note->frontmatter->{labels} // [])->@*;
+    my $all_labels = App::Notetaker::LabelSet->new();
+    $all_labels->add( $session->labels->labels->@* );
 
     if( defined $filter and length $filter ) {
-        for my $k (keys %labels) {
-            delete $labels{ $k }
-                unless $k =~ /\Q$filter\E/i
-        }
+        $all_labels->assign( grep { $_ =~ /\Q$filter\E/i } $all_labels->labels->@* );
     }
 
-    $c->stash( labels => \%labels );
+    $c->stash( all_labels => $all_labels );
+    $c->stash( labels => $note->labels );
     $c->stash( note => $note );
     $c->stash( label_filter => $filter );
 
@@ -1053,10 +1050,8 @@ sub update_labels( $c, $inline=0 ) {
     my $fn = $c->param('fn');
     my %labels = $c->req->params->to_hash->%*;
 
-    my @labels = sort { fc($a) cmp fc($b) } values %labels;
-
     my $note = find_or_create_note( $session, $fn );
-    $note->frontmatter->{labels} = \@labels;
+    $note->labels->assign(values %labels);
     $note->save_to( $session->clean_filename( $fn ));
 
     if( $inline ) {
@@ -1119,7 +1114,7 @@ sub delete_label( $c, $inline ) {
     $note->save_to( $session->clean_filename( $fn ));
 
     if( $inline ) {
-        $c->stash( labels => $note->frontmatter->{labels} );
+        $c->stash( labels => $note->labels );
         $c->stash( note => $note );
         $c->render('display-labels');
 
@@ -1635,7 +1630,7 @@ window.addEventListener('DOMContentLoaded', function() {
     </a>
     <div class="content" hx-disable="true"><%== $note->{html} %></div>
     </a>
-%=include 'display-labels', labels => $note->frontmatter->{labels}, note => $note
+%=include 'display-labels', labels => $note->labels, note => $note
 </div>
 %         }
 </div>
@@ -1759,7 +1754,7 @@ window.addEventListener('DOMContentLoaded', function() {
        class="list-group-item border-end-0 d-inline-block text-truncate"
        data-bs-parent="#sidebar"
     >Notes</a>
-% for my $label ($labels->@*) {
+% for my $label ($labels->labels->@*) {
 %     my $current_class = $label eq $current ? 'sidebar-current' : '';
     <a href="<%= url_with()->query({ label => $label, sidebar => 1 }) %>"
        class="list-group-item border-end-0 d-inline-block text-truncate <%= $current_class %>"
@@ -1808,6 +1803,7 @@ window.addEventListener('DOMContentLoaded', function() {
     id="body"
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
+    load="javascript:setupPage()"
 >
 %=include('navbar', type => 'note', show_filter => $show_filter );
 
@@ -1816,7 +1812,7 @@ window.addEventListener('DOMContentLoaded', function() {
 % my $textcolor = sprintf q{ color: light-dark(%s, %s)}, contrast_bw( $_bgcolor ), contrast_bw( $_bgcolor_dark );
 % my $bgcolor   = sprintf q{ background-color: light-dark( %s, %s )}, $_bgcolor, $_bgcolor_dark ;
 % my $style     = sprintf q{ style="%s; %s;"}, $bgcolor, $textcolor;
-%=include 'display-labels', labels => $note->frontmatter->{labels}, note => $note
+%=include 'display-labels', labels => $note->labels, note => $note
 <div class="single-note"<%== $style %>>
 % my $doc_url = '/note/' . $note->path;
 <form action="<%= url_for( $doc_url ) %>" method="POST">
@@ -2034,8 +2030,7 @@ window.addEventListener('DOMContentLoaded', function() {
 </form>
 
 @@display-labels.html.ep
-% $labels //= [];
-% if( $labels->@* ) {
+% if( $labels->labels->@* ) {
 %     my $id = 'labels-'. $note->filename;
 %     $id =~ s![.]!_!g;
     <div class="labels"
@@ -2043,7 +2038,7 @@ window.addEventListener('DOMContentLoaded', function() {
         hx-target="this"
         hx-swap="outerHTML"
     >
-%     for my $label ($labels->@*) {
+%     for my $label ($labels->labels->@*) {
     <div class="label badge rounded-pill bg-secondary" ><%= $label %>
 %# Yeah, this should be a FORM, but I can't get it to play nice with Bootstrap
     <a class="delete-label"
@@ -2072,7 +2067,7 @@ window.addEventListener('DOMContentLoaded', function() {
     </button>
 
     <div class="dropdown-menu">
-%=include 'filter-edit-labels', note => $note, label_filter => $label_filter, labels => $labels
+%=include 'filter-edit-labels', note => $note, label_filter => $label_filter
     </div>
 </div>
 
@@ -2102,7 +2097,7 @@ window.addEventListener('DOMContentLoaded', function() {
         <button class="nojs btn btn-default">Filter</button>
     </div>
 </form>
-%=include 'edit-labels', note => $note, labels => $labels, new_name => $label_filter
+%=include 'edit-labels', note => $note, new_name => $label_filter
 
 @@edit-labels.html.ep
 <div id="label-edit-list">
@@ -2112,7 +2107,10 @@ window.addEventListener('DOMContentLoaded', function() {
   <button class="nojs btn btn-default" type="submit">Set</button>
 %=include 'display-create-label', prev_label => '', new_name => $label_filter
 % my $idx=1;
-% for my $label (sort { fc($a) cmp fc($b) } keys $labels->%*) {
+% my $labels = $note->labels;
+% use Data::Dumper; warn Dumper $labels; warn Dumper $all_labels;
+% my %is_set = $labels->as_set->%*;
+% for my $label ($all_labels->labels->@*) {
 %   my $name = "label-" . $idx++;
     <span class="edit-label dropdown-item">
     <input type="checkbox" name="<%= $name %>"
@@ -2122,7 +2120,7 @@ window.addEventListener('DOMContentLoaded', function() {
            hx-trigger="change"
            hx-swap="none"
            hx-target="this"
-           <%== $labels->{$label} ? 'checked' : ''%>
+           <%== defined $is_set{ fc($label) } ? 'checked' : ''%>
     />
     <label for="<%= $name %>" style="width: 100%"><%= $label %> &#x1F3F7;</label>
     </span>
@@ -2273,10 +2271,10 @@ window.addEventListener('DOMContentLoaded', function() {
 %    }
 </div>
 %}
-% if( $labels->@* ) {
+% if( $labels->labels->@* ) {
 <div>
 <h2>Labels</h2>
-%    for my $l ($labels->@*) {
+%    for my $l ($labels->labels->@*) {
     <a href="<%= url_with('/')->query({ label => $l }) %>"
        hx-disinherit="*"
        hx-target="#body"
