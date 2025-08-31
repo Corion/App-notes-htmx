@@ -361,7 +361,7 @@ function htmxNavigation( elt ) {
 let appInitialized;
 function setupApp() {
     if( appInitialized ) { return; };
-    console.log("Setting up application");
+    //console.log("Setting up application");
 
     if ( window.matchMedia ) {
         function setTheme(theme) {
@@ -382,9 +382,7 @@ function setupApp() {
     const sheet = window.document.styleSheets[1];
     let removeRules = [];
     let index = 0;
-    console.log(window.document.styleSheets);
     for (let r of sheet.cssRules) {
-        console.log( r.selectorText);
         if( r.selectorText === '.nojs' ) {
             r.style.display = 'none';
 
