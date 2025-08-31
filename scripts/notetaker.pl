@@ -192,6 +192,7 @@ sub render_index($c) {
     return login_detour($c) unless $c->is_user_authenticated;
     $c->session(expiration => 86400);
     render_notes( $c );
+    $c->stash( hydrated => 1 );
     $c->render('index');
 }
 
@@ -1419,7 +1420,13 @@ post '/htmx-unpin/*fn' => sub($c) { \&update_pinned( $c, 0, 1 ) };
 
 get  '/export-archive' => \&export_archive;
 get '/setup' => \&render_setup;
-get '/pwa' => 'pwa';
+get '/pwa' => sub( $c ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+    $c->session(expiration => 86400);
+    render_notes( $c );
+    $c->stash( hydrated => 0 );
+    $c->render('index');
+};
 
 # Session handling
 get '/login' => sub ($c) { $c->render(template => 'login') };
@@ -1520,7 +1527,17 @@ __DATA__
     </div>
 
     <main class="col">
+% if( $hydrated ) {
 %=include "documents", documents => $documents
+% } else {
+    <script>
+    window.addEventListener('load', function() {
+        // console.log(window.IS_STANDALONE);
+        // hydrate with the documents, and bar etc.
+        htmx.ajax("GET", "/filter", "main")
+    });
+    </script>
+% }
     </main>
 </div>
 <div id="btn-new" class="dropup position-fixed bottom-0 end-0 rounded-circle m-5 noprint">
