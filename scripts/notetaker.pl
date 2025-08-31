@@ -2086,7 +2086,6 @@ __DATA__
 %=include 'display-create-label', prev_label => '', new_name => $label_filter
 % my $idx=1;
 % my $labels = $note->labels;
-% use Data::Dumper; warn Dumper $labels; warn Dumper $all_labels;
 % my %is_set = $labels->as_set->%*;
 % for my $label ($all_labels->labels->@*) {
 %   my $name = "label-" . $idx++;
