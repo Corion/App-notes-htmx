@@ -1160,10 +1160,12 @@ sub edit_share( $c, $inline ) {
 sub stash_filter( $c, $filter ) {
     my $session = get_session( $c );
     $c->stash( filter => $filter );
-    $c->stash( labels => [sort { fc($a) cmp fc($b) } keys $session->labels->%*] );
-    $c->stash( types  => [] );
-    $c->stash( colors => [sort { fc($a) cmp fc($b) } keys $session->colors->%*] );
-    $c->stash( created_buckets => $session->created_buckets );
+
+    # This is not really the filter anymore...
+    $c->stash( all_labels => $session->labels );
+    $c->stash( all_types  => [] );
+    $c->stash( all_colors => [sort { fc($a) cmp fc($b) } keys $session->colors->%*] );
+    $c->stash( all_created_buckets => $session->created_buckets );
 }
 
 sub select_filter( $c ) {
@@ -1535,11 +1537,11 @@ window.addEventListener('DOMContentLoaded', function() {
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
 >
-%=include('navbar', type => 'documents', colors => $colors, labels => $labels, show_filter => $show_filter, note => undef, editor => undef, all_users => undef, shared_with => undef, );
+%=include('navbar', type => 'documents', colors => $all_colors, labels => $all_labels, show_filter => $show_filter, note => undef, editor => undef, all_users => undef, shared_with => undef, );
 <div class="container-fluid" id="container">
 <div class="row flex-nowrap">
     <div class="col-auto px-0">
-%=include 'sidebar', labels => $labels, filter => $filter,
+%=include 'sidebar', labels => $all_labels, filter => $filter,
     </div>
 
     <main class="col">
@@ -1656,7 +1658,7 @@ window.addEventListener('DOMContentLoaded', function() {
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
 >
-%=include('navbar', type => 'documents', colors => $colors, labels => $labels, show_filter => $show_filter, note => undef, editor => undef, all_users => undef, shared_with => undef, );
+%=include('navbar', type => 'documents', colors => $all_colors, labels => $labels, show_filter => $show_filter, note => undef, editor => undef, all_users => undef, shared_with => undef, );
 <div class="container-fluid" id="container">
 <div class="row flex-nowrap">
     <div class="col-auto px-0">
@@ -1683,7 +1685,7 @@ window.addEventListener('DOMContentLoaded', function() {
     <div class="nav-item">
       <div id="form-filter">
 % if( $show_filter ) {
-%=include('select-filter', types => [], colors => $colors, labels => $labels, moniker => $moniker, created_buckets => $created_buckets)
+%=include('select-filter', types => [], colors => $all_colors, labels => $all_labels, moniker => $moniker, all_created_buckets => $all_created_buckets)
 % } else {
 %# We already have a selection
       <form id="form-filter-instant-small" method="GET" action="<%= url_with( "/" )->query({ "show-filter" => 1 }) %>">
@@ -1873,8 +1875,7 @@ window.addEventListener('DOMContentLoaded', function() {
 %=include('attach-audio', note => $note, field_name => 'audio' );
     </div>
     <div id="action-labels">
-% my %labels; $labels{ $_ } = 1 for ($note->frontmatter->{labels} // [])->@*;
-%= include 'menu-edit-labels', note => $note, labels => \%labels, label_filter => ''
+%= include 'menu-edit-labels', note => $note, all_labels => $all_labels, label_filter => ''
     </div>
     <div id="action-copy">
         <form action="<%= url_for('/copy/' . $note->path ) %>" method="POST"
@@ -2285,10 +2286,10 @@ window.addEventListener('DOMContentLoaded', function() {
 </div>
 %}
 <!-- things -->
-% if( $colors->@* ) {
+% if( $all_colors->@* ) {
 <div>
 <h2>Colors</h2>
-%    for my $l ($colors->@*) {
+%    for my $l ($all_colors->@*) {
     <a href="<%= url_with('/')->query({ color => $l }) %>"
        hx-disinherit="*"
        hx-target="#body"
@@ -2298,10 +2299,10 @@ window.addEventListener('DOMContentLoaded', function() {
 </div>
 %}
 <!-- date created -->
-% if( $created_buckets->@* ) {
+% if( $all_created_buckets->@* ) {
 <div>
 <h2>Created</h2>
-%    for my $t ($created_buckets->@*) {
+%    for my $t ($all_created_buckets->@*) {
     <a href="<%= url_with('/')->query({ 'created.start' => $t->{start}, 'created.end' => $t->{end} }) %>"
        hx-disinherit="*"
        hx-target="#body"
