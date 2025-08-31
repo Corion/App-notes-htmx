@@ -329,21 +329,6 @@ function changeBlock(tag) {
     htmx.trigger(editor, 'input');
 }
 
-/* Handle dark mode */
-if ( window.matchMedia ) {
-    function setTheme(theme) {
-        document.documentElement.setAttribute('data-bs-theme', theme);
-    }
-    function updateTheme() {
-        const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-        setTheme(theme);
-    }
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-        updateTheme()
-    })
-    updateTheme()
-}
-
 function hotkeyHandler( evt ) {
     evt = evt || window.event;
 
@@ -372,4 +357,49 @@ function htmxNavigation( elt ) {
     document.onkeydown = hotkeyHandler;
 }
 
-htmx.onLoad(htmxNavigation);
+// Set up all listeners
+let appInitialized;
+function setupApp() {
+    if( appInitialized ) { return; };
+    console.log("Setting up application");
+
+    if ( window.matchMedia ) {
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-bs-theme', theme);
+        }
+        function updateTheme() {
+            const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            setTheme(theme);
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            updateTheme()
+        })
+        updateTheme()
+    }
+
+
+    // Hide all nodes that have the 'nojs' class
+    const sheet = window.document.styleSheets[1];
+    let removeRules = [];
+    let index = 0;
+    console.log(window.document.styleSheets);
+    for (let r of sheet.cssRules) {
+        console.log( r.selectorText);
+        if( r.selectorText === '.nojs' ) {
+            r.style.display = 'none';
+
+        } else if( r.selectorText === '.jsonly' ) {
+            // Reverse order so we can delete without shifting the array indices
+            removeRules.unshift( index );
+        }
+        index++;
+    };
+
+    for (let i of removeRules ) {
+        sheet.removeRule(i);
+    }
+    appInitialized = true;
+}
+htmx.onLoad(setupApp);
+// per-page setup
+//htmx.onLoad(setupPage);

@@ -1494,27 +1494,6 @@ __DATA__
 <script src="<%= url_for( "/app-notekeeper.js" )%>"></script>
 <script>
 //htmx.logAll();
-
-// Hide all nodes that have the 'nojs' class
-window.addEventListener('DOMContentLoaded', function() {
-    const sheet = window.document.styleSheets[1];
-    let removeRules = [];
-    let index = 0;
-    for (let r of sheet.cssRules) {
-        if( r.selectorText === '.nojs' ) {
-            r.style.display = 'none';
-
-        } else if( r.selectorText === '.jsonly' ) {
-            // Reverse order so we can delete without shifting the array indices
-            removeRules.unshift( index );
-        }
-        index++;
-    };
-
-    for (let i of removeRules ) {
-        sheet.removeRule(i);
-    }
-});
 </script>
 
 @@ index.html.ep
@@ -1803,7 +1782,6 @@ window.addEventListener('DOMContentLoaded', function() {
     id="body"
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
-    load="javascript:setupPage()"
 >
 %=include('navbar', type => 'note', show_filter => $show_filter );
 
