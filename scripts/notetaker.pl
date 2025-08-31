@@ -406,8 +406,6 @@ sub display_note( $c, $note ) {
 
     my $html = as_html( $c, $note );
     $c->stash( note_html => $html );
-    $c->stash( all_labels => $session->labels );
-    $c->stash( filter => $filter );
     $c->stash( moniker => filter_moniker( $filter ));
     $c->stash( show_filter => !!$c->param('show-filter') );
 
