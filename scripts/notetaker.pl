@@ -1556,7 +1556,7 @@ __DATA__
             <button type="submit" class="nojs">Upload</button>
         </form>
     </div>
-    <a class="btn btn-success btn-lg"
+    <a id="btn-new-note" class="btn btn-success btn-lg"
        href="<%= url_with('/new' ) %>"
     ><i class="fa-solid fa-plus">+</i>
     </a>
