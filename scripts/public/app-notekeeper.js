@@ -336,11 +336,20 @@ function hotkeyHandler( evt ) {
     if( evt.altKey ) return;
     if( evt.metaKey ) return;
 
+    // Maybe convert to dispatch table?
     if (evt.key == 's') {
         if ((evt.target instanceof HTMLTextAreaElement) || (evt.target instanceof HTMLInputElement)) return;
         let searchBox = htmx.find('#text-filter');
         if( searchBox ) {
             searchBox.focus();
+            evt.stopPropagation();
+            return false;
+        }
+    } else if (evt.key == 'n') {
+        if ((evt.target instanceof HTMLTextAreaElement) || (evt.target instanceof HTMLInputElement)) return;
+        let newNote = htmx.find('#btn-new-note');
+        if( newNote ) {
+            newNote.click();
             evt.stopPropagation();
             return false;
         }
@@ -352,16 +361,14 @@ function hotkeyHandler( evt ) {
 }
 
 /* Called for every page/fragment loaded by HTMX */
-function htmxNavigation( elt ) {
-    /* Set up the hotkeys for the current page */
-    document.onkeydown = hotkeyHandler;
-}
-
 // Set up all listeners
 let appInitialized;
 function setupApp() {
     if( appInitialized ) { return; };
     //console.log("Setting up application");
+
+    // We should switch that for the different page types maybe
+    document.onkeydown = hotkeyHandler;
 
     if ( window.matchMedia ) {
         function setTheme(theme) {
