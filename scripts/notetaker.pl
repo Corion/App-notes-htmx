@@ -1083,14 +1083,7 @@ sub add_label( $c, $inline ) {
 
     my $note = find_or_create_note( $session, $fn );
 
-    my $status;
-    if ( defined $v ) {
-        $status = $v;
-    } else {
-        $status = 1;
-    };
-
-    $note->update_labels( $status, [$label] );
+    $note->add_label( $label );
     $note->save_to( $session->clean_filename( $fn ));
 
     $c->stash(note => $note);
@@ -2129,7 +2122,7 @@ __DATA__
   <!-- Here, we also need a non-JS solution ... -->
 % if( defined $new_name and length($new_name)) {
 %    my $url = url_for("/add-label/" . $note->path )->query( "new-label" => $new_name );
-<a id="create-label" href=" <%= $url %>"
+<a id="create-label" href="<%= $url %>"
    hx-get="<%= $url %>"
    hx-swap="outerHTML"
 >+ Create '<%= $new_name %>'</a>
