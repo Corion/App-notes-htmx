@@ -360,6 +360,36 @@ function hotkeyHandler( evt ) {
     };
 }
 
+function dropHandler( e ) {
+    // do a manual upload via ajax, since submitting the form itself
+    // does not work...
+    const files = e.dataTransfer.files;
+    const form = htmx.find( "#form-attach-file" );
+
+    let uploaded = Promise.resolve();
+
+    const formData = new FormData();
+    const filesValues = [];
+    for (let file of files) {
+        formData.append( "file", file, file.name );
+    }
+    // htmx.ajax does not understand FormData?
+    return htmx.ajax('POST',
+        form.getAttribute('hx-post'),
+        {
+            values: {
+                "file" : formData.getAll('file'),
+            },
+            headers: {
+                "content-encoding":"multipart/form-data"
+            },
+            source: form,
+        }
+    )
+    uploaded.then(() => { console.log("Upload done")});
+
+}
+
 /* Called for every page/fragment loaded by HTMX */
 // Set up all listeners
 let appInitialized;
@@ -368,6 +398,20 @@ function setupApp() {
 
     // We should switch that for the different page types maybe
     document.onkeydown = hotkeyHandler;
+
+    let uploadArea = htmx.find('.note-container');
+    if( uploadArea ) {
+        uploadArea.addEventListener("drop", dropHandler);
+
+        // stop weird behaviour if dropping the file elsewhere:
+        window.addEventListener("dragover", (e) => {
+            e.preventDefault();
+        });
+        window.addEventListener("drop", (e) => {
+            e.preventDefault();
+        });
+    }
+
 
     if( appInitialized ) { return; };
     appInitialized = true;
