@@ -336,11 +336,12 @@ sub get_documents($session, $filter={}) {
             # other criteria
             (($b->frontmatter->{ pinned } // 0 ) - ($a->frontmatter->{ pinned } // 0))
             ||
-            $last_edit{ $b } <=> $last_edit{ $a }
+            $last_edit{ $b } cmp $last_edit{ $a }
         }
         map {
             my $note = App::Notetaker::Document->from_file( $_, $session->document_directory );
-            $last_edit{ $note } = (stat($_))[9]; # most-recent changed;
+            $last_edit{ $note } =    $note->frontmatter->{"content-edited"}
+                                  || timestamp(stat($_)[9]); # most-recent changed;
             $note
         }
         $session->documents( include => $filter->{include} )
