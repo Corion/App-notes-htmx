@@ -341,7 +341,7 @@ sub get_documents($session, $filter={}) {
         map {
             my $note = App::Notetaker::Document->from_file( $_, $session->document_directory );
             $last_edit{ $note } =    $note->frontmatter->{"content-edited"}
-                                  || timestamp(stat($_)[9]); # most-recent changed;
+                                  || timestamp((stat($_))[9]); # most-recent changed;
             $note
         }
         $session->documents( include => $filter->{include} )
@@ -549,7 +549,24 @@ sub save_note( $session, $note, $fn ) {
     $note->frontmatter->{version} = timestamp( $ts );
     $note->frontmatter->{author} = $session->username;
 
-    $note->save_to( $session->clean_filename( $fn ));
+    my $target = $session->clean_filename( $fn );
+    if( -f $target) {
+        my $prev_version = App::Notetaker::Document->from_file( $target, $session->document_directory );
+        if( $prev_version->body ne $note->body ) {
+            warn "Body changed:";
+            warn "Old: " . $prev_version->body;
+            warn "New: " . $note->body;
+            $note->frontmatter->{"content-edited"} = timestamp(time());
+        } else {
+            $note->frontmatter->{"content-edited"} //= timestamp((stat($target))[9]);
+        }
+
+    } else {
+        $note->frontmatter->{"content-edited"} = timestamp(time());
+
+    }
+
+    $note->save_to( $target );
 }
 
 sub save_note_body( $c ) {
