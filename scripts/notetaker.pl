@@ -285,7 +285,7 @@ sub match_label_substring( $label, $note ) {
 }
 
 sub match_username( $filter, $user ) {
-    grep { $_ =~ /\Q$filter\E/i } ([$user->{user}, $user->{name}])->@*
+    grep { ($_//'') =~ /\Q$filter\E/i } ([$user->{user}, $user->{name}])->@*
 }
 
 sub match_field_range( $filter, $field, $note ) {
