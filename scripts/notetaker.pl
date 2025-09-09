@@ -512,6 +512,11 @@ any  '/new' => sub( $c ) {
         my $image = $c->param('image');
         attach_image_impl( $session, $note, $image );
     }
+    if( my $image = $c->param('file')) {
+        $note //= find_note( $session, $fn );
+        my $file = $c->param('file');
+        attach_file_impl( $session, $note, $file );
+    }
     if( my $body_html = $c->param('body-html')) {
         $note //= find_note( $session, $fn );
         my $turndown = Text::HTML::Turndown->new();
@@ -983,6 +988,19 @@ sub attach_file_impl( $session, $note, $file, $markdown ) {
     $note->body( $note->body . "\n$markdown\n" );
 }
 
+sub attach_file( $c ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
+    my $session = get_session( $c );
+    my $note = find_note( $session, $c->param('fn') );
+    my $file = $c->param('file');
+
+    my $basename = clean_fragment( $file->filename );
+    attach_file_impl( $session, $note, $file,"[$basename](attachments/$basename)" );
+    save_note( $session, $note, $note->path );
+    $c->redirect_to($c->url_for('/note/' . $note->path ));
+}
+
 # XXX create note subdirectory
 # XXX create thumbnail for image / reduce resolution/quality
 # XXX convert image to jpeg in the process, or webp or whatever
@@ -1404,6 +1422,7 @@ get  '/htmx-edit-title/*fn' => sub( $c ) { edit_note_title( $c, 1 ) };
 post '/edit-title/*fn' => \&update_note_title;
 post '/edit-title' => \&update_note_title; # empty note
 get  '/display-title/*fn' => \&display_note_title;
+post '/upload-file/*fn' => \&attach_file;
 post '/upload-image/*fn' => \&attach_image;
 get  '/attach-audio/*fn' => \&capture_audio;
 post '/upload-audio/*fn' => \&attach_audio;
@@ -1864,7 +1883,7 @@ __DATA__
 </div>
 </div>
 <div id="actionbar" class="navbar bg-body-tertiary mt-auto fixed-bottom noprint">
-    <div id="action-attach">
+    <div id="action-attach-image">
         <form action="<%= url_for( "/upload-image/" . $note->path ) %>" method="POST"
             enctype='multipart/form-data'
             hx-trigger="change"
@@ -1874,6 +1893,19 @@ __DATA__
                    name="image" id="capture-image-image"
                    style="display: none"
                    capture="environment"
+            />
+            <button type="submit" class="nojs">Upload</button>
+        </form>
+    </div>
+    <div id="action-attach-file">
+        <form action="<%= url_for( "/upload-file/" . $note->path ) %>" method="POST"
+            enctype='multipart/form-data'
+            hx-trigger="change"
+        >
+            <label for="upload-file">&#x1F4CE;</label>
+            <input id="upload-file" type="file" accept="*/*"
+                   name="file" id="attach-file-file"
+                   style="display: none"
             />
             <button type="submit" class="nojs">Upload</button>
         </form>
