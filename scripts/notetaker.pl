@@ -977,8 +977,13 @@ sub update_note_title( $c, $autosave=0 ) {
     #}
 }
 
+sub attach_file_impl( $session, $note, $file, $markdown ) {
+    my $filename = "attachments/" . clean_fragment( $file->filename );
+    $file->move_to($session->document_directory . "/$filename");
+    $note->body( $note->body . "\n$markdown\n" );
+}
+
 # XXX create note subdirectory
-# XXX save image to attachments/ subdirectory
 # XXX create thumbnail for image / reduce resolution/quality
 # XXX convert image to jpeg in the process, or webp or whatever
 
@@ -986,8 +991,7 @@ sub attach_image_impl( $session, $note, $image ) {
     my $filename = "attachments/" . clean_fragment( $image->filename );
     # Check that we have some kind of image file according to the name
     return if $filename !~ /\.(jpg|jpeg|png|webp|dng|heic)\z/i;
-    $image->move_to($session->document_directory . "/$filename");
-    $note->body( $note->body . "\n![$filename]($filename)\n" );
+    attach_file_impl( $session, $note, $image, "![$filename]($filename)");
 }
 
 sub attach_image( $c ) {
