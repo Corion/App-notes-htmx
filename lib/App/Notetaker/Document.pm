@@ -107,4 +107,15 @@ sub remove_label( $self, @labels ) {
     $self->labels->remove( @labels );
 }
 
+sub title( $self ) {
+    if( exists $self->frontmatter->{title}) {
+        return $self->frontmatter->{title}
+    } elsif( $self->body ) {
+        $self->body =~ /^.*?(\S+.*?)$/m
+            and return $1
+    } else {
+        return ''
+    }
+}
+
 1;

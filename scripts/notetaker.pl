@@ -252,7 +252,7 @@ JS
 
 sub match_text( $filter, $note ) {
        ( $note->body // '' ) =~ /\Q$filter\E/i
-    || ( $note->frontmatter->{title} // '' ) =~ /\Q$filter\E/i
+    || ( $note->title // '' ) =~ /\Q$filter\E/i
 }
 
 # Does an AND match
@@ -524,7 +524,11 @@ any  '/new' => sub( $c ) {
         $note->body( $body );
     }
     if( $note ) {
-        save_note( $session, $note, $fn );
+        if(    ($note->body)
+            || ($note->frontmatter && $note->title)) {
+            warn "Saving note";
+            save_note( $session, $note, $fn );
+        }
     }
 
     $c->redirect_to( $c->url_for("/note/$fn"));
@@ -950,7 +954,7 @@ sub update_note_title( $c, $autosave=0 ) {
     }
 
     my $note = find_or_create_note( $session, $fn );
-    my $rename = ($note->frontmatter->{title} ne $title);
+    my $rename = ($note->title ne $title);
     $note->frontmatter->{title} = $title;
     $note->save_to( $session->clean_filename( $fn ));
 
@@ -1614,7 +1618,7 @@ __DATA__
           <a class="dropdown-item" href="<%= url_for("/new ")->query({ label => 'Template', 'body-markdown' => "Alternatively just add the 'Template' tag to a note" }) %>">+ Create a new template</a>
       </li>
 % for my $template ($templates->@*) {
-%     my $title = $template->frontmatter->{title} || '(untitled)';
+%     my $title = $template->title || '(untitled)';
       <li>
         <a class="dropdown-item"
             href="<%= url_with( '/new' )->query( template => $template->filename ) %>"
@@ -1657,7 +1661,7 @@ __DATA__
        id="<%= $note->filename %>">
     <div class="note-ui">
     <a href="<%= url_for( "/note/" . $note->path ) %>" class="title">
-    <div class="title-text"><%= $note->frontmatter->{title} %></div>
+    <div class="title-text"><%= $note->title %></div>
     </a>
         <a href="<%= url_for( "/note/" . $note->path ) %>" class="pop-out"
             target="_blank"
@@ -1834,7 +1838,7 @@ __DATA__
 <meta charset="utf-8">
 %=include 'htmx-header'
 
-% my $title = $note->frontmatter->{title} // '';
+% my $title = $note->title // '';
 % $title = 'untitled' if length $title == 0;
 <title><%= $title %> - notekeeper</title>
 </head>
@@ -1857,9 +1861,9 @@ __DATA__
 <form action="<%= url_for( $doc_url ) %>" method="POST">
 <button class="nojs" name="save" type="submit">Save</button>
 % if( $edit_field and $edit_field eq 'title' ) {
-%=include "edit-text", field_name => 'title', value => $note->frontmatter->{title}, class => 'title', reload => 1, field_properties => $field_properties->{title},
+%=include "edit-text", field_name => 'title', value => $note->title, class => 'title', reload => 1, field_properties => $field_properties->{title},
 % } else {
-%=include "display-text", field_name => 'title', value => $note->frontmatter->{title}, class => 'title', reload => 1
+%=include "display-text", field_name => 'title', value => $note->title, class => 'title', reload => 1
 % }
 <div class="note-container">
 %=include "note-version", note => $note
