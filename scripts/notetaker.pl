@@ -514,9 +514,7 @@ any  '/new' => sub( $c ) {
     }
     if( my $files = $c->every_param('file')) {
         $note //= find_note( $session, $fn );
-        for my $file ($files->@*) {
-            attach_file_impl( $session, $note, $file );
-        }
+        attach_files( $session, $note, $files );
     }
     if( my $body_html = $c->param('body-html')) {
         $note //= find_note( $session, $fn );
@@ -989,17 +987,20 @@ sub attach_file_impl( $session, $note, $file, $markdown ) {
     $note->body( $note->body . "\n$markdown\n" );
 }
 
+sub attach_files( $session, $note, $files ) {
+    for my $file ( $files->@* ) {
+        my $basename = clean_fragment( $file->filename );
+        attach_file_impl( $session, $note, $file,"[$basename](attachments/$basename)" );
+    }
+}
+
 sub attach_file( $c ) {
     return login_detour($c) unless $c->is_user_authenticated;
     my $session = get_session( $c );
     my $note = find_note( $session, $c->param('fn') );
     my $files = $c->every_param('file');
     if( defined $files && $files->@* ) {
-        for my $file ( $files->@* ) {
-            my $basename = clean_fragment( $file->filename );
-            attach_file_impl( $session, $note, $file,"[$basename](attachments/$basename)" );
-            save_note( $session, $note, $note->path );
-        }
+        attach_files( $session, $note, $files );
     } else {
         warn "No file uploaded";
     }
