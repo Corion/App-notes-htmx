@@ -360,22 +360,22 @@ function hotkeyHandler( evt ) {
     };
 }
 
-function dropHandler( e ) {
+function dropHandler( formName, e ) {
     // do a manual upload via ajax, since submitting the form itself
     // does not work...
     const files = e.dataTransfer.files;
-    const form = htmx.find( "#form-attach-file" );
-
-    let uploaded = Promise.resolve();
+    const form = htmx.find( formName );
+    if(! form) {
+        console.log(`Internal error: Upload form ${formName} not found.`);
+    }
 
     const formData = new FormData();
     const filesValues = [];
     for (let file of files) {
         formData.append( "file", file, file.name );
     }
-    // htmx.ajax does not understand FormData?
     return htmx.ajax('POST',
-        form.getAttribute('hx-post'),
+        form.getAttribute('action'),
         {
             values: {
                 "file" : formData.getAll('file'),
@@ -386,8 +386,6 @@ function dropHandler( e ) {
             source: form,
         }
     )
-    uploaded.then(() => { console.log("Upload done")});
-
 }
 
 /* Called for every page/fragment loaded by HTMX */
@@ -401,7 +399,7 @@ function setupApp() {
 
     let uploadArea = htmx.find('.note-container');
     if( uploadArea ) {
-        uploadArea.addEventListener("drop", dropHandler);
+        uploadArea.addEventListener("drop", (e) => dropHandler("#form-attach-file",e));
 
         // stop weird behaviour if dropping the file elsewhere:
         window.addEventListener("dragover", (e) => {
@@ -412,6 +410,18 @@ function setupApp() {
         });
     }
 
+    let globalUploadArea = htmx.find('.documents');
+    if( globalUploadArea ) {
+        globalUploadArea.addEventListener("drop", (e) => dropHandler("#form-new-note",e));
+
+        // stop weird behaviour if dropping the file elsewhere:
+        window.addEventListener("dragover", (e) => {
+            e.preventDefault();
+        });
+        window.addEventListener("drop", (e) => {
+            e.preventDefault();
+        });
+    }
 
     if( appInitialized ) { return; };
     appInitialized = true;

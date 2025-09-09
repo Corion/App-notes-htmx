@@ -1588,6 +1588,7 @@ __DATA__
         <form action="<%= url_for( "/new" ) %>" method="POST"
             enctype='multipart/form-data'
             hx-trigger="change"
+            id="form-new-note"
         >
             <label for="upload-image-new">&#128247;</label>
             <input id="upload-image-new" type="file" accept="image/*"
