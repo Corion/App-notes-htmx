@@ -509,13 +509,14 @@ any  '/new' => sub( $c ) {
     }
     if( my $image = $c->param('image')) {
         $note //= find_note( $session, $fn );
-        my $image = $c->param('image');
+        my $image = $c->every_param('image');
         attach_image_impl( $session, $note, $image );
     }
-    if( my $image = $c->param('file')) {
+    if( my $files = $c->every_param('file')) {
         $note //= find_note( $session, $fn );
-        my $file = $c->param('file');
-        attach_file_impl( $session, $note, $file );
+        for my $file ($files->@*) {
+            attach_file_impl( $session, $note, $file );
+        }
     }
     if( my $body_html = $c->param('body-html')) {
         $note //= find_note( $session, $fn );
@@ -990,14 +991,18 @@ sub attach_file_impl( $session, $note, $file, $markdown ) {
 
 sub attach_file( $c ) {
     return login_detour($c) unless $c->is_user_authenticated;
-
     my $session = get_session( $c );
     my $note = find_note( $session, $c->param('fn') );
-    my $file = $c->param('file');
-
-    my $basename = clean_fragment( $file->filename );
-    attach_file_impl( $session, $note, $file,"[$basename](attachments/$basename)" );
-    save_note( $session, $note, $note->path );
+    my $files = $c->every_param('file');
+    if( defined $files && $files->@* ) {
+        for my $file ( $files->@* ) {
+            my $basename = clean_fragment( $file->filename );
+            attach_file_impl( $session, $note, $file,"[$basename](attachments/$basename)" );
+            save_note( $session, $note, $note->path );
+        }
+    } else {
+        warn "No file uploaded";
+    }
     $c->redirect_to($c->url_for('/note/' . $note->path ));
 }
 
@@ -1005,11 +1010,13 @@ sub attach_file( $c ) {
 # XXX create thumbnail for image / reduce resolution/quality
 # XXX convert image to jpeg in the process, or webp or whatever
 
-sub attach_image_impl( $session, $note, $image ) {
-    my $filename = "attachments/" . clean_fragment( $image->filename );
-    # Check that we have some kind of image file according to the name
-    return if $filename !~ /\.(jpg|jpeg|png|webp|dng|heic)\z/i;
-    attach_file_impl( $session, $note, $image, "![$filename]($filename)");
+sub attach_image_impl( $session, $note, $images ) {
+    for my $image ($images->@*) {
+        my $filename = "attachments/" . clean_fragment( $image->filename );
+        # Check that we have some kind of image file according to the name
+        return if $filename !~ /\.(jpg|jpeg|png|webp|dng|heic)\z/i;
+        attach_file_impl( $session, $note, $image, "![$filename]($filename)");
+    }
 }
 
 sub attach_image( $c ) {
@@ -1017,8 +1024,8 @@ sub attach_image( $c ) {
 
     my $session = get_session( $c );
     my $note = find_note( $session, $c->param('fn') );
-    my $image = $c->param('image');
-    attach_image_impl( $session, $note, $image );
+    my $images = $c->every_param('image');
+    attach_image_impl( $session, $note, $images );
     save_note( $session, $note, $note->path );
     $c->redirect_to($c->url_for('/note/' . $note->path ));
 }
@@ -1899,8 +1906,12 @@ __DATA__
     </div>
     <div id="action-attach-file">
         <form action="<%= url_for( "/upload-file/" . $note->path ) %>" method="POST"
-            enctype='multipart/form-data'
-            hx-trigger="change"
+             hx-post="<%= url_for( "/upload-file/" . $note->path ) %>"
+             enctype='multipart/form-data'
+          hx-trigger="change"
+         hx-encoding="multipart/form-data"
+         hx-target="body"
+         id="form-attach-file"
         >
             <label for="upload-file">&#x1F4CE;</label>
             <input id="upload-file" type="file" accept="*/*"
