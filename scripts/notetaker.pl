@@ -300,7 +300,7 @@ sub match_range( $filter, $field, $note ) {
 
 # If we had a real database, this would be the interface ...
 sub get_documents($session, $filter={}) {
-    my %stat;
+    my %last_edit;
     my $labels = $session->labels;
     my $colors = $session->colors;
     #my $created_buckets = $session->created_buckets;
@@ -336,11 +336,11 @@ sub get_documents($session, $filter={}) {
             # other criteria
             (($b->frontmatter->{ pinned } // 0 ) - ($a->frontmatter->{ pinned } // 0))
             ||
-            $stat{ $b } <=> $stat{ $a }
+            $last_edit{ $b } <=> $last_edit{ $a }
         }
         map {
             my $note = App::Notetaker::Document->from_file( $_, $session->document_directory );
-            $stat{ $note } = (stat($_))[9]; # most-recent changed;
+            $last_edit{ $note } = (stat($_))[9]; # most-recent changed;
             $note
         }
         $session->documents( include => $filter->{include} )
