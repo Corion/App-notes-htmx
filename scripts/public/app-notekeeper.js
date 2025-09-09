@@ -364,12 +364,15 @@ function hotkeyHandler( evt ) {
 // Set up all listeners
 let appInitialized;
 function setupApp() {
-    if( appInitialized ) { return; };
-    //console.log("Setting up application");
+    // Setup for each page
 
     // We should switch that for the different page types maybe
     document.onkeydown = hotkeyHandler;
 
+    if( appInitialized ) { return; };
+    appInitialized = true;
+
+    // Global only-once setup
     if ( window.matchMedia ) {
         function setTheme(theme) {
             document.documentElement.setAttribute('data-bs-theme', theme);
@@ -403,7 +406,6 @@ function setupApp() {
     for (let i of removeRules ) {
         sheet.removeRule(i);
     }
-    appInitialized = true;
 }
 htmx.onLoad(setupApp);
 // per-page setup
