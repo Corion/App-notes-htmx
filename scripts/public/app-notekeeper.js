@@ -388,11 +388,25 @@ function dropHandler( formName, e ) {
     )
 }
 
+function scrollToFragment() {
+    console.log("Maybe scrolling");
+    let fr = window.location.hash;
+    if( fr ) {
+        // Strip leading # ...
+        //fr = fr.substring(1, fr.length);
+        console.log("fr",fr);
+        const target = htmx.find(fr);
+        console.log(target);
+        if(target)target.scrollIntoView();
+    }
+}
+
 /* Called for every page/fragment loaded by HTMX */
 // Set up all listeners
 let appInitialized;
 function setupApp() {
     // Setup for each page
+    htmx.on("htmx:afterSettle", scrollToFragment);
 
     // We should switch that for the different page types maybe
     document.onkeydown = hotkeyHandler;
