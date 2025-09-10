@@ -1506,6 +1506,9 @@ app->helper(
 app->helper(
     light_dark => sub($self,$color){ light_dark( $color ) },
 );
+app->helper(
+    clean_fragment => sub($self,$fn){ clean_fragment($fn) },
+);
 
 app->start;
 
