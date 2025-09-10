@@ -1663,8 +1663,9 @@ __DATA__
 % my $textcolor = sprintf q{ color: light-dark(%s, %s)}, contrast_bw( $_bgcolor ), contrast_bw( $_bgcolor_dark );
 % my $bgcolor   = sprintf q{ background-color: light-dark( %s, %s )}, $_bgcolor, $_bgcolor_dark ;
 % my $style     = sprintf q{ style="%s; %s;"}, $bgcolor, $textcolor;
+% my $id = $note->path =~ s/\.markdown$//r;
 <div class="grid-item note position-relative"<%== $style %>
-       id="<%= $note->filename %>">
+       id="note-<%= $id %>">
     <div class="note-ui">
     <a href="<%= url_for( "/note/" . $note->path ) %>" class="title">
     <div class="title-text"><%= $note->title %></div>
@@ -1745,7 +1746,8 @@ __DATA__
       </div>
     </div>
 % } elsif( $type eq 'note' ) {
-    <div class="nav-item"><a href="<%= url_with( "/" ) %>"
+% my $id = $note->path =~ s/\.markdown$//r;
+    <div class="nav-item"><a href="<%= url_with( "/" )->fragment("note-$id") %>"
             hx-trigger="click, keyup[key=='Escape'] from:body"
         ><span class="rounded-circle fs-3">&#x2715;</span></a>
     </div>
