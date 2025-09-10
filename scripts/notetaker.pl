@@ -543,7 +543,13 @@ get '/note/*fn' => sub($c) {
     my $session = get_session( $c );
     $c->stash( filter => $filter );
     my $note = find_note( $session, $c->param('fn'));
-    display_note( $c, $note );
+    if( $note ) {
+        display_note( $c, $note );
+    } else {
+        # Can we do better than redirecting to the general list of documents?
+        # Should we attempt a search for the title? We would need a fuzzy search
+        $c->redirect_to($c->url_for( '/' ));
+    }
 };
 
 sub save_note( $session, $note, $fn ) {
