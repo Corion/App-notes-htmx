@@ -389,15 +389,15 @@ function dropHandler( formName, e ) {
 }
 
 function scrollToFragment() {
-    console.log("Maybe scrolling");
     let fr = window.location.hash;
     if( fr ) {
-        // Strip leading # ...
-        //fr = fr.substring(1, fr.length);
-        console.log("fr",fr);
+        // fr already contains a leading "#"
         const target = htmx.find(fr);
         console.log(target);
-        if(target)target.scrollIntoView();
+        if(target)target.scrollIntoView({
+            behavior: "instant",
+            block: "center",
+        });
     }
 }
 
