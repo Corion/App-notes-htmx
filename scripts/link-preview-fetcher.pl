@@ -99,35 +99,39 @@ sub fetch_preview_opengraph( $ua, $url ) {
     if( $res->is_success ) {
 
         my $og = Data::OpenGraph->parse_string( $res->decoded_content );
-        my $url = $og->property( "url" );
-        my $title = $og->property( "title" );
-        my $type  = $og->property( "type" );
-        my $image  = $og->property( "image" );
-        my $description  = $og->property( "description" );
 
-        #use Data::Dumper;
-        #warn Dumper $og;
+        if( $og->property("type")) {
+            # We found some (valid) OpenGraph entity
 
-        # We need HTML escaping for everything here!
-        return Link::Preview::Markdown->new(
-            assets => { image => $image },
-            values => {
-                title => $title,
-                description => $description,
-                url => $url,
-                type => $type,
-            },
-            markdown_template => <<'MARKDOWN',
+            my $url = $og->property( "url" );
+            my $title = $og->property( "title" );
+            my $type  = $og->property( "type" );
+            my $image  = $og->property( "image" );
+            my $description  = $og->property( "description" );
+
+            # We need HTML escaping for everything here!
+            return Link::Preview::Markdown->new(
+                assets => { image => $image },
+                values => {
+                    title => $title,
+                    description => $description,
+                    url => $url,
+                    type => $type,
+                },
+                markdown_template => <<'MARKDOWN',
     <div class="opengraph" href="{url}">
         <div class="title">{title}</div>
         <img src="{image}" />
         <div class="description">{description}</div>
     </div>
 MARKDOWN
+            );
+        } else {
+            return;
+        }
 
-        );
     } else {
-        return $res->code;
+        return;
     }
 }
 
