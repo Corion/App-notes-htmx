@@ -64,6 +64,7 @@ sub fetched( $self, $asset, $target ) {
 package main;
 use 5.020;
 use experimental 'signatures';
+use experimental 'for_list';
 use stable 'postderef';
 
 use Data::OpenGraph;
