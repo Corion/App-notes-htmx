@@ -148,15 +148,16 @@ sub fetch_preview( $ua, $url ) {
 #say "<html>";
 for my $url (@ARGV) {
     #say "<h1>$url</h1>";
-    my $preview = fetch_preview( $ua, $url );
+    if( my $preview = fetch_preview( $ua, $url )) {
     #use Data::Dumper; warn Dumper $preview;
-    for my ($asset, $target) ($preview->assets_for_fetch->%*) {
-        my ($url, $filename) = $target->@*;
-        $filename //= tmpfile;
-        $filename = "assets/$filename";
-        say "Fetching $asset <$url> to $filename";
-        $preview->fetched( $asset, $filename );
+        for my ($asset, $target) ($preview->assets_for_fetch->%*) {
+            my ($url, $filename) = $target->@*;
+            $filename //= tmpfile;
+            $filename = "assets/$filename";
+            say "Fetching $asset <$url> to $filename";
+            $preview->fetched( $asset, $filename );
+        }
+        say $preview->markdown;
     }
-    say $preview->markdown;
 }
 #say "</html>";
