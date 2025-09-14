@@ -139,13 +139,10 @@ my $ua = LWP::UserAgent::Paranoid->new();
 $ua->protocols_allowed(["http", "https"]);
 
 sub fetch_preview( $ua, $url ) {
-    if( my $r = fetch_preview_youtube( $ua, $url )) {
-        return $r
-    } elsif( my $r = fetch_preview_opengraph( $ua, $url )) {
-        return $r
-    } else {
-        return
-    }
+    return
+        fetch_preview_youtube( $ua, $url )
+     // fetch_preview_opengraph( $ua, $url )
+        ;
 }
 
 #say "<html>";
