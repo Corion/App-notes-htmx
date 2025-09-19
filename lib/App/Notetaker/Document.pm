@@ -30,6 +30,11 @@ has 'labels' => (
     is => 'ro',
 );
 
+has 'links' => (
+    is => 'lazy',
+    default => sub { [] },
+);
+
 sub BUILD( $self, $args ) {
     $args->{labels} = App::Notetaker::LabelSet->new( labels => $self->frontmatter->{labels} );
 }
@@ -74,6 +79,7 @@ sub from_file( $class, $fn, $document_directory ) {
     $class->new( {
         (path => $path),
         (filename => $f->basename),
+        (links => $tfm->frontmatter_hashref->{links} // []),
         (frontmatter => $tfm->frontmatter_hashref // {}),
         (labels => App::Notetaker::LabelSet->new(labels => $l)),
         (body => $tfm->data_text),
@@ -89,6 +95,8 @@ sub save_to( $self, $fn ) {
         data_text => $self->body,
         frontmatter_hashref => $self->frontmatter,
     );
+
+    $tfm->{links} = $self->links;
 
     # Clean up empty shared entries:
     if( my $s = $self->frontmatter->{ shared }) {
