@@ -1,5 +1,6 @@
 #!perl
 use 5.020;
+use Carp 'croak';
 use Mojolicious::Lite '-signatures';
 use experimental 'try';
 use Text::FrontMatter::YAML;
@@ -1204,6 +1205,22 @@ sub edit_share( $c, $inline ) {
     }
 }
 
+sub link_preview( $c, $inline ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
+    my $session = get_session( $c );
+    my $note = find_note( $session, $c->param('fn') );
+
+    $c->stash( note => $note );
+
+    if( $inline ) {
+        $c->render('link-preview');
+
+    } else {
+        croak "Link preview not implemented as its own page"
+    }
+}
+
 sub stash_filter( $c, $filter ) {
     my $session = get_session( $c );
     $c->stash( filter => $filter );
@@ -1464,6 +1481,9 @@ get  '/htmx-share-menu/*fn' => sub( $c ) { edit_share( $c, 0 ) };
 get  '/edit-share/*fn' => sub( $c ) { edit_share( $c, 0 ) };
 post '/edit-share/*fn' => sub( $c ) { edit_share($c, 0 ) };
 post '/htmx-edit-share/*fn' => sub( $c ) { edit_share( $c, 1 ) };
+
+# Fragments
+get  '/link-preview/*fn' => sub( $c ) { link_preview( $c, 1 ) };
 
 post '/pin/*fn'   => sub($c) { \&update_pinned( $c, 1, 0 ) };
 post '/unpin/*fn' => sub($c) { \&update_pinned( $c, 0, 0 ) };
@@ -1842,6 +1862,24 @@ __DATA__
 <input id="note-author" type="hidden" name="author" value="<%= $note->frontmatter->{author} %>"
     hx-swap-oob="true" />
 
+@@link-preview.html.ep
+% my @links = $note->links->@*;
+% if( grep { ($_->{status} //'' ) ne 'done' } @links ) { # we still want to poll
+<div id="link-preview" hx-get="/link-preview/<%= $note->path %>"
+    hx-trigger="load delay:1s"
+    hx-swap="outerHTML">
+% } else {
+<div id="link-preview">
+% }
+% for my $l (@links) {
+    % if( ($l->{status} //'') eq 'done' ) {
+<%== $l->{html} // '' %><br />
+    % } else {
+<%= $l->{url} %><br />
+    % }
+% }
+</div>
+
 @@ note.html.ep
 <!DOCTYPE html>
 <html>
@@ -1901,6 +1939,7 @@ __DATA__
         contentEditable="true"><%== $note_html %></div>
 </div>
 % }
+%=include("link-preview", note => $note);
 </div>
 </form>
     <div class="edited-date"><%= $note->frontmatter->{updated} %></div>
