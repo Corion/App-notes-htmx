@@ -172,7 +172,8 @@ sub render_notes($c) {
     for my $note ( @documents ) {
         my $repr;
         if( length $note->body ) {
-            $repr = as_html( $c, $note, strip_links => 0, search => $filter->{text} );
+            my $base = $c->url_for('/note');
+            $repr = as_html( $base, $note, strip_links => 0, search => $filter->{text} );
         } else {
             $repr = '&nbsp;'; # so even an empty note becomes clickable
         };
@@ -408,7 +409,8 @@ sub display_note( $c, $note ) {
     my $session = get_session( $c );
     my $filter = fetch_filter( $c );
 
-    my $html = as_html( $c, $note );
+    my $base = $c->url_for('/note');
+    my $html = as_html( $base, $note );
     $c->stash( note_html => $html );
     $c->stash( moniker => filter_moniker( $filter ));
     $c->stash( show_filter => !!$c->param('show-filter') );
@@ -1534,7 +1536,7 @@ app->start;
 
 # Make relative links actually relative to /note/ so that we can also
 # properly serve attachments
-sub as_html( $c, $doc, %options ) {
+sub as_html( $base, $doc, %options ) {
     my $renderer = Markdown::Perl->new(
         mode => 'github',
         disallowed_html_tags => ['script','a','object'],
@@ -1555,7 +1557,6 @@ sub as_html( $c, $doc, %options ) {
         $html =~ s!</a>!!gsi;
     }
 
-    my $base = $c->url_for('/note/');
     $html =~ s!<img src="\K(?=attachments/[^"]+\.(?:png|jpg|jpeg|gif)")!$base!gi;
     $html =~ s!<img src="(attachments/[^"]+\.(?:ogg|mp3|aac))"!<audio src="$base$1" controls>!g;
 
