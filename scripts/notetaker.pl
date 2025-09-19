@@ -556,6 +556,14 @@ get '/note/*fn' => sub($c) {
     }
 };
 
+sub update_links( $base, $session, $note ) {
+    my %known_links = map { $_->{url} => $_ } $note->links->@*;
+
+    $note->links->@* = map {
+        $known_links{ $_ } // +{ url => $_, status => 'pending' }
+    } (as_html($base, $note, strip_links => 0 ) =~ m!<a[^>]+href="([^"]+)"!g);
+}
+
 sub save_note( $base, $session, $note, $fn ) {
     my $ts = time;
     warn "Setting creation timestamp to " . timestamp( $ts )
@@ -567,13 +575,15 @@ sub save_note( $base, $session, $note, $fn ) {
     $note->frontmatter->{version} = timestamp( $ts );
     $note->frontmatter->{author} = $session->username;
 
+    update_links( $base, $session, $note );
+
     my $target = $session->clean_filename( $fn );
     if( -f $target) {
         my $prev_version = App::Notetaker::Document->from_file( $target, $session->document_directory );
         if( $prev_version->body ne $note->body ) {
-            warn "Body changed:";
-            warn "Old: " . $prev_version->body;
-            warn "New: " . $note->body;
+            #warn "Body changed:";
+            #warn "Old: " . $prev_version->body;
+            #warn "New: " . $note->body;
             $note->frontmatter->{"content-edited"} = timestamp(time());
         } else {
             $note->frontmatter->{"content-edited"} //= timestamp((stat($target))[9]);
