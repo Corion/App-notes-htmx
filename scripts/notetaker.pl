@@ -530,7 +530,8 @@ any  '/new' => sub( $c ) {
         if(    ($note->body)
             || ($note->frontmatter && $note->title)) {
             warn "Saving note";
-            save_note( $session, $note, $fn );
+            my $base = $c->url_for("/note/");
+            save_note( $base, $session, $note, $fn );
         }
     }
 
@@ -555,7 +556,7 @@ get '/note/*fn' => sub($c) {
     }
 };
 
-sub save_note( $session, $note, $fn ) {
+sub save_note( $base, $session, $note, $fn ) {
     my $ts = time;
     warn "Setting creation timestamp to " . timestamp( $ts )
         if ! $note->frontmatter->{created};
@@ -622,7 +623,8 @@ sub save_note_body( $c ) {
     $body =~ s/\s+\z//sm;
 
     $note->body($body);
-    save_note( $session, $note, $fn );
+    my $base = $c->url_for("/note/");
+    save_note( $base, $session, $note, $fn );
 
     $c->redirect_to($c->url_for( '/note/'. $fn ));
 };
@@ -639,7 +641,8 @@ sub delete_note( $c ) {
         $c->stash( undo => '/undelete/' . $note->path );
         $note->frontmatter->{deleted} = timestamp(time);
         remove_note_symlinks( $note );
-        save_note( $session, $note, $fn );
+        my $base = $c->url_for("/note/");
+        save_note( $base, $session, $note, $fn );
         move_note( $session->document_directory . "/" . $note->path  => $session->document_directory . "/deleted/" . $note->filename );
     }
 
@@ -659,7 +662,8 @@ sub archive_note( $c ) {
         # Save undo data?!
         $c->stash( undo => '/unarchive/' . $note->path );
         $note->frontmatter->{archived} = timestamp(time);
-        save_note( $session, $note, $fn );
+        my $base = $c->url_for("/note/");
+        save_note( $base, $session, $note, $fn );
         move_note( $session->document_directory . "/" . $note->path  => $session->document_directory . "/archived/" . $note->filename );
     }
 
@@ -736,7 +740,8 @@ sub copy_note( $c ) {
         my $new_name = basename( find_name( $filename ));
         $note->frontmatter->{created} = timestamp(time);
         warn "Saving to '$new_name'";
-        save_note( $session, $note, $new_name );
+        my $base = $c->url_for("/note/");
+        save_note( $base, $session, $note, $new_name );
         return $c->redirect_to($c->url_with('/note/' . $new_name ));
     } else {
         $c->redirect_to($c->url_for('/'));
@@ -804,7 +809,8 @@ sub share_note( $c, $inline=0 ) {
             }
         }
 
-        save_note( $session, $note, $fn );
+        my $base = $c->url_for("/note/");
+        save_note( $base, $session, $note, $fn );
     }
 
     # Display the note, at least until we know how to discriminate from where
@@ -1040,7 +1046,8 @@ sub attach_image( $c ) {
     my $note = find_note( $session, $c->param('fn') );
     my $images = $c->every_param('image');
     attach_image_impl( $session, $note, $images );
-    save_note( $session, $note, $note->path );
+    my $base = $c->url_for("/note/");
+    save_note( $base, $session, $note, $note->path );
     $c->redirect_to($c->url_for('/note/' . $note->path ));
 }
 
