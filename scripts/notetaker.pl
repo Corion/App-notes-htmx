@@ -2256,7 +2256,7 @@ __DATA__
            hx-trigger="change"
            hx-swap="none"
            hx-target="this"
-           <%== defined $is_set{ fc($label) } ? 'checked' : ''%>
+           <%== exists $is_set{ fc($label) } ? 'checked' : ''%>
     />
     <label for="<%= $name %>" style="width: 100%"><%= $label %> &#x1F3F7;</label>
     </span>
