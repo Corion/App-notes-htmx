@@ -1110,7 +1110,6 @@ sub edit_labels( $c, $inline ) {
     }
 
     $c->stash( all_labels => $all_labels );
-    $c->stash( labels => $note->labels );
     $c->stash( note => $note );
     $c->stash( label_filter => $filter );
 
