@@ -1582,6 +1582,8 @@ sub as_html( $base, $doc, %options ) {
     $html =~ s!<img src="\K(?=attachments/[^"]+\.(?:png|jpg|jpeg|gif)")!$base!gi;
     $html =~ s!<img src="(attachments/[^"]+\.(?:ogg|mp3|aac))"!<audio src="$base$1" controls>!g;
 
+    # Make checkboxes clickable again
+    $html =~ s!<input (checked="[^"]*" )?disabled="" type="checkbox"!<input contentEditable="false" ${1}type="checkbox"!g;
     return $html
 }
 

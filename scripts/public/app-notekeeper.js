@@ -424,6 +424,24 @@ function setupApp() {
         });
     }
 
+    const singleNote = htmx.find('.note-container');
+    if( singleNote ) {
+        const checkboxes = singleNote.querySelectorAll( '.note-container input[type=checkbox]' );
+        checkboxes.forEach( (c) =>  {
+            c.addEventListener( 'change', function(e) {
+                const el = e.target;
+
+                if (el.checked) {
+                    el.setAttribute("checked","checked");
+                } else {
+                    el.removeAttribute("checked","checked");
+                }
+
+                });
+            }
+        );
+    };
+
     let globalUploadArea = htmx.find('.documents');
     if( globalUploadArea ) {
         globalUploadArea.addEventListener("drop", (e) => dropHandler("#form-new-note",e));
