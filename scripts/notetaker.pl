@@ -1102,14 +1102,7 @@ sub edit_labels( $c, $inline ) {
     my $note = find_note( $session, $c->param('fn') );
     my $filter = $c->param('label-filter');
 
-    my $all_labels = App::Notetaker::LabelSet->new();
-    $all_labels->add( $session->labels->labels->@* );
-
-    if( defined $filter and length $filter ) {
-        $all_labels->assign( grep { $_ =~ /\Q$filter\E/i } $all_labels->labels->@* );
-    }
-
-    $c->stash( all_labels => $all_labels );
+    $c->stash( all_labels => $session->all_labels( $filter ));
     $c->stash( note => $note );
     $c->stash( label_filter => $filter );
 
@@ -1134,6 +1127,7 @@ sub update_labels( $c, $inline=0 ) {
 
     if( $inline ) {
         $c->stash( note => $note );
+        $c->stash( all_labels => $session->all_labels );
         $c->render('edit-labels');
 
     } else {
@@ -1165,6 +1159,8 @@ sub add_label( $c, $inline ) {
 
     $c->stash(note => $note);
     if( $inline ) {
+        $c->stash( all_labels => $session->all_labels );
+        $c->stash( label_filter => undef );
         $c->render('edit-labels');
 
     } else {
@@ -2224,7 +2220,7 @@ __DATA__
         <button class="nojs btn btn-default">Filter</button>
     </div>
 </form>
-%=include 'edit-labels', note => $note, new_name => $label_filter
+%=include 'edit-labels', note => $note, new_name => $label_filter, all_labels => $all_labels
 
 @@edit-labels.html.ep
 <div id="label-edit-list">
