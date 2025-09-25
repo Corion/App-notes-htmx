@@ -1955,7 +1955,7 @@ __DATA__
 <form action="<%= url_for( $doc_url ) %>" method="POST">
 <button class="nojs" name="save" type="submit">Save</button>
 % if( $edit_field and $edit_field eq 'title' ) {
-%=include "edit-text", field_name => 'title', value => $note->title, class => 'title', reload => 1, field_properties => $field_properties->{title},
+%=include "edit-text", field_name => 'title', value => $note->title, class => 'title', field_properties => $field_properties->{title},
 % } else {
 %=include "display-text", field_name => 'title', value => $note->title, class => 'title', reload => 1
 % }
