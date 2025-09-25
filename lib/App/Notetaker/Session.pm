@@ -87,7 +87,7 @@ sub tempnote($self) {
 
 sub all_labels( $self, $filter=undef ) {
     my $all_labels = App::Notetaker::LabelSet->new();
-    $all_labels->add( grep { defined $filter ? /\Q$filter/ : 1 } $self->labels->labels->@* );
+    $all_labels->add( grep { defined $filter ? /\Q$filter/i : 1 } $self->labels->labels->@* );
     return $all_labels
 }
 
