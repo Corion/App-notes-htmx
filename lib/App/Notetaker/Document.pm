@@ -72,7 +72,19 @@ sub from_file( $class, $fn, $document_directory ) {
     my $tfm = Text::FrontMatter::YAML->new(
         document_string => $body,
     );
-    my $l = (($tfm->frontmatter_hashref // {})->{labels}) // [];
+
+    if(! $tfm->frontmatter_hashref) {
+        # We had no frontmatter, maybe a fresh document
+        $tfm = Text::FrontMatter::YAML->new(
+            data_text => $body,
+            frontmatter_hashref => {
+            labels => [],
+            links => [],
+            }
+        );
+    };
+
+    my $l = ($tfm->frontmatter_hashref->{labels}) // [];
 
     my $path = $f->abs2rel( $document_directory );
 
@@ -80,7 +92,7 @@ sub from_file( $class, $fn, $document_directory ) {
         (path => $path),
         (filename => $f->basename),
         (links => $tfm->frontmatter_hashref->{links} // []),
-        (frontmatter => $tfm->frontmatter_hashref // {}),
+        (frontmatter => $tfm->frontmatter_hashref),
         (labels => App::Notetaker::LabelSet->new(labels => $l)),
         (body => $tfm->data_text),
     } );
