@@ -2136,7 +2136,7 @@ __DATA__
 @@edit-text.html.ep
 <form action="<%= url_for( "/edit-$field_name/" . $note->path ) %>" method="POST"
 % if( $field_properties->{ reload } ) {
-    hx-trigger="blur from:#note-input-text-<%= $field_name %>"
+    hx-trigger="blur from:#note-input-text-<%= $field_name %> changed"
 % } else {
     hx-swap="outerHTML"
 % }
