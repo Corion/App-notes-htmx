@@ -1105,6 +1105,7 @@ sub edit_labels( $c, $inline ) {
     $c->stash( all_labels => $session->all_labels( $filter ));
     $c->stash( note => $note );
     $c->stash( label_filter => $filter );
+    $c->stash( oob => $inline );
 
     if( $inline ) {
         $c->render('edit-labels');
@@ -1127,6 +1128,8 @@ sub update_labels( $c, $inline=0 ) {
 
     $note->labels->assign(@labels);
     $note->save_to( $session->clean_filename( $fn ));
+
+    $c->stash( oob => $inline );
 
     if( $inline ) {
         $c->stash( note => $note );
@@ -1158,9 +1161,12 @@ sub add_label( $c, $inline ) {
     my $note = find_or_create_note( $session, $fn );
 
     $note->add_label( $label );
+    $session->labels->add( $label );
     $note->save_to( $session->clean_filename( $fn ));
 
     $c->stash(note => $note);
+        $c->stash( oob => $inline );
+
     if( $inline ) {
         $c->stash( all_labels => $session->all_labels );
         $c->stash( label_filter => undef );
@@ -1185,6 +1191,7 @@ sub delete_label( $c, $inline ) {
 
     if( $inline ) {
         $c->stash( note => $note );
+        $c->stash( oob => undef );
         $c->render('display-labels');
 
     } else {
@@ -1719,7 +1726,7 @@ __DATA__
     </a>
     <div class="content" hx-disable="true"><%== $note->{html} %></div>
     </a>
-%=include 'display-labels', note => $note
+%=include 'display-labels', note => $note, oob => undef
 </div>
 %         }
 </div>
@@ -1919,7 +1926,7 @@ __DATA__
 % my $textcolor = sprintf q{ color: light-dark(%s, %s)}, contrast_bw( $_bgcolor ), contrast_bw( $_bgcolor_dark );
 % my $bgcolor   = sprintf q{ background-color: light-dark( %s, %s )}, $_bgcolor, $_bgcolor_dark ;
 % my $style     = sprintf q{ style="%s; %s;"}, $bgcolor, $textcolor;
-%=include 'display-labels', note => $note
+%=include 'display-labels', note => $note, oob => undef
 <div class="single-note"<%== $style %>>
 % my $doc_url = '/note/' . $note->path;
 <form action="<%= url_for( $doc_url ) %>" method="POST">
@@ -2161,8 +2168,12 @@ __DATA__
 %     $id =~ s![.]!_!g;
     <div class="labels"
         id="<%= $id %>"
+% if( $oob ) {
+        hx-swap-oob="true"
+% } else {
         hx-target="this"
         hx-swap="outerHTML"
+% }
     >
 %     for my $label ($labels->labels->@*) {
     <div class="label badge rounded-pill bg-secondary" ><%= $label %>
@@ -2262,6 +2273,7 @@ __DATA__
 % }
 </form>
 </div>
+%=include( 'display-labels', note => $note, oob => 1 )
 
 @@display-create-label.html.ep
 %# This needs a rework with the above
