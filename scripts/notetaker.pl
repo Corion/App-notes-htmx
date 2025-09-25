@@ -1119,10 +1119,13 @@ sub update_labels( $c, $inline=0 ) {
 
     my $session = get_session( $c );
     my $fn = $c->param('fn');
-    my %labels = $c->req->params->to_hash->%*;
-
     my $note = find_or_create_note( $session, $fn );
-    $note->labels->assign(values %labels);
+
+    my $submitted_labels = $c->req->params->to_hash;
+
+    my @labels = map { $submitted_labels->{$_} } grep { /^label-\d+\z/ } keys $submitted_labels->%*;
+
+    $note->labels->assign(@labels);
     $note->save_to( $session->clean_filename( $fn ));
 
     if( $inline ) {
@@ -2247,6 +2250,15 @@ __DATA__
     <label for="<%= $name %>" style="width: 100%"><%= $label %> &#x1F3F7;</label>
     </span>
 %   $idx++;
+%   delete $is_set{ fc($label) }; # so we know that we don't need to keep this value
+% }
+%# Keep all the labels that are not visible as unchanged:
+% for my $label (keys %is_set) {
+%   my $name = "label-" . $idx++;
+    <input type="hidden" name="<%= $name %>"
+           id="<%= $name %>"
+           value="<%= $is_set{ fc($label) } %>"
+    />
 % }
 </form>
 </div>
