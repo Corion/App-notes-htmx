@@ -2181,9 +2181,8 @@ __DATA__
 
 @@display-labels.html.ep
 % my $labels = $note->labels;
-% if( $labels->labels->@* ) {
-%     my $id = 'labels-'. $note->filename;
-%     $id =~ s![.]!_!g;
+% my $id = 'labels-'. $note->filename;
+% $id =~ s![.]!_!g;
     <div class="labels"
         id="<%= $id %>"
 % if( $oob ) {
@@ -2203,9 +2202,8 @@ __DATA__
         &#10006;
     </a>
     </div>
-%     }
-    </div>
 % }
+    </div>
 
 @@menu-edit-labels.html.ep
 <div class="dropup" id="dropdown-labels" hx-trigger="show.bs.dropdown"
