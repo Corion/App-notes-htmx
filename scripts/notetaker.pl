@@ -481,14 +481,15 @@ any  '/new' => sub( $c ) {
         # Copy over the (relevant) attributes, or everything?!
         $note //= find_note( $session, $fn );
         $note->{body} = $template->{body};
+        $note->labels->add(values $template->labels->as_set->%*);
+        $note->labels->remove('Template');
 
         my $f = $template->{frontmatter};
         for my $k (keys $f->%*) {
-            if( $k eq 'labels' ) {
-                $note->labels->remove('Template');
-
-            } elsif(     $k ne 'created'
-                and $k ne 'updated') {
+            if(     $k ne 'created'
+                and $k ne 'updated'
+                and $k ne 'labels'
+                ) {
                 $note->frontmatter->{$k} = $f->{$k};
             }
         }
