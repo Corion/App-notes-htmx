@@ -2211,6 +2211,7 @@ __DATA__
 @@filter-edit-labels.html.ep
 % my $url = url_for( "/edit-labels/" . $note->path );
 % my $htmx_url = url_for( "/htmx-edit-labels/" . $note->path );
+<div id="menu-container">
 <div class="dropdown-item">Label note</div>
 <form action="<%= $url %>" method="GET" id="label-filter-form"
  class="form-inline dropdown-item"
@@ -2220,7 +2221,10 @@ __DATA__
 >
     <div class="form-group">
         <div class="input-group input-group-unstyled has-feedback inner-addon right-addon">
-        <i class="glyphicon glyphicon-search form-control-feedback input-group-addon">x</i>
+        <i class="glyphicon glyphicon-search form-control-feedback input-group-addon"
+            hx-get="<%= url_for( '/htmx-label-menu/' . $note->path )->query({ label_filter => undef }) %>"
+            hx-target="#menu-container"
+        >x</i>
         <input name="label-filter" type="text" class="form-control"
             style="width: 30%;"
             placeholder="Enter label name"
@@ -2235,6 +2239,7 @@ __DATA__
     </div>
 </form>
 %=include 'edit-labels', note => $note, new_name => $label_filter, all_labels => $all_labels
+</div>
 
 @@edit-labels.html.ep
 <div id="label-edit-list">
