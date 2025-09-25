@@ -1184,7 +1184,6 @@ sub delete_label( $c, $inline ) {
     $note->save_to( $session->clean_filename( $fn ));
 
     if( $inline ) {
-        $c->stash( labels => $note->labels );
         $c->stash( note => $note );
         $c->render('display-labels');
 
@@ -1720,7 +1719,7 @@ __DATA__
     </a>
     <div class="content" hx-disable="true"><%== $note->{html} %></div>
     </a>
-%=include 'display-labels', labels => $note->labels, note => $note
+%=include 'display-labels', note => $note
 </div>
 %         }
 </div>
@@ -1920,7 +1919,7 @@ __DATA__
 % my $textcolor = sprintf q{ color: light-dark(%s, %s)}, contrast_bw( $_bgcolor ), contrast_bw( $_bgcolor_dark );
 % my $bgcolor   = sprintf q{ background-color: light-dark( %s, %s )}, $_bgcolor, $_bgcolor_dark ;
 % my $style     = sprintf q{ style="%s; %s;"}, $bgcolor, $textcolor;
-%=include 'display-labels', labels => $note->labels, note => $note
+%=include 'display-labels', note => $note
 <div class="single-note"<%== $style %>>
 % my $doc_url = '/note/' . $note->path;
 <form action="<%= url_for( $doc_url ) %>" method="POST">
@@ -2156,6 +2155,7 @@ __DATA__
 </form>
 
 @@display-labels.html.ep
+% my $labels = $note->labels;
 % if( $labels->labels->@* ) {
 %     my $id = 'labels-'. $note->filename;
 %     $id =~ s![.]!_!g;
