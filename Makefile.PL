@@ -69,7 +69,7 @@ my %module = (
 
         # Convert from and to HTML
         'Markdown::Perl'       => 0,
-        'Text::HTML::Turndown' => 0,
+        'Text::HTML::Turndown'    => '0.08',
         'Text::FrontMatter::YAML' => '0.07',
         'Date::Period::Human' => 0,
         'Unicode::CaseFold' => 0,
