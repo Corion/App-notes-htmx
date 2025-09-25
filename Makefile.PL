@@ -72,12 +72,15 @@ my %module = (
         'Text::HTML::Turndown' => 0,
         'Text::FrontMatter::YAML' => '0.07',
         'Date::Period::Human' => 0,
+        'Unicode::CaseFold' => 0,
 
         'Moo'                       => 2, # for some hashes-as-objects
 
         'YAML::PP::LibYAML' => 0,
         'Crypt::Passphrase' => 0,
+        'Crypt::Argon2' => 0,
         'Crypt::Passphrase::Argon2' => 0,
+        'Crypt::URandom' => 0,
 
         'Archive::Zip'              => 0,
     },
