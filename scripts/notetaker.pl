@@ -2281,7 +2281,7 @@ __DATA__
 % if( defined $new_name and length($new_name)) {
 %    my $url = url_for("/add-label/" . $note->path )->query( "new-label" => $new_name );
 <a id="create-label" href="<%= $url %>"
-   hx-get="<%= $url %>"
+   hx-post="<%= url_for("/htmx-add-label/" . $note->path )->query( "new-label" => $new_name ); %>"
    hx-swap="outerHTML"
 >+ Create '<%= $new_name %>'</a>
 % }
