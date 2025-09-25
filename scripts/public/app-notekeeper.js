@@ -403,6 +403,16 @@ function scrollToFragment() {
     }
 }
 
+function getUserContent() {
+    const el = htmx.find('#usercontent');
+
+    if( el ) {
+        return { "body-html" : el.innerHTML }
+    } else {
+        return { };
+    }
+}
+
 /* Called for every page/fragment loaded by HTMX */
 // Set up all listeners
 let appInitialized;

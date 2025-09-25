@@ -634,10 +634,21 @@ sub save_note_body( $c ) {
     $body =~ s/\s+\z//sm;
 
     $note->body($body);
+
     my $base = $c->url_for("/note/");
     save_note( $base, $session, $note, $fn );
 
-    $c->redirect_to($c->url_for( '/note/'. $fn ));
+    # XXX If the name has changed, we need to replace the HTMX URL!
+
+    if( $c->is_htmx_request ) {
+        # Simply update author/version on the client
+        $c->stash(note => $note);
+        $c->stash(oob => 1);
+        $c->render('note-version')
+
+    } else {
+        $c->redirect_to($c->url_for( '/note/'. $fn ));
+    }
 };
 
 sub delete_note( $c ) {
@@ -1883,9 +1894,18 @@ __DATA__
 
 @@ note-version.html.ep
 <input id="note-version" type="hidden" name="version" value="<%= $note->frontmatter->{version} %>"
-    hx-swap-oob="true" />
+% if( $oob ) {
+    hx-swap-oob="true"
+% }
+/>
 <input id="note-author" type="hidden" name="author" value="<%= $note->frontmatter->{author} %>"
-    hx-swap-oob="true" />
+% if( $oob ) {
+    hx-swap-oob="true"
+% }
+/>
+% if( $oob ) {
+<div id="edited-date" hx-swap-oob="true"><%= $note->frontmatter->{updated} %></div>
+% }
 
 @@link-preview.html.ep
 % my @links = $note->links->@*;
@@ -1939,8 +1959,8 @@ __DATA__
 % } else {
 %=include "display-text", field_name => 'title', value => $note->title, class => 'title', reload => 1
 % }
+%=include "note-version", note => $note, oob => undef
 <div class="note-container">
-%=include "note-version", note => $note
 % if( $editor eq 'markdown' ) {
 <textarea name="body-markdown" id="note-textarea" autofocus
     style="color: inherit; background-color: inherit;"
@@ -1967,7 +1987,7 @@ __DATA__
 %=include("link-preview", note => $note);
 </div>
 </form>
-    <div class="edited-date"><%= $note->frontmatter->{updated} %></div>
+    <div id="edited-date" class="edited-date"><%= $note->frontmatter->{updated} %></div>
 </div>
 </div>
 <div id="actionbar" class="navbar bg-body-tertiary mt-auto fixed-bottom noprint">
