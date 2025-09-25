@@ -117,6 +117,7 @@ function activeAttributes(range) {
 
 function updateToolbar() {
     const sel = window.getSelection();
+    if( !sel.rangeCount ) return;
     const state = activeAttributes( sel.getRangeAt(0));
     for (let a of textAttrs) {
         const el = document.getElementById(`btn-${a}`);
@@ -267,6 +268,7 @@ function removeFormat(tagName, selection) {
 
 function toggleFormat(tagName) {
     const sel = window.getSelection();
+    if (!sel.rangeCount || sel.isCollapsed) return;
     const state = activeAttributes( sel.getRangeAt(0));
     tagName = tagName.toUpperCase();
 
