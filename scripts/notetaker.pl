@@ -1952,31 +1952,26 @@ __DATA__
 %=include 'display-labels', note => $note, oob => undef
 <div class="single-note"<%== $style %>>
 % my $doc_url = '/note/' . $note->path;
-<form action="<%= url_for( $doc_url ) %>" method="POST">
-<button class="nojs" name="save" type="submit">Save</button>
 % if( $edit_field and $edit_field eq 'title' ) {
 %=include "edit-text", field_name => 'title', value => $note->title, class => 'title', field_properties => $field_properties->{title},
 % } else {
 %=include "display-text", field_name => 'title', value => $note->title, class => 'title', reload => 1
 % }
+<form action="<%= url_for( $doc_url ) %>" method="POST"
+    hx-trigger="input from:#note_html delay:200ms, keyup from:#note-textarea delay:200ms changed"
+    hx-vals='js:{...getUserContent()}'
+    hx-swap="none"
+>
 %=include "note-version", note => $note, oob => undef
+<button class="nojs" name="save" type="submit">Save</button>
 <div class="note-container">
 % if( $editor eq 'markdown' ) {
 <textarea name="body-markdown" id="note-textarea" autofocus
     style="color: inherit; background-color: inherit;"
-    hx-post="<%= url_for( $doc_url ) %>"
-    hx-trigger="#note-textarea, keyup delay:200ms changed"
-    hx-swap="none"
 ><%= $note->body %></textarea>
 % } elsif( $editor eq 'html' ) {
 %# This can only work with JS enabled; well, the saving
-<div id="note_html"
-    hx-post="<%= url_for( $doc_url ) %>"
-    hx-vals='js:{"body-html":htmx.find("#usercontent").innerHTML}'
-    hx-trigger="input delay:200ms"
-    hx-swap="none"
-    >
-    <!-- This is untrusted content, so tell HTMX that -->
+<div id="note_html"><!-- This is untrusted content, so tell HTMX that -->
     <div id="usercontent"
         hx-disable="true"
         onclick="javascript:updateToolbar()"
