@@ -1672,7 +1672,7 @@ __DATA__
     </button>
     <ul class="dropdown-menu">
       <li>
-          <a class="dropdown-item" href="<%= url_for("/new ")->query({ label => 'Template', 'body-markdown' => "Alternatively just add the 'Template' tag to a note" }) %>">+ Create a new template</a>
+          <a class="dropdown-item" href="<%= url_for("/new")->query({ label => 'Template', 'body-markdown' => "Alternatively just add the 'Template' tag to a note" }) %>">+ Create a new template</a>
       </li>
 % for my $template ($templates->@*) {
 %     my $title = $template->title || '(untitled)';
