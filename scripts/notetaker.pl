@@ -33,7 +33,7 @@ use Archive::Zip;
 app->static->with_roles('+Compressed');
 plugin 'DefaultHelpers';
 plugin 'HTMX';
-plugin 'Gzip';
+#plugin 'Gzip'; # fails since Mojolicious 9.23
 
 my %sessions;
 

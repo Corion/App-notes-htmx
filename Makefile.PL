@@ -65,7 +65,7 @@ my %module = (
         'Mojolicious::Plugin::HTMX' => 0,
         'Mojolicious::Plugin::Authentication' => 0,
         'Mojolicious::Static::Role::Compressed' => 0,
-        'Mojolicious::Plugin::Gzip' => 0,
+        #'Mojolicious::Plugin::Gzip' => 0,
         'Text::CleanFragment' => 0,
 
         # Convert from and to HTML
