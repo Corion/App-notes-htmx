@@ -33,6 +33,7 @@ use Archive::Zip;
 app->static->with_roles('+Compressed');
 plugin 'DefaultHelpers';
 plugin 'HTMX';
+plugin 'Gzip';
 
 my %sessions;
 
