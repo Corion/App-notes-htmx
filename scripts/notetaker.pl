@@ -37,10 +37,12 @@ plugin 'HTMX';
 
 my %sessions;
 
-my $user_directory = 'users';
+my $base_directory = $ENV{ TEST_NOTES_BASE } // '.';
+my $user_directory = "$base_directory/users";
 
 sub get_session( $c ) {
     my $user = $c->current_user;
+
     return $sessions{ $user->{user} }
         if $sessions{ $user->{user} };
     my $s = App::Notetaker::Session->new(
@@ -1389,6 +1391,14 @@ my $session_store = Mojolicious::Sessions->new();
 $session_store->default_expiration(0); # cookies are forever
 
 app->hook(
+    before_dispatch => sub ($c) {
+        if( $ENV{ TEST_NOTES_USER }) {
+            #warn app->authenticate( $ENV{ TEST_NOTES_USER }, $ENV{ TEST_NOTES_USER })
+            warn "Setting current user to $ENV{ TEST_NOTES_USER }";
+            $c->current_user( load_account($ENV{ TEST_NOTES_USER }));
+            $c->stash(user => $c->current_user);
+        };
+    },
     before_render => sub ($c, $args) {
         my $user = $c->is_user_authenticated ? $c->current_user : undef;
         $c->stash(user => $user);
