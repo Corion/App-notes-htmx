@@ -211,7 +211,7 @@ sub render_setup($c) {
     return login_detour($c) unless $c->is_user_authenticated;
     $c->session(expiration => 86400);
 
-my $url = $c->url_for('/new')->to_abs;
+    my $url = $c->url_for('/new')->to_abs;
     # Consider using the fetch API
     # opening a fresh window/tab
     # and window.location as the fallback
@@ -1586,6 +1586,7 @@ sub as_html( $base, $doc, %options ) {
 
     # Make checkboxes clickable again
     $html =~ s!<input (checked="[^"]*" )?disabled="" type="checkbox"!<input contentEditable="false" ${1}type="checkbox"!g;
+
     return $html
 }
 
