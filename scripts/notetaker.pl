@@ -1396,7 +1396,6 @@ app->hook(
             #warn app->authenticate( $ENV{ TEST_NOTES_USER }, $ENV{ TEST_NOTES_USER })
             warn "Setting current user to $ENV{ TEST_NOTES_USER }";
             $c->current_user( load_account($ENV{ TEST_NOTES_USER }));
-            $c->stash(user => $c->current_user);
         };
     },
 );
