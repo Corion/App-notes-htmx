@@ -1457,35 +1457,6 @@ sub login_detour( $c ) {
     return $c->redirect_to($login);
 }
 
-get '/login' => sub ($c) { $c->render(template => 'login') };
-post '/login' => sub ($c) {
-    my $username = $c->param('username');
-    my $password = $c->param('password');
-    if ($c->authenticate($username, $password)) {
-        #warn $c->is_user_authenticated ? 'YES' : 'NOT YET';
-
-        my $next = $c->url_for('/');
-        if( $c->is_user_authenticated ) {
-            #$c->session( user => get_session($username) );
-            $next = $c->session('return_to') // $c->url_for( '/' );
-            $c->session('return_to' => undef);
-        };
-        $next = Mojo::URL->new($next)->to_abs();
-        $c->redirect_to($next);
-    }
-    else {
-        # XXX also here, we should preserve form uploads etc.
-        $c->redirect_to($c->url_for('/login'));
-    }
-    return;
-};
-
-post '/logout' => sub ($c) {
-    $c->logout if $c->is_user_authenticated;
-    return $c->redirect_to('/');
-};
-
-
 get  '/edit-title' => \&edit_note_title; # empty note
 get  '/edit-title/*fn' => \&edit_note_title;
 get  '/htmx-edit-title' => sub( $c ) { edit_note_title( $c, 1 ) }; # empty note
@@ -1542,15 +1513,24 @@ post '/login' => sub ($c) {
     my $username = $c->param('username');
     my $password = $c->param('password');
     if ($c->authenticate($username, $password)) {
-        warn $c->is_user_authenticated ? 'YES' : 'NOT YET';
-        my $next = $c->session('return_to') // $c->url_for('/');
+        #warn $c->is_user_authenticated ? 'YES' : 'NOT YET';
+
+        my $next = $c->url_for('/');
+        if( $c->is_user_authenticated ) {
+            #$c->session( user => get_session($username) );
+            $next = $c->session('return_to') // $c->url_for( '/' );
+            $c->session('return_to' => undef);
+        };
+        $next = Mojo::URL->new($next)->to_abs();
         $c->redirect_to($next);
     }
     else {
-        $c->redirect_to($c->req->url->to_abs);
+        # XXX also here, we should preserve form uploads etc.
+        $c->redirect_to($c->url_for('/login'));
     }
     return;
 };
+
 post '/logout' => sub ($c) {
     $c->logout if $c->is_user_authenticated;
     return $c->redirect_to($c->url_for('/'));
