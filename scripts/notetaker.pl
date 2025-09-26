@@ -1755,11 +1755,11 @@ __DATA__
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
 >
-%=include('navbar', type => 'documents', colors => $all_colors, labels => $labels, show_filter => $show_filter, note => undef, editor => undef, all_users => undef, shared_with => undef, );
+%=include('navbar', type => 'documents', colors => $all_colors, labels => $all_labels, show_filter => $show_filter, note => undef, editor => undef, all_users => undef, shared_with => undef, );
 <div class="container-fluid" id="container">
 <div class="row flex-nowrap">
     <div class="col-auto px-0">
-%=include 'sidebar', labels => $labels, filter => $filter,
+%=include 'sidebar', labels => $all_labels, filter => $filter,
     </div>
     <main class="col">
     <h1>Clip anything on the web</h1>
