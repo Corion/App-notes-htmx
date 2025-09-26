@@ -1399,15 +1399,13 @@ app->hook(
             $c->stash(user => $c->current_user);
         };
     },
+);
+app->hook(
     before_render => sub ($c, $args) {
         my $user = $c->is_user_authenticated ? $c->current_user : undef;
         $c->stash(user => $user);
         return $c;
     },
-
-    #after_dispatch => sub( $c ) {
-    #    warn $c->res->as_string;
-    #},
 );
 
 # If we are behind a reverse proxy, prepend our path
