@@ -175,7 +175,7 @@ sub render_notes($c) {
     for my $note ( @documents ) {
         my $repr;
         if( length $note->body ) {
-            my $base = $c->url_for('/note');
+            my $base = $c->url_for('/note/');
             $repr = as_html( $base, $note, strip_links => 0, search => $filter->{text} );
         } else {
             $repr = '&nbsp;'; # so even an empty note becomes clickable
@@ -412,7 +412,7 @@ sub display_note( $c, $note ) {
     my $session = get_session( $c );
     my $filter = fetch_filter( $c );
 
-    my $base = $c->url_for('/note');
+    my $base = $c->url_for('/note/');
     my $html = as_html( $base, $note );
     $c->stash( note_html => $html );
     $c->stash( moniker => filter_moniker( $filter ));
@@ -1579,7 +1579,7 @@ sub as_html( $base, $doc, %options ) {
         $html =~ s!</a>!!gsi;
     }
 
-    $html =~ s!<img src="\K(?=attachments/[^"]+\.(?:png|jpg|jpeg|gif)")!$base!gi;
+    $html =~ s!<img src="\K(?=attachments/[^"]+\.(?:png|jpg|jpeg|gif)")!$base/!gi;
     $html =~ s!<img src="(attachments/[^"]+\.(?:ogg|mp3|aac))"!<audio src="$base$1" controls>!g;
 
     # Make checkboxes clickable again
