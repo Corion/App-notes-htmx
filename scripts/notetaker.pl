@@ -1860,7 +1860,7 @@ __DATA__
     <div id="sidebar-nav" class="list-group border-0 rounded-0 text-sm-start"
     >
 % my $current = $filter->{label} // '';
-    <a href="<%= url_with()->query({ label => '', sidebar => 1 }) %>"
+    <a href="<%= url_with()->query({ label => undef, sidebar => 1 }) %>"
        class="list-group-item border-end-0 d-inline-block"
        data-bs-parent="#sidebar"
     >Notes</a>
