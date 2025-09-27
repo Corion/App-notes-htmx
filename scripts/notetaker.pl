@@ -1885,7 +1885,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
         hx-post="<%= url_with('/htmx-unpin/'.$note->path) %>"
         hx-target="#documents"
         hx-swap="outerHTML transition:true"
-    ><button type="submit" class="pinned"><%= "\N{PUSHPIN}" %></bold></button></form>
+    ><button type="submit" class="pinned"><bold><%= "\N{PUSHPIN}" %></bold></button></form>
 % } else {
     <form method="POST" action="<%= url_with('/pin/'.$note->path) %>"
         hx-post="<%= url_with('/htmx-pin/'.$note->path) %>"
