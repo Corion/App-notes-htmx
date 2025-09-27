@@ -1603,7 +1603,7 @@ __DATA__
 <link rel="stylesheet" href="<%= url_for( "/bootstrap.5.3.3.min.css" ) %>" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 <link rel="stylesheet" href="<%= url_for( "/notes.css" )%>" />
 <script src="<%= url_for( "/bootstrap.5.3.3.min.js")%>"></script>
-<script src="<%= url_for( "/htmx.2.0.4.min.js")%>"></script>
+<script src="<%= url_for( "/htmx.2.0.7.min.js")%>"></script>
 <script src="<%= url_for( "/ws.2.0.1.js")%>"></script>
 <script src="<%= url_for( "/debug.2.0.1.js")%>"></script>
 <script src="<%= url_for( "/loading-states.2.0.1.js")%>"></script>
