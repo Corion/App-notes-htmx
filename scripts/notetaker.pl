@@ -1848,16 +1848,17 @@ __DATA__
 
 @@sidebar.html.ep
 <div id="sidebar" class="collapse collapse-horizontal border-end <%= $sidebar ? 'show' : '' %> sticky-top">
-    <div id="sidebar-nav" class="list-group border-0 rounded-0 text-sm-start min-vh-100">
+    <div id="sidebar-nav" class="list-group border-0 rounded-0 text-sm-start"
+    >
 % my $current = $filter->{label} // '';
     <a href="<%= url_with()->query({ label => '', sidebar => 1 }) %>"
-       class="list-group-item border-end-0 d-inline-block text-truncate"
+       class="list-group-item border-end-0 d-inline-block"
        data-bs-parent="#sidebar"
     >Notes</a>
 % for my $label ($labels->labels->@*) {
 %     my $current_class = $label eq $current ? 'sidebar-current' : '';
     <a href="<%= url_with()->query({ label => $label, sidebar => 1 }) %>"
-       class="list-group-item border-end-0 d-inline-block text-truncate <%= $current_class %>"
+       class="list-group-item border-end-0 d-inline-block <%= $current_class %>"
        data-bs-parent="#sidebar"
     ><%= $label %> &#x1F3F7;</a>
 % }

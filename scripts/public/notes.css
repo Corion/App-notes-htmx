@@ -215,6 +215,11 @@ a.pop-out {
     width: 100%;
 }
 
+#sidebar {
+    overflow-y:scroll;
+    height: 100vh;
+}
+
 .sidebar-current {
     background-color: green;
 }
