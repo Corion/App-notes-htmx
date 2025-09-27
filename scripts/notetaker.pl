@@ -1611,6 +1611,10 @@ __DATA__
 <script src="<%= url_for( "/app-notekeeper.js" )%>"></script>
 <script>
 //htmx.logAll();
+
+// Hack to show us what element caused the syntax error
+// We still don't know what attribute, but that's close enough
+htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 </script>
 
 @@ index.html.ep
