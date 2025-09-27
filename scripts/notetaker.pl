@@ -2411,7 +2411,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
             hx-target="#documents"
             hx-swap="outerHTML"
             hx-replace-url="true"
-            hx-trigger="change find:input delay:200ms changed, input find:input delay:200ms changed, keyup[key=='Enter'], load"
+            hx-trigger="change from:input delay:200ms changed, input from:input delay:200ms changed, keyup[key=='Enter'], load"
       >
         <div class="input-group">
         <input id="text-filter" name="q" value="<%= $filter->{text_as_typed}//'' %>"
