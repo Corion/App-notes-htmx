@@ -13,3 +13,4 @@ notes_demo/
 .prove
 *.patch
 .git-version
+scripts/public/*.gz
