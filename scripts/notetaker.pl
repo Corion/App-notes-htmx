@@ -45,6 +45,11 @@ sub get_session( $c ) {
 
     return $sessions{ $user->{user} }
         if $sessions{ $user->{user} };
+
+    # Maybe we should simply read the notes and their labels here?
+    # That way we have the full list of labels at the start, at the "price"
+    # of touching all notes on user login, potentially twice
+
     my $s = App::Notetaker::Session->new(
         username => $user->{user},
         document_directory => $user->{notes},
