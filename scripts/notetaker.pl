@@ -110,7 +110,7 @@ sub fetch_filter( $c ) {
     my $text = $c->param('q');
     my $terms = [shellwords( $text )];
     my $filter = {
-              label => $c->every_param('label'),
+        maybe label => $c->every_param('label'),
         maybe text  => $terms,
         maybe text_as_typed  => $text,
         maybe color => $c->param('color'),
@@ -308,9 +308,18 @@ sub get_documents($session, $filter={}) {
     my %last_edit;
     my $labels = $session->labels;
     my $colors = $session->colors;
+
+    if( ! keys $filter->%*
+        or (keys $filter->%* == 2
+            and exists $filter->{text}  and $filter->{text}->@* == 0
+            and exists $filter->{label} and $filter->{label}->@* == 0)) {
+        # We are reading the full document list, so we can recreate the list of
+        # labels and colors, purging labels that were since deleted
+        $labels->%* = ();
+        $colors->%* = ();
+    }
+
     #my $created_buckets = $session->created_buckets;
-    #%$labels = ();
-    #%$colors = ();
     return
         grep {
                ($filter->{text}  ? match_terms( $filter->{text}, $_ )  : 1)
