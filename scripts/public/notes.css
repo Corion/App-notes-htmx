@@ -215,6 +215,12 @@ a.pop-out {
     width: 100%;
 }
 
+#menu-container {
+    max-height: 85vh;
+    overflow-x: clip;
+    overflow-y: scroll;
+}
+
 #sidebar {
     overflow-y:scroll;
     height: 100vh;
