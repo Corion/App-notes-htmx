@@ -1291,7 +1291,7 @@ sub delete_label( $c, $inline ) {
 
     if( $inline ) {
         $c->stash( note => $note );
-        $c->stash( oob => undef );
+        $c->stash( oob => 1 );
         $c->render('display-labels');
 
     } else {
