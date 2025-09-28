@@ -250,6 +250,12 @@ sub render_index($c) {
     $c->session(expiration => 86400);
     render_notes( $c );
     $c->stash( hydrated => 1 );
+
+    # Why do we need to push the updated URL here?!
+    my $filter = fetch_filter( $c );
+    my $u = $c->url_for("/")->query(filter_query( $filter ));
+    $c->htmx->res->replace_url( $u );
+
     $c->render('index');
 }
 
