@@ -372,6 +372,12 @@ sub match_range( $filter, $field, $note ) {
     match_field_range( $filter->{$field}, $field, $note )
 }
 
+sub _expand_label_hierarchy( $l ) {
+    my @h = (split m!/!, $l);
+    my $acc;
+    return map { $acc = (defined $acc ? "$acc/" : '') . $_ } @h
+}
+
 # If we had a real database, this would be the interface ...
 sub get_documents($session, $filter={}) {
     my %last_edit;
@@ -402,7 +408,8 @@ sub get_documents($session, $filter={}) {
             my $n = $_;
 
             # While we're at it, also read in all labels
-            $labels->add( $n->labels->labels->@* );
+            # and expand the hierarchy
+            $labels->add( map { _expand_label_hierarchy($_) } $n->labels->labels->@* );
 
             # While we're at it, also read in all used colors
             $colors->{ $n->frontmatter->{color} } = 1
