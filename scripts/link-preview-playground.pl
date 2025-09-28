@@ -169,7 +169,7 @@ sub fetch_preview( $ua, $url, $html=undef ) {
     # but that implies that the logic also has to live upwards?!
     # What is then the result/aim of this subroutine at all?
     if( ! @most_fitting and ! $html ) {
-        $html = $ua->get( $url )->res->content;
+        $html = $ua->get( $url )->res->body;
         $prereqs{ html } = $html;
         @most_fitting = grep {
             $_->applies( \%prereqs );
