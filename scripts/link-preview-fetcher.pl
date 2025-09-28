@@ -1,66 +1,4 @@
 #!perl
-package Link::Preview::Markdown 0.01;
-use 5.020;
-use experimental 'signatures';
-use stable 'postderef';
-use Moo 2;
-use File::Temp 'tempfile';
-
-has 'markdown_template' => (
-    is => 'ro',
-);
-
-has 'values' => (
-    is => 'lazy',
-    default => sub { {} },
-);
-
-has 'assets' => (
-    is => 'lazy',
-    default => sub { {} },
-);
-
-around 'BUILDARGS' => sub( $orig, $class, %args ) {
-    if( $args{ assets } and ref $args{assets} eq 'ARRAY' ) {
-        $args{ assets } = +{ map {; $_ => [$_, tempfile()] } $args{ assets }->@* };
-    }
-
-    for my $asset (keys $args{ assets }->%*) {
-        if( ! ref $args{ assets }->{ $asset }) {
-            $args{ assets }->{ $asset } = [ $args{ assets }->{ $asset }, $class->asset_filename( $args{ assets }->{$asset}) // tempfile ]
-        }
-    }
-    return $class->$orig( %args )
-};
-
-sub asset_filename( $class, $url ) {
-    $url =~ m!.*/([^/?]+)(?:\z|\?)!
-        and return $1
-}
-
-sub interpolate( $self, $strings, $values=$self->values ) {
-    return [map {
-        s!\{(\w+)\}!$values->{$1} // "{$1}"!gre
-    } ($strings->@*)]
-}
-
-sub markdown( $self, $values = $self->values, ) {
-    return $self->interpolate( [$self->markdown_template], $values )->[0]
-}
-
-sub assets_for_fetch( $self ) {
-    my $assets = $self->assets;
-    return +{
-        map { $_ => $self->interpolate( $assets->{$_} )}
-            keys $assets->%*
-    }
-}
-
-sub fetched( $self, $asset, $target ) {
-    $self->assets->{ $asset } = $target;
-    $self->values->{ $asset } = $target;
-}
-
 package main;
 use 5.020;
 use experimental 'signatures';
@@ -83,12 +21,13 @@ sub fetch_preview_youtube( $ua, $url ) {
         return
     }
     # XXX also handle youtu.be , youtube-nocookie
+    # XXX also fill "title", "type"
 
-    return Link::Preview::Markdown->new(
+    return Link::Preview->new(
         markdown_template => <<'MARKDOWN',
-[![Linktext]({thumbnail})]({url})
+[![Linktext]({image})]({url})
 MARKDOWN
-        assets => { thumbnail => ['https://img.youtube.com/vi/{id}/default.jpg', 'thumbnail_{id}.jpg'] },
+        assets => { image => ['https://img.youtube.com/vi/{id}/default.jpg', 'thumbnail_{id}.jpg'] },
         values => { id => $id, url => $url, },
     );
 }
@@ -110,7 +49,7 @@ sub fetch_preview_opengraph( $ua, $url ) {
             my $description  = $og->property( "description" );
 
             # We need HTML escaping for everything here!
-            return Link::Preview::Markdown->new(
+            return Link::Preview->new(
                 assets => { image => $image },
                 values => {
                     title => $title,
@@ -119,10 +58,12 @@ sub fetch_preview_opengraph( $ua, $url ) {
                     type => $type,
                 },
                 markdown_template => <<'MARKDOWN',
-    <div class="opengraph" href="{url}">
-        <div class="title">{title}</div>
-        <img src="{image}" />
-        <div class="description">{description}</div>
+    <div class="opengraph">
+        <a href="{url}">
+            <div class="title">{title}</div>
+            <img src="{image}" />
+            <div class="description">{description}</div>
+        </a>
     </div>
 MARKDOWN
             );
@@ -157,6 +98,12 @@ for my $url (@ARGV) {
             say "Fetching $asset <$url> to $filename";
             $preview->fetched( $asset, $filename );
         }
+        # How do we actually want to render these?
+        # Different sites warrant different "cards"
+        # but different output formats also warrant different "cards"
+        # So we would want/need to create an OpenGraph-like data format
+        # and have separate templates to render them?!
+        # On the other hand, one can always render into a custom template
         say $preview->markdown;
     }
 }
