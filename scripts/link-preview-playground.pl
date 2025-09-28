@@ -188,7 +188,7 @@ sub fetch_preview( $ua, $url, $html=undef ) {
 sub update_page( $c ) {
     my %info;
 
-    # XXX this should be Mojo::UserAgent::Paranoid
+    # XXX this should be Mojo::UserAgent::Paranoid, which we still have to write
     my $ua = Mojo::UserAgent->new();
 
     #warn $c->req->param('links');
