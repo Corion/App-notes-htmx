@@ -169,6 +169,53 @@ sub filter_moniker( $filter ) {
     return join " ", grep { defined $_ and length $_ } ($attr, $location, $created);
 }
 
+=head2 C<< filter_query( $filter ) >>
+
+Returns an arrayref with list of pairs suitable for constructing a
+L<Mojo::URL> query string that encodes the filter.
+
+    my $u = $c->uri_for("/")->query( filter_query( $filter ));
+
+This is convenient if you want to persist a filter for the user.
+
+=cut
+
+sub filter_query( $filter ) {
+
+    my %names = (
+        'text_as_typed' => 'q',
+        'text' => undef,
+        'text_or_label' => undef,
+        'created_start' => 'created.start',
+        'created_end' => 'created.end',
+        'include' => 'folder',
+    );
+
+    my @res;
+
+    if( my $c = delete $filter->{created} ) {
+        for my $n (qw(start end)) {
+            if( $c->{ $n }) {
+                $filter->{"created_${n}"} = $c->{$n};
+            }
+        }
+    }
+
+    for my $k (keys $filter->%*) {
+        if( exists $names{ $k }) {
+            my $v = delete $filter->{$k};
+            if( my $n = $names{ $k }) {
+                push @res, $n => $v;
+            }
+        }
+    }
+    for my $k (sort keys $filter->%*) {
+        push @res, $k, $filter->{$k};
+    }
+
+    return \@res;
+}
+
 sub render_notes($c) {
     my $filter = fetch_filter($c);
     my $sidebar = $c->param('sidebar');
@@ -209,6 +256,11 @@ sub render_index($c) {
 sub render_filter($c) {
     return login_detour($c) unless $c->is_user_authenticated;
     render_notes( $c );
+    # Set the filter URL so we can reload the page in the browser
+    my $filter = fetch_filter( $c );
+    my $u = $c->url_for("/")->query(filter_query( $filter ));
+    $u->query( ["show-filter" => 1]);
+    $c->htmx->res->replace_url( $u );
     $c->render('documents');
 }
 
@@ -1793,19 +1845,30 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
         <a href="#" data-bs-target="#sidebar" data-bs-toggle="collapse"
                class="border rounded-3 p-1 text-decoration-none"><i class="bi bi-list bi-lg py-2 p-1"></i> Labels</a>
     </div>
-    <div class="nav-item"><a href="<%= url_for( "/" )%>">index</a></div>
+    <div class="nav-item"><a href="<%= url_for( "/" )%>"
+% if( $show_filter ) {
+    hx-trigger="click, keyup[key=='Escape'] from:body"
+% }
+>index</a></div>
     <div class="nav-item">
       <div id="form-filter">
 % if( $show_filter ) {
 %=include('select-filter', types => [], colors => $all_colors, labels => $all_labels, moniker => $moniker, all_created_buckets => $all_created_buckets)
 % } else {
 %# We already have a selection
-      <form id="form-filter-instant-small" method="GET" action="<%= url_with( "/" )->query({ "show-filter" => 1 }) %>">
+      <form id="form-filter-instant-small" method="GET" action="<%= url_with( "/" )->query({ "show-filter" => 1 }) %>"
+        hx-get="<%= url_for( "/" )->query( 'show-filter'=>1 ) %>"
+        hx-trigger="focus delay:500ms"
+        hx-target="#body"
+        >
         <input id="text-filter" name="q" value="<%= $filter->{text_as_typed}//'' %>"
             placeholder="Search"
             hx-get="<%= url_with( "/" )->query( 'show-filter'=>1 )->query({ q => undef }) %>"
-            hx-trigger="focus delay:200ms, changed delay:100ms"
+            hx-trigger="input changed delay:500ms, keyup changed delay:500ms"
             hx-target="#body"
+            onfocus="this.select()"
+%# Ideally, we don't want to swap out the above search element, because that leads to weird behaviour
+%# on slow connections, but such is life ...
         />
       </form>
 % }
@@ -1813,7 +1876,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
     </div>
 % } elsif( $type eq 'note' ) {
 % my $id = clean_fragment($note->path) =~ s/\.markdown$//r =~ s/\./_/gr;
-    <div class="nav-item"><a href="<%= url_with( "/" )->fragment("note-$id") %>"
+    <div class="nav-item"><a href="<%= url_for( "/" )->fragment("note-$id") %>"
             hx-trigger="click, keyup[key=='Escape'] from:body"
         ><span class="rounded-circle fs-3">&#x2715;</span></a>
     </div>
