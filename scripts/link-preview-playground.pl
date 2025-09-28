@@ -140,11 +140,10 @@ my @previewers = (qw(
     Link::Preview::SiteInfo::OpenGraph
 ));
 
-sub fetch_preview_set( $prereq_set ) {
+sub fetch_preview_set( $prereq_set, $exclude = {} ) {
     my $have = join "\0", sort { $a cmp $b } grep { $prereq_set->{$_} } keys $prereq_set->%*;
     my @res;
-    for my $p (@previewers) {
-        warn "$p: " . join ", ", keys $p->prerequisites->%*;
+    for my $p (grep { ! $exclude->{ $_ }} @previewers) {
         my $need = join "\0", sort { $a cmp $b } keys $p->prerequisites->%*;
         if( $need eq $have ) {
             push @res, $p;
@@ -161,19 +160,23 @@ sub fetch_preview( $ua, $url, $html=undef ) {
         url => $url,
         html => $html,
     );
+
+    my %already_checked;
     my @most_fitting = grep {
-        $_->applies( \%prereqs );
-    } fetch_preview_set( \%prereqs );
+        $_->applies( \%prereqs ) or $already_checked{ $_ }++;
+    } fetch_preview_set( \%prereqs, \%already_checked );
 
     # Maybe push fetching the HTML one level upwards instead?!
     # but that implies that the logic also has to live upwards?!
     # What is then the result/aim of this subroutine at all?
     if( ! @most_fitting and ! $html ) {
+        warn "Fetching <$url> for preview";
+        # For development, we should cache this a lot!
         $html = $ua->get( $url )->res->body;
         $prereqs{ html } = $html;
         @most_fitting = grep {
             $_->applies( \%prereqs );
-        } fetch_preview_set( \%prereqs );
+        } fetch_preview_set( \%prereqs, \%already_checked );
     }
     if( @most_fitting ) {
         return $most_fitting[0]->generate( \%prereqs );
