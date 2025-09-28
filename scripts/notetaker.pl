@@ -1980,7 +1980,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 % } elsif( $editor eq 'html' ) {
 %# This can only work with JS enabled; well, the saving
 <div id="note_html"><!-- This is untrusted content, so tell HTMX that -->
-    <div id="usercontent"
+    <div id="usercontent" autofocus
         hx-disable="true"
         onclick="javascript:updateToolbar()"
         onkeyup="javascript:updateToolbar()"
