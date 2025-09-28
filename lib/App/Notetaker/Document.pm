@@ -27,7 +27,8 @@ has 'filename' => (
 );
 
 has 'labels' => (
-    is => 'ro',
+    is => 'lazy',
+    default => sub( $self ) { App::Notetaker::LabelSet->new( labels => $self->frontmatter->{labels} ) },
 );
 
 has 'links' => (
