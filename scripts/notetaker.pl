@@ -341,9 +341,15 @@ sub match_color( $filter, $note ) {
 }
 
 # Match a label as the entire string, case-insensitively
+# Also match sub-labels, that is, "foo" also matches "foo/bar" (but not "fooz")
 sub match_label( $labels, $note ) {
     my %l = map { fc $_ => 1 } $labels->@*;
-    grep { $l{ fc($_) } } ($note->labels->labels)->@*
+    grep {
+            my $label = $_;
+               $l{ fc($label) }
+               # Try if label is more specific than one of the selected labels
+            // grep { $label =~ m!\A\Q$_/! } keys %l;
+         } ($note->labels->labels)->@*
 }
 
 # Match a label substring, case-insensitively
