@@ -2478,13 +2478,11 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
             hx-get="<%= url_with( "/filter" )->query({ q => undef }) %>"
             hx-target="#documents"
             hx-swap="outerHTML"
-            hx-replace-url="true"
-            hx-trigger="change from:input delay:200ms changed, input from:input delay:200ms changed, keyup[key=='Enter'], load"
+            hx-trigger="change from:input delay:200ms changed, input from:input delay:200ms changed, keyup[key=='Enter']"
       >
         <div class="input-group">
         <input id="text-filter" name="q" value="<%= $filter->{text_as_typed}//'' %>"
             placeholder="<%== $moniker %>"
-            autofocus
         />
         <span class="input-group-append">
 % if ( keys $filter->%* ) {
