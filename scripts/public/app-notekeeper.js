@@ -331,7 +331,7 @@ function changeBlock(tag) {
     htmx.trigger(editor, 'input');
 }
 
-function hotkeyHandler( evt ) {
+function hotkeyHandlerDocuments( evt ) {
     evt = evt || window.event;
 
     if( evt.ctrlKey ) return;
@@ -339,7 +339,7 @@ function hotkeyHandler( evt ) {
     if( evt.metaKey ) return;
 
     // Maybe convert to dispatch table?
-    if (evt.key == 's') {
+    if (evt.key == 's' || evt.key == "/") {
         if ((evt.target instanceof HTMLTextAreaElement) || (evt.target instanceof HTMLInputElement)) return;
         let searchBox = htmx.find('#text-filter');
         if( searchBox ) {
@@ -347,7 +347,7 @@ function hotkeyHandler( evt ) {
             evt.stopPropagation();
             return false;
         }
-    } else if (evt.key == 'n') {
+    } else if (evt.key == 'n' || evt.key == "c") {
         if ((evt.target instanceof HTMLTextAreaElement) || (evt.target instanceof HTMLInputElement)) return;
         let newNote = htmx.find('#btn-new-note');
         if( newNote ) {
@@ -356,11 +356,29 @@ function hotkeyHandler( evt ) {
             return false;
         }
     } else if (evt.key == 'Escape') {
-        // hide search bar?!
+        // hide search/filter bar?!
     } else {
         // console.log( evt.key )
     };
 }
+
+function hotkeyHandlerNote( evt ) {
+    evt = evt || window.event;
+
+    if( evt.ctrlKey ) return;
+    if( evt.altKey ) return;
+    if( evt.metaKey ) return;
+
+    // Return to list on Escape is handled by the inline JS, because it knows
+    // about a fragment that we want to jump to
+
+    // Maybe convert to dispatch table?
+    if (0) {
+    } else {
+        // console.log( evt.key )
+    };
+}
+
 
 function dropHandler( formName, e ) {
     // do a manual upload via ajax, since submitting the form itself
@@ -420,24 +438,26 @@ function setupApp() {
     // Setup for each page
     htmx.on("htmx:afterSettle", scrollToFragment);
 
-    // We should switch that for the different page types maybe
-    document.onkeydown = hotkeyHandler;
-
-    let uploadArea = htmx.find('.note-container');
-    if( uploadArea ) {
-        uploadArea.addEventListener("drop", (e) => dropHandler("#form-attach-file",e));
-
-        // stop weird behaviour if dropping the file elsewhere:
-        window.addEventListener("dragover", (e) => {
-            e.preventDefault();
-        });
-        window.addEventListener("drop", (e) => {
-            e.preventDefault();
-        });
-    }
 
     const singleNote = htmx.find('.note-container');
+    const noteList   = htmx.find('#documents');
+
     if( singleNote ) {
+        document.onkeydown = hotkeyHandlerNote;
+
+        let uploadArea = htmx.find('.note-container');
+        if( uploadArea ) {
+            uploadArea.addEventListener("drop", (e) => dropHandler("#form-attach-file",e));
+
+            // stop weird behaviour if dropping the file elsewhere:
+            window.addEventListener("dragover", (e) => {
+                e.preventDefault();
+            });
+            window.addEventListener("drop", (e) => {
+                e.preventDefault();
+            });
+        }
+
         const checkboxes = singleNote.querySelectorAll( '.note-container input[type=checkbox]' );
         checkboxes.forEach( (c) =>  {
             c.addEventListener( 'change', function(e) {
@@ -454,17 +474,21 @@ function setupApp() {
         );
     };
 
-    let globalUploadArea = htmx.find('.documents');
-    if( globalUploadArea ) {
-        globalUploadArea.addEventListener("drop", (e) => dropHandler("#form-new-note",e));
+    if( noteList ) {
+        document.onkeydown = hotkeyHandlerDocuments;
 
-        // stop weird behaviour if dropping the file elsewhere:
-        window.addEventListener("dragover", (e) => {
-            e.preventDefault();
-        });
-        window.addEventListener("drop", (e) => {
-            e.preventDefault();
-        });
+        let globalUploadArea = htmx.find('.documents');
+        if( globalUploadArea ) {
+            globalUploadArea.addEventListener("drop", (e) => dropHandler("#form-new-note",e));
+
+            // stop weird behaviour if dropping the file elsewhere:
+            window.addEventListener("dragover", (e) => {
+                e.preventDefault();
+            });
+            window.addEventListener("drop", (e) => {
+                e.preventDefault();
+            });
+        }
     }
 
     if( appInitialized ) { return; };
@@ -484,7 +508,6 @@ function setupApp() {
         })
         updateTheme()
     }
-
 
     // Hide all nodes that have the 'nojs' class
     const sheet = window.document.styleSheets[1];
