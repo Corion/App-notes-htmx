@@ -1950,7 +1950,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 <div id="sidebar" class="collapse collapse-horizontal border-end <%= $sidebar ? 'show' : '' %> sticky-top">
     <div id="sidebar-nav" class="list-group border-0 rounded-0 text-sm-start"
     >
-% my $current = $filter->{label} // '';
+% my $current = ($filter->{label} // [])->[0];
     <a href="<%= url_with()->query({ label => undef, sidebar => 1 }) %>"
        class="list-group-item border-end-0 d-inline-block"
        data-bs-parent="#sidebar"
