@@ -119,6 +119,7 @@ MARKDOWN
 
 package main;
 use 5.020;
+use lib 'lib';
 use Mojolicious::Lite -signatures;
 use Mojo::UserAgent;
 use Link::Preview;
@@ -275,7 +276,13 @@ textarea {
   flex: 1;
   height: 100%;
   width: 100%;
-  min-height: 400px;
+  max-height: 400px;
+  color: inherit;
+  background-color: inherit;
+}
+
+.preview-card img {
+    max-height: 200px;
 }
 </style>
 <title>Link Preview</title>
@@ -288,41 +295,55 @@ textarea {
 >
 <h1>Link list</h1>
 <div>
-<textarea name="links" id="note-textarea" autofocus
-    style="color: inherit; background-color: inherit;"
-    hx-post="/"
-    hx-target="#body"
-    hx-trigger="#note-textarea, keyup delay:200ms changed"
+<form action="/" method="POST"
+    hx-trigger="input from:#note-textarea delay:200ms changed, keyup delay:200ms changed"
     hx-swap="none"
+    id="user-input-form"
 >
+<textarea id="user-input" name="links" id="note-textarea" autofocus>
 % for my $l ($links->@*) {
 <%= $l %>
 % }
 </textarea>
+</form>
 </div>
 <h1>Link data</h1>
-<table id="link-data" hx-swap-oob="true">
+<table id="link-data" hx-swap-oob="true"
+% my $pending = grep { ($_->{status} // '') eq 'pending' } $link_preview->@*;
+% if( $pending ) {
+%     warn "Have pending preview requests";
+    hx-trigger="every 500ms"
+    hx-target="#user-input-form"
+% };
+>
 % for my $i (0..$link_data->@*-1) {
     <tr><td>
 % use Data::Dumper;
 <pre>
 % local $Data::Dumper::Sortkeys=1;
-<%= Dumper $link_data->[$i] %>
+% my $p = $link_data->[$i]->{data} // {};
+<%= Dumper $p->{preview} %>
 </pre>
 </td>
 <td>
-% my $url = $link_preview->[$i];
-% if ( $url->{preview} ) {
-%     my $fetch = $url->{preview}->assets_for_fetch;
-%     for my $asset (values $fetch->%*) {
-    <img src="<%= $asset->[0] %>" />
-%     }
-<div id="description"><%== $url->{preview}->markdown %></div>
-% } else {
-    - none -
-% }
+%= include "link-preview-card", info => $link_preview->[$i];
 </td></tr>
 % }
 </table>
 </body>
 </html>
+
+@@ link-preview-card.html.ep
+<div class="preview-card">
+% if ( $info->{preview} ) {
+%     my $fetch = $info->{preview}->assets_for_fetch;
+%     for my $asset (values $fetch->%*) {
+    <img src="<%= $asset->[0] %>" />
+%     }
+<div id="description"><%== $info->{preview}->markdown %></div>
+% } elsif ($info->{status} eq 'pending') {
+    - pending - (polling reload not yet scheduled)
+% } else {
+    - none - <%= $info->{status} %>
+% }
+</div>
