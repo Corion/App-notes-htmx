@@ -125,6 +125,7 @@ use Mojo::UserAgent;
 use Link::Preview;
 use Carp 'croak';
 use Future;
+use Crypt::Digest::SHA256 'sha256_b64u';
 
 no experimental 'signatures';
 sub first_defined( &;@ ) {
@@ -206,9 +207,9 @@ sub fetch_preview( $ua, $url, $html=undef ) {
 
         $pending{ $url } = {
             url => $url,
-            #promise => $p,
             status => 'pending',
             preview => undef,
+            id => sha256_b64u( $url ),
         }
     }
     if( @most_fitting ) {
@@ -246,8 +247,23 @@ sub render_index($c) {
     $c->render('index');
 }
 
+sub render_preview( $c ) {
+    my $id  = $c->param('id');
+    use Data::Dumper; warn Dumper [values %pending, values %done];
+    (my $req) = grep { $id eq $_->{id} } values %pending, values %done;
+warn "Preview for $id / $req";
+    if( $req) {
+        $c->stash( info => $req );
+        return $c->render('link-preview-card');
+    } else {
+        $c->res->code(286); # stop polling
+        $c->render( text => 'HTMX Stop polling' );
+    }
+}
+
 get '/' => \&render_index;
 post '/' => \&render_index;
+get  '/preview' => \&render_preview;
 
 app->start;
 
@@ -296,11 +312,12 @@ textarea {
 <h1>Link list</h1>
 <div>
 <form action="/" method="POST"
+    hx-post="/"
     hx-trigger="input from:#note-textarea delay:200ms changed, keyup delay:200ms changed"
     hx-swap="none"
     id="user-input-form"
 >
-<textarea id="user-input" name="links" id="note-textarea" autofocus>
+<textarea name="links" id="note-textarea" autofocus>
 % for my $l ($links->@*) {
 <%= $l %>
 % }
@@ -308,14 +325,7 @@ textarea {
 </form>
 </div>
 <h1>Link data</h1>
-<table id="link-data" hx-swap-oob="true"
-% my $pending = grep { ($_->{status} // '') eq 'pending' } $link_preview->@*;
-% if( $pending ) {
-%     warn "Have pending preview requests";
-    hx-trigger="every 500ms"
-    hx-target="#user-input-form"
-% };
->
+<table id="link-data" hx-swap-oob="true">
 % for my $i (0..$link_data->@*-1) {
     <tr><td>
 % use Data::Dumper;
@@ -334,7 +344,16 @@ textarea {
 </html>
 
 @@ link-preview-card.html.ep
-<div class="preview-card">
+% my $poll = (($info->{status} // '') eq 'pending' ) ? 'every 500ms' : '';
+
+%# hx-trigger every XXX does not work without hx-post or hx-get
+<div class="preview-card" id="preview-<%= $info->{id} %>"
+% if( $poll ) {
+    hx-trigger="<%= $poll %>"
+    hx-get="<%= $c->url_with("/preview")->query( id => $info->{id} ) %>"
+    hx-swap="outerHTML"
+% }
+>
 % if ( $info->{preview} ) {
 %     my $fetch = $info->{preview}->assets_for_fetch;
 %     for my $asset (values $fetch->%*) {
@@ -342,7 +361,7 @@ textarea {
 %     }
 <div id="description"><%== $info->{preview}->markdown %></div>
 % } elsif ($info->{status} eq 'pending') {
-    - pending - (polling reload not yet scheduled)
+    - pending - (polling)
 % } else {
     - none - <%= $info->{status} %>
 % }
