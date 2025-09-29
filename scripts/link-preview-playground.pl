@@ -152,7 +152,16 @@ sub fetch_preview_set( $prereq_set, $exclude = {} ) {
     return @res
 }
 
+my %pending = ();
+my %done = ();
+
 sub fetch_preview( $ua, $url, $html=undef ) {
+    if( $done{ $url }) {
+        return $done{ $url }
+    }
+    if( $pending{ $url }) {
+        return $pending{ $url }
+    }
 
     # First, check with URL only, then (optionally) fetch HTML and check with
     # that, if we have no candidate that works without fetching the HTML
@@ -171,15 +180,38 @@ sub fetch_preview( $ua, $url, $html=undef ) {
     # What is then the result/aim of this subroutine at all?
     if( ! @most_fitting and ! $html ) {
         warn "Fetching <$url> for preview";
+        my $u = $url;
         # For development, we should cache this a lot!
-        $html = $ua->get( $url )->res->body;
-        $prereqs{ html } = $html;
-        @most_fitting = grep {
-            $_->applies( \%prereqs );
-        } fetch_preview_set( \%prereqs, \%already_checked );
+        $ua->get_p( $u )->then(sub( $tx ) {
+            my $res = $tx->res;
+            warn sprintf "%s %d: <%s>", ($res->is_success ? '.' : '!'), $res->code, $tx->req->url;
+            my $html = $tx->res->body;
+            $prereqs{ html } = $html;
+
+            @most_fitting = grep {
+                $_->applies( \%prereqs );
+            } fetch_preview_set( \%prereqs, \%already_checked );
+            if( $most_fitting[0] ) {
+                $pending{ $url }->{preview} = $most_fitting[0]->generate(\%prereqs);
+            }
+            $done{ $url } = delete $pending{ $url };
+            $done{ $url }->{status} = 'done';
+        })
+        ->catch(sub( $err ) {
+            warn "** $u: $err";
+            $done{ $url } = delete $pending{ $url };
+            $done{ $url }->{status} = "error: $err";
+        });
+
+        $pending{ $url } = {
+            url => $url,
+            #promise => $p,
+            status => 'pending',
+            preview => undef,
+        }
     }
     if( @most_fitting ) {
-        return $most_fitting[0]->generate( \%prereqs );
+        return { preview => $most_fitting[0]->generate( \%prereqs ) };
     } else {
         return undef
     }
@@ -189,15 +221,19 @@ sub update_page( $c ) {
     my %info;
 
     # XXX this should be Mojo::UserAgent::Paranoid, which we still have to write
-    my $ua = Mojo::UserAgent->new();
+    my $ua = $c->ua; # Mojo::UserAgent->new();
+    $ua->max_redirects(10);
 
     #warn $c->req->param('links');
 
     $info{ links } = [ grep { /\S/ } map { s/\s*\z//; $_ } split /\ *\r?\n/, ($c->req->param('links') // 'https://example.com') ];
     $info{ "link_data" } = [map { +{ url => $_, data => fetch_preview( $ua, $_ ) } } $info{ links }->@*];
-    $info{ "link_preview" } = [map { +{ url => $_, preview => fetch_preview( $ua, $_ ) } } $info{ links }->@*];
+    $info{ "link_preview" } = [map { +{ url => $_, fetch_preview( $ua, $_ )->%* } } $info{ links }->@*];
 
     # Also, async-fetch the page and retry with the page content if needed
+    for (sort keys %pending) {
+        warn sprintf "% 10s - %s", $pending{$_}->{status}, $_;
+    }
 
     for my $k (sort keys %info) {
         $c->stash( $k => $info{$k} );
