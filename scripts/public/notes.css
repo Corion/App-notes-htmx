@@ -227,7 +227,8 @@ a.pop-out {
 }
 
 .sidebar-current {
-    background-color: green;
+    /* make this bright/dark depending on theme */
+    background-color: light-dark(#bbb, #666);
 }
 
 .svg_icon {
