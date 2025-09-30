@@ -356,6 +356,7 @@ function hotkeyHandlerDocuments( evt ) {
             return false;
         }
     } else if (evt.key == 't') {
+        if ((evt.target instanceof HTMLTextAreaElement) || (evt.target instanceof HTMLInputElement)) return;
         htmx.find("#btn-new-from-template").click()
     } else if (evt.key == 'Escape') {
         // hide search/filter bar?!
