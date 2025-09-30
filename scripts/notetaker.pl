@@ -1750,7 +1750,9 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
        href="<%= url_with('/new' ) %>"
     ><i class="fa-solid fa-plus">+</i>
     </a>
-    <button type="button" class="btn btn-secondary btn-lg dropdown-toggle dropdown-toggle-split hide-toggle"
+    <button type="button"
+            id="btn-new-from-template"
+            class="btn btn-secondary btn-lg dropdown-toggle dropdown-toggle-split hide-toggle"
             data-bs-toggle="dropdown"
             aria-expanded="false"
             aria-haspopup="true"
