@@ -32,6 +32,7 @@ use Archive::Zip;
 
 app->static->with_roles('+Compressed');
 plugin 'DefaultHelpers';
+plugin 'UrlWithout';
 plugin 'HTMX';
 #plugin 'Gzip'; # fails since Mojolicious 9.23
 
@@ -2271,6 +2272,10 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
   <button type="submit" class="nojs">Set</button>
 </form>
 
+@@ label-pill.html.ep
+% my $class = $active ? 'text-secondary-emphasis bg-secondary' : 'text-secondary bg-secondary-subtle';
+<div class="label badge rounded-pill <%= $class %>" ><%= $label %></div>
+
 @@display-labels.html.ep
 % my $labels = $note->labels;
 % my $id = 'labels-'. $note->filename;
@@ -2530,12 +2535,18 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 % if( $labels->labels->@* ) {
 <div>
 <h2>Labels</h2>
+%    my %active = map { $_ => 1 } ($filter->{label} // [])->@*;
 %    for my $l ($labels->labels->@*) {
-    <a href="<%= url_with('/')->query({ label => $l }) %>"
+%        my ($url);
+%        if( $active{ $l }) {
+%            $url = url_without('/', label => $l );
+%        } else {
+%            $url = url_with('/')->query([ label => $l ]);
+%        }
+    <a href="<%= $url %>"
        hx-disinherit="*"
        hx-target="#body"
-       hx-get="<%= url_with('/')->query({ label => $l }) %>"
-    ><%= $l %></a>
+    ><%= include( 'label-pill', label => $l, active => $active{ $l } ) %></a>
 %    }
 </div>
 %}
