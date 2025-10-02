@@ -2496,9 +2496,8 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 @@select-filter.html.ep
 <div id="form-filter-2">
       <form id="form-filter-instant" method="GET" action="<%= url_for( "/" ) %>"
-            hx-get="<%= url_with( "/filter" )->query({ q => undef }) %>"
-            hx-target="#documents"
-            hx-swap="outerHTML"
+            hx-get="<%= url_with( "/" )->query({ q => undef, 'show-filter' => 1 }) %>"
+            hx-target="#body"
             hx-trigger="change from:input delay:200ms changed, input from:input delay:200ms changed, keyup[key=='Enter']"
       >
         <div class="input-group">
