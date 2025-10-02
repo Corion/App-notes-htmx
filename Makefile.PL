@@ -66,6 +66,7 @@ my %module = (
         'Mojolicious::Plugin::Authentication' => 0,
         'Mojolicious::Static::Role::Compressed' => 0,
         #'Mojolicious::Plugin::Gzip' => 0,
+        'Net::DNS::Native' => 0, # for native/async name resolution
         'Text::CleanFragment' => 0,
 
         # Convert from and to HTML
