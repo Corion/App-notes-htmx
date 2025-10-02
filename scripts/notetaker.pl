@@ -540,7 +540,7 @@ sub serve_attachment( $c ) {
 
 get '/index.html' => \&render_index;
 get '/' => \&render_index;
-get '/filter' => \&render_filter;
+get '/documents' => \&render_filter;
 
 any  '/new' => sub( $c ) {
     return login_detour($c) unless $c->is_user_authenticated;
@@ -1724,7 +1724,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
     window.addEventListener('load', function() {
         // console.log(window.IS_STANDALONE);
         // hydrate with the documents, and bar etc.
-        htmx.ajax("GET", "/filter", "main")
+        htmx.ajax("GET", "/documents", "main")
     });
     </script>
 % }
