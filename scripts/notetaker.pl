@@ -32,7 +32,6 @@ use Archive::Zip;
 
 app->static->with_roles('+Compressed');
 plugin 'DefaultHelpers';
-plugin 'UrlWithout';
 plugin 'HTMX';
 #plugin 'Gzip'; # fails since Mojolicious 9.23
 
@@ -2501,10 +2500,10 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 @@select-filter.html.ep
 <div id="form-filter-2">
       <form id="form-filter-instant" method="GET" action="<%= url_for( "/" ) %>"
-            hx-get="<%= url_with( "/" )->query({ q => undef, 'show-filter' => 1 }) %>"
             hx-target="#body"
-            hx-trigger="change from:input delay:200ms changed, input from:input delay:200ms changed, keyup[key=='Enter']"
+            hx-trigger="change delay:200ms changed, input from:input delay:200ms changed, keyup[key=='Enter']"
       >
+      <input type="hidden" name="show-filter" value="1" />
         <div class="input-group">
         <input id="text-filter" name="q" value="<%= $filter->{text_as_typed}//'' %>"
             placeholder="<%== $moniker %>"
@@ -2537,16 +2536,10 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 <h2>Labels</h2>
 %    my %active = map { $_ => 1 } ($filter->{label} // [])->@*;
 %    for my $l ($labels->labels->@*) {
-%        my ($url);
-%        if( $active{ $l }) {
-%            $url = url_without('/', label => $l );
-%        } else {
-%            $url = url_with('/')->query([ label => $l ]);
-%        }
-    <a href="<%= $url %>"
-       hx-disinherit="*"
-       hx-target="#body"
-    ><%= include( 'label-pill', label => $l, active => $active{ $l } ) %></a>
+%        my $id = "label-".clean_fragment($l) =~ s/\./_/gr;
+    <label for="<%= $id %>"><%= include( 'label-pill', label => $l, active => $active{ $l } ) %>
+    <input type="checkbox" name="label" value="<%= $l %>" id="<%= $id %>" <%== $active{$l} ? 'checked' : "" %> style="display:none"/>
+    </label>
 %    }
 </div>
 %}
