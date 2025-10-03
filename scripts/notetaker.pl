@@ -1637,6 +1637,11 @@ app->helper(
 app->helper(
     clean_fragment => sub($self,$fn){ clean_fragment($fn) },
 );
+app->helper(
+    for_id => sub($self,$text) {
+        return clean_fragment($text) =~ s/\./_/gr
+    }
+);
 
 app->start;
 
@@ -1802,7 +1807,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 % my $textcolor = sprintf q{ color: light-dark(%s, %s)}, contrast_bw( $_bgcolor ), contrast_bw( $_bgcolor_dark );
 % my $bgcolor   = sprintf q{ background-color: light-dark( %s, %s )}, $_bgcolor, $_bgcolor_dark ;
 % my $style     = sprintf q{ style="%s; %s;"}, $bgcolor, $textcolor;
-% my $id = clean_fragment($note->path) =~ s/\.markdown$//r =~ s/\./_/gr;
+% my $id = for_id( clean_fragment($note->path) =~ s/\.markdown$//r);
 <div class="grid-item note position-relative"<%== $style %>
        id="note-<%= $id %>">
     <div class="note-ui">
@@ -1896,7 +1901,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
       </div>
     </div>
 % } elsif( $type eq 'note' ) {
-% my $id = clean_fragment($note->path) =~ s/\.markdown$//r =~ s/\./_/gr;
+% my $id = for_id( clean_fragment($note->path) =~ s/\.markdown$//r);
     <div class="nav-item"><a href="<%= url_for( "/" )->fragment("note-$id") %>"
             hx-trigger="click, keyup[key=='Escape'] from:body"
         ><span class="rounded-circle fs-3">&#x2715;</span></a>
@@ -2570,7 +2575,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 <h2>Labels</h2>
 %    my %active = map { $_ => 1 } ($filter->{label} // [])->@*;
 %    for my $l ($labels->labels->@*) {
-%        my $id = "label-".clean_fragment($l) =~ s/\./_/gr;
+%        my $id = "label-".for_id($l);
     <label for="<%= $id %>"><%= include( 'label-pill', label => $l, active => $active{ $l } ) %>
     <input type="checkbox" name="label" value="<%= $l %>" id="<%= $id %>" <%== $active{$l} ? 'checked' : "" %> style="display:none"/>
     </label>
@@ -2581,12 +2586,12 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 % if( $all_colors->@* ) {
 <div>
 <h2>Colors</h2>
+%    my %active = map { $_ => 1 } ($filter->{color} // [])->@*;
 %    for my $l ($all_colors->@*) {
-    <a href="<%= url_with('/')->query({ color => $l }) %>"
-       hx-disinherit="*"
-       hx-target="#body"
-       hx-get="<%= url_with('/')->query({ color => $l }) %>"
-    ><span class="color-circle" style="background-color:<%== $l %>;">&nbsp;</span></a>
+%        my $id = "color-".for_id($l);
+%        my $active = $active{ $l } ? "border: black solid 2px;" : "border: transparent solid 2px;";
+    <label for="<%= $id %>" id="label-<%=$id%>" class="color-circle" style="background-color:<%== $l %>;<%= $active %>">&nbsp;</label>
+    <input type="checkbox" name="color" value="<%= $l %>" id="<%= $id %>" <%== $active{$l} ? 'checked' : "" %> style="display:none"/>
 %    }
 </div>
 %}
