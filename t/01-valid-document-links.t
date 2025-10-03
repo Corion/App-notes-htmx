@@ -10,10 +10,10 @@ use Symbol 'gensym';
 $ENV{TEST_NOTES_BASE}="t/";
 $ENV{TEST_NOTES_USER}="demo";
 
-sub request( $url ) {
+sub request( $method, $url ) {
     #diag "$^X, '-Ilib', 'scripts/notetaker.pl', 'get', $url";
     my $pid = open3( my $input, my $output, my $err = gensym(),
-        $^X, '-Ilib', 'scripts/notetaker.pl', 'get', $url
+        $^X, '-Ilib', 'scripts/notetaker.pl', $method, $url
     );
 
     my $html = do { local $/; <$output> };
@@ -22,10 +22,10 @@ sub request( $url ) {
     return { html => $html, error => $error };
 }
 
-sub extract_attribute( $html, $tag, $attr ) {
+sub extract_attribute( $html, $tag, $attr, $method='get' ) {
     my @res;
     while( $html =~ m!(<$tag [^>]*${attr}="([^"]+)".*?>)!gsi ) {
-        push @res, { tag => $1, link => $2 }
+        push @res, { method => $method, tag => $1, link => $2 }
     }
     for( @res ) {
         $_->{link} =~ s!&amp;!&!g;
