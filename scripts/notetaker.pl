@@ -1994,7 +1994,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
     <a href="<%= url_with()->query({ label => undef, sidebar => 1 }) %>"
        class="list-group-item border-end-0 d-inline-block"
        data-bs-parent="#sidebar"
-    >All Notes</a>Notes</a>
+    >All Notes</a>
 % for my $key (sort { fc($hierarchy{$a}->{visual}) cmp fc($hierarchy{$b}->{visual}) } keys %hierarchy) {
 %= include( "label-hierarchy-level", label => $hierarchy{ $key }, current => $current );
 % }
