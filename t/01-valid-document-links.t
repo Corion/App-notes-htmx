@@ -45,7 +45,10 @@ sub links( $html ) {
     push @links, extract( $html, 'img', 'src' );
     push @links, extract( $html, 'script', 'src' );
 
-    # Also scan for HTMX attributes here
+    # This creates more and more new notes by crawling
+    #push @links, extract( $html, '\\w+', 'hx-get' );
+    #push @links, extract( $html, '\\w+', 'hx-post', 'post' );
+
     return @links
 }
 
@@ -53,7 +56,10 @@ sub title( $html ) {
    [($html =~ m!<title>([^<]+)</title>!msi)]->[0];
 }
 
-my @queue = ({ link => "/" });
+my @queue = (
+    { link => "new?title=Tags+-+Obsidian+Help&body-html=%3Cp+id%3D%22attribution%22%3Efrom+%3Ca+href%3D%22https%3A%2F%2Fhelp.obsidian.md%2Ftags%22%3ETags+-+Obsidian+Help%3C%2Fa%3E%3C%2Fp%3E&label=%23saved_from_browser" },
+    { link => "/" },
+);
 my %seen = (
     '#' => 1,
 );
