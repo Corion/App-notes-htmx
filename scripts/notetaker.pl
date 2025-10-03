@@ -359,7 +359,7 @@ sub match_label( $labels, $note ) {
             my $label = $_;
                $l{ fc($label) }
                # Try if label is more specific than one of the selected labels
-            // grep { $label =~ m!\A\Q$_/! } keys %l;
+            // grep { $label =~ m!\A\Q$_/!i } keys %l;
          } ($note->labels->labels)->@*
 }
 
