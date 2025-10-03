@@ -119,8 +119,14 @@ sub fetch_filter( $c ) {
         undef $col;
     };
 
+    my $lab = $c->every_param('label');
+    if( ! $lab->@* ) {
+        undef $lab;
+    };
+
+
     my $filter = {
-        maybe label => $c->every_param('label'),
+        maybe label => $lab,
         maybe text  => $terms,
         maybe text_as_typed  => $text,
         maybe color         => $col,
