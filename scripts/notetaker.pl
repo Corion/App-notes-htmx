@@ -95,7 +95,7 @@ The note label (multiple allowed)
 
 =item B<color>
 
-The note color, formatted as C< #xxxxxx >
+The note colors, formatted as C< #xxxxxx > (multiple allowed)
 
 =item B<created.start>
 
@@ -114,18 +114,24 @@ sub fetch_filter( $c ) {
 
     my $text = $c->param('q');
     my $terms = [shellwords( $text )];
+    my $col = $c->every_param('color');
+    if( ! $col->@* ) {
+        undef $col;
+    };
+
     my $filter = {
         maybe label => $c->every_param('label'),
         maybe text  => $terms,
         maybe text_as_typed  => $text,
-        maybe color => $c->param('color'),
+        maybe color         => $col,
         maybe created_start => $c->param('created.start'),
         maybe created_end   => $c->param('created.end'),
         maybe include       => (@include ? \@include : () ),
     };
     if( $filter->{color} ) {
-        $filter->{color} =~ /#[0-9a-f]{6}/
-            or delete $filter->{color};
+        $filter->{color}->@* = grep { /\A#[0-9a-f]{6}\z/ }
+                                    $filter->{color}->@*
+                                    ;
     }
 
     if( my $v = delete $filter->{created_start} ) {
@@ -159,8 +165,7 @@ sub filter_moniker( $filter ) {
     if( $filter->{label} && $filter->{label}->@* ) {
         $location = "in " . join ", ", map { "'$_'" } $filter->{label}->@*
     }
-    if( $filter->{color} ) {
-        #$location = qq{<span class="color-circle" style="background-color:$filter->{color};">&nbsp;</span> notes};
+    if( $filter->{color} and $filter->{color}->@* ) {
         $attr = qq{color notes};
     }
     if( $filter->{created} ) {
@@ -336,8 +341,8 @@ sub match_text_or_label( $text_or_label, $note ) {
                              } $text_or_label->@* );
 }
 
-sub match_color( $filter, $note ) {
-    ($note->frontmatter->{color} // '') eq $filter
+sub match_color( $color, $note ) {
+    first { $_ eq ($note->frontmatter->{color} // '') } $color->@*
 }
 
 # Match a label as the entire string, case-insensitively
