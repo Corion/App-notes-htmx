@@ -1948,7 +1948,45 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 </div>
 </nav>
 
+@@ label-hierarchy-level.html.ep
+%# Fold out details if they are a leftmost substring of $current
+% my $current_class = $current eq $label->{label} ? 'sidebar-current' : '';
+% if( !$label->{details}->@* ) {
+    <a href="<%= url_with()->query({ label => $label->{label}, sidebar => 1 }) %>"
+       class="list-group-item border-end-0 d-inline-block <%= $current_class %>"
+       data-bs-parent="#sidebar"
+    ><%= $label->{visual} %> &#x1F3F7;</a><br/>
+% } else {
+% my $open =    $current eq $label->{label}
+%            || index( $current, "$label->{label}/" ) == 0;
+% $open = $open ? " open " : "";
+    <details class="sidebar-details border-end-0 list-group-item" <%= $open %>>
+    <summary><a href="<%= url_with()->query({ label => $label->{label}, sidebar => 1 }) %>"
+       class="<%= $current_class %>"
+       data-bs-parent="#sidebar"
+    ><%= $label->{visual} %> &#x1F3F7;</a>
+    </summary>
+    <div class="sidebar-details-sublabel">
+%     for my $c ($label->{details}->@* ) {
+%=include( "label-hierarchy-level", label => $c, current => $current )
+%     }
+    </div></details>
+% }
+
 @@sidebar.html.ep
+%# Group the labels according to hierarchy
+% my %hierarchy = map { $_ => +{ visual => $_, details => [], label => $_ }} $labels->labels->@*;
+%# Now sort the elements bottom-up into their hierarchy slot, removing them from the tree
+% my @lower = sort { scalar($b =~ tr!/!/!) <=> scalar($a =~ tr!/!/!) } grep { m!/! } keys %hierarchy;
+% for my $l (@lower) {
+%     my $v = delete $hierarchy{ $l };
+%     $l =~ m!^(.+)/([^/]+)\z!
+%         or die "Internal error: Item $l should contain a slash, but doesn't!";
+%     my ($p,$q) = ($1,$2);
+%     $v->{visual} = $q;
+%     push $hierarchy{ $p }->{ details }->@*, $v;
+%     $hierarchy{ $p }->{ details }->@* = sort { $a->{visual} cmp $b->{visual}} $hierarchy{ $p }->{ details }->@*;
+% }
 <div id="sidebar" class="collapse collapse-horizontal border-end <%= $sidebar ? 'show' : '' %> sticky-top">
     <div id="sidebar-nav" class="list-group border-0 rounded-0 text-sm-start"
     >
@@ -1956,13 +1994,9 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
     <a href="<%= url_with()->query({ label => undef, sidebar => 1 }) %>"
        class="list-group-item border-end-0 d-inline-block"
        data-bs-parent="#sidebar"
-    >Notes</a>
-% for my $label ($labels->labels->@*) {
-%     my $current_class = $label eq $current ? 'sidebar-current' : '';
-    <a href="<%= url_with()->query({ label => $label, sidebar => 1 }) %>"
-       class="list-group-item border-end-0 d-inline-block <%= $current_class %>"
-       data-bs-parent="#sidebar"
-    ><%= $label %> &#x1F3F7;</a>
+    >All Notes</a>Notes</a>
+% for my $key (sort { fc($hierarchy{$a}->{visual}) cmp fc($hierarchy{$b}->{visual}) } keys %hierarchy) {
+%= include( "label-hierarchy-level", label => $hierarchy{ $key }, current => $current );
 % }
     </div>
 </div>

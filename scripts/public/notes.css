@@ -231,6 +231,43 @@ a.pop-out {
     background-color: light-dark(#bbb, #666);
 }
 
+.sidebar-details-sublabel {
+    margin-left: 1vw;
+}
+
+details.sidebar-details {
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+
+.sidebar-details a {
+    display: inline-block;
+    position: relative;
+    text-decoration: none;
+    color: var(--bs-body-color);
+    box-sizing: border-box;
+    line-height: var(--bs-body-line-height);
+    padding-bottom: 8px;
+    padding-top: 8px;
+    border-bottom: 1px;
+}
+
+.sidebar-details summary::marker {
+  display: none;
+  content:"";
+}
+.sidebar-details summary::-webkit-details-marker {
+  display: none;
+  content:"";
+}
+
+.sidebar-details summary::after {
+  content: ' +';
+}
+details[open].sidebar-details >summary:after {
+  content: " -";
+}
+
 .svg_icon {
   width: 1em;
   max-height: 1.5em;
