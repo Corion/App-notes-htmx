@@ -1961,8 +1961,8 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
     <div class="dropdown-item">
       <a id="btn-export"
         hx-boost="false"
-        href="<%= url_for('/export-archive')%>"
-        class="btn btn-secondary" id="export">Export notes</a>
+        href="<%= url_with('/export-archive')%>"
+        class="btn btn-secondary" id="export">Export selected notes</a>
     </div>
     <div class="dropdown-item">
     <a class="nav-link" href="https://github.com/Corion/App-notes-htmx" target="_blank">Github</a>
