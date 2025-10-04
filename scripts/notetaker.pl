@@ -169,7 +169,7 @@ Returns an (English) textual description of the current filter.
 sub filter_moniker( $filter ) {
     my ($attr, $location, $created);
     if( $filter->{label} && $filter->{label}->@* ) {
-        $location = "in " . join ", ", map { "'$_'" } $filter->{label}->@*
+        $location = join ", ", map { "'$_'" } $filter->{label}->@*
     }
     if( $filter->{color} and $filter->{color}->@* ) {
         $attr = qq{color notes};
@@ -2571,7 +2571,8 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
       <input type="hidden" name="show-filter" value="1" />
         <div class="input-group">
         <input id="text-filter" name="q" value="<%= $filter->{text_as_typed}//'' %>"
-            placeholder="<%== $moniker %>"
+% my $vis = $moniker ? "in $moniker" : "Search";
+            placeholder="<%== $vis %>"
         />
         <span class="input-group-append">
 % if ( keys $filter->%* ) {
