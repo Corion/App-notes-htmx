@@ -231,9 +231,9 @@ sub render_notes($c) {
     my $filter = fetch_filter($c);
     my $sidebar = $c->param('sidebar');
     my $session = get_session( $c );
-    my @documents = get_documents($session, $filter);
+    my @documents = get_documents($c, $session, $filter);
 
-    my @templates = get_templates($session);
+    my @templates = get_templates($c, $session);
 
     for my $note ( @documents ) {
         my $repr;
@@ -390,31 +390,17 @@ sub _expand_label_hierarchy( $l ) {
 }
 
 # If we had a real database, this would be the interface ...
-sub get_documents($session, $filter={}) {
+# We cache the list of all documents per-request
+sub all_documents( $session, $labels, $colors ) {
+    # We are reading the full document list, so we can recreate the list of
+    # labels and colors, purging labels that were since deleted
+
+    $labels->%* = ();
+    $colors->%* = ();
+
     my %last_edit;
-    my $labels = $session->labels;
-    my $colors = $session->colors;
 
-    if( ! keys $filter->%*
-        or (keys $filter->%* == 2
-            and exists $filter->{text}  and $filter->{text}->@* == 0
-            and exists $filter->{label} and $filter->{label}->@* == 0)) {
-        # We are reading the full document list, so we can recreate the list of
-        # labels and colors, purging labels that were since deleted
-        $labels->%* = ();
-        $colors->%* = ();
-    }
-
-    #my $created_buckets = $session->created_buckets;
     return
-        grep {
-               ($filter->{text}  ? match_terms( $filter->{text}, $_ )  : 1)
-            && ($filter->{text_or_label} && $filter->{text_or_label}->@* ? match_text_or_label( $filter->{text_or_label}, $_ )  : 1)
-            && ($filter->{color} ? match_color( $filter->{color}, $_ ) : 1)
-            && ($filter->{label} && $filter->{label}->@* ? match_label( $filter->{label}, $_ ) : 1)
-            && ($filter->{created} ? match_range( $filter, 'created', $_ ) : 1)
-            && ($filter->{updated} ? match_range( $filter, 'updated', $_ ) : 1)
-        }
         map {
             my $n = $_;
 
@@ -445,12 +431,41 @@ sub get_documents($session, $filter={}) {
                                   || timestamp((stat($_))[9]); # most-recent changed;
             $note
         }
-        $session->documents( include => $filter->{include} )
+        $session->documents()
+}
+
+sub get_documents($c, $session, $filter={}) {
+    my @all_documents;
+    if( $c and my $d = $c->stash('documents')) {
+        @all_documents = $d->@*
+    } else {
+        @all_documents = all_documents( $session, $session->labels, $session->colors );
+        $c->stash('documents', \@all_documents)
+            if $c;
+    };
+
+    if( ! keys $filter->%*
+        or (keys $filter->%* == 2
+            and exists $filter->{text}  and $filter->{text}->@* == 0
+            and exists $filter->{label} and $filter->{label}->@* == 0)) {
+    }
+
+    #my $created_buckets = $session->created_buckets;
+    return
+        grep {
+               ($filter->{text}  ? match_terms( $filter->{text}, $_ )  : 1)
+            && ($filter->{text_or_label} && $filter->{text_or_label}->@* ? match_text_or_label( $filter->{text_or_label}, $_ )  : 1)
+            && ($filter->{color} ? match_color( $filter->{color}, $_ ) : 1)
+            && ($filter->{label} && $filter->{label}->@* ? match_label( $filter->{label}, $_ ) : 1)
+            && ($filter->{created} ? match_range( $filter, 'created', $_ ) : 1)
+            && ($filter->{updated} ? match_range( $filter, 'updated', $_ ) : 1)
+        }
+        @all_documents
 }
 
 # Ugh - we are conflating display and data...
-sub get_templates( $session ) {
-    get_documents(  $session, { label => ['Template'] } )
+sub get_templates( $c, $session ) {
+    get_documents(  $c, $session, { label => ['Template'] } )
 }
 
 sub get_users($session, $filter={}, $include_self=1) {
@@ -1420,7 +1435,7 @@ sub export_archive( $c ) {
     my $session = get_session( $c );
     my $f = fetch_filter( $c );
 
-    my @notes = get_documents( $session, $f );
+    my @notes = get_documents( $c, $session, $f );
 
     my $base = Mojo::File->new( $session->document_directory());
 
