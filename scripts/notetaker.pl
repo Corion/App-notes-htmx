@@ -1679,12 +1679,6 @@ sub as_html( $base, $doc, %options ) {
         disallowed_html_tags => ['script','a','object'],
     );
     my $body = $doc->body;
-    if( my $w = $options{ search }) {
-        if( my @t = $w->@* ) {
-            my $t = join "|", map { quotemeta $_ } grep { length $_ } @t;
-            $body =~ s!($t)!<mark>$1</mark>!gi;
-        }
-    };
 
     # Markdown::Perl autoconverts (some) URL-like strings to links, even when
     # they are already within a linking tag.
@@ -1699,6 +1693,14 @@ sub as_html( $base, $doc, %options ) {
 
     # Make checkboxes clickable again
     $html =~ s!<input (checked="[^"]*" |)disabled="" type="checkbox"!<input contentEditable="false" ${1}type="checkbox"!g;
+
+    if( my $w = $options{ search }) {
+        if( my @t = $w->@* ) {
+            my $t = join "|", map { quotemeta $_ } grep { length $_ } @t;
+            $html =~ s!>[^<]*?\K($t)!<mark>$1</mark>!gi;
+        }
+    };
+
 
     return $html
 }
