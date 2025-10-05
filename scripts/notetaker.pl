@@ -67,7 +67,7 @@ sub date_range_visual( $range ) {
 
 =head2 C<< fetch_filter >>
 
-  my $filter = fetch_filter( $c );
+  my $filter = fetch_filter( $c, $created_buckets );
 
 Fetches the current filter settings from the request in C< $c > and returns
 it as a hashref.
@@ -97,19 +97,18 @@ The note label (multiple allowed)
 
 The note colors, formatted as C< #xxxxxx > (multiple allowed)
 
-=item B<created.start>
+=item B<created-between>
 
-=item B<created.end>
+The ranges for note creation. The note creation date, must be before C<.end>
+and after C<.start>.
 
-The note creation date, must be before C<.end> and after C<.start>.
-
-Both values will be returned in the C< created > key as a subhash.
+Both values will be returned in the C< created-between > array as a subhash.
 
 =back
 
 =cut
 
-sub fetch_filter( $c ) {
+sub fetch_filter( $c, $created_buckets ) {
     my @include = $c->every_param('folder')->@*;
 
     my $text = $c->param('q');
@@ -124,14 +123,16 @@ sub fetch_filter( $c ) {
         undef $lab;
     };
 
+    my $created = $c->every_param('created-range');
+    my %bucket = map { $_->{vis} => $_ } $created_buckets->@*;
+    $created = [map { $bucket{ $_ } } $created->@*];
 
     my $filter = {
         maybe label => $lab,
         maybe text  => $terms,
         maybe text_as_typed  => $text,
         maybe color         => $col,
-        maybe created_start => $c->param('created.start'),
-        maybe created_end   => $c->param('created.end'),
+        maybe created       => ($created->@* ? $created : undef ),
         maybe include       => (@include ? \@include : () ),
     };
     if( $filter->{color} ) {
@@ -140,21 +141,11 @@ sub fetch_filter( $c ) {
                                     ;
     }
 
-    if( my $v = delete $filter->{created_start} ) {
-        $filter->{created} //= {};
-        $filter->{created}->{start} = $v;
-    }
-    if( my $v = delete $filter->{created_end} ) {
-        $filter->{created} //= {};
-        $filter->{created}->{end} = $v;
-    }
-
     # Restructure the query in the filter text:
     if( my @labels = grep { /^#/ } $filter->{ text }->@* ) {
         $filter->{ text }->@* = grep { !/^#/ } $filter->{ text }->@*;
         $filter->{ text_or_label } = \@labels;
     }
-
     return $filter
 }
 
@@ -175,41 +166,34 @@ sub filter_moniker( $filter ) {
         $attr = qq{color notes};
     }
     if( $filter->{created} ) {
-        $created = date_range_visual( $filter->{created} );
+        $created = join "or", map { date_range_visual( $_ ) } $filter->{created}->@*;
     }
     return join " ", grep { defined $_ and length $_ } ($attr, $location, $created);
 }
 
-=head2 C<< filter_query( $filter ) >>
+=head2 C<< filter_query( $filter, $created_buckets ) >>
 
 Returns an arrayref with list of pairs suitable for constructing a
 L<Mojo::URL> query string that encodes the filter.
 
-    my $u = $c->uri_for("/")->query( filter_query( $filter ));
+    my $u = $c->uri_for("/")->query( filter_query( $filter, [...] ));
 
 This is convenient if you want to persist a filter for the user.
 
 =cut
 
 sub filter_query( $filter ) {
-
     my %names = (
         'text_as_typed' => 'q',
         'text' => undef,
         'text_or_label' => undef,
-        'created_start' => 'created.start',
-        'created_end' => 'created.end',
         'include' => 'folder',
     );
 
     my @res;
 
     if( my $c = delete $filter->{created} ) {
-        for my $n (qw(start end)) {
-            if( $c->{ $n }) {
-                $filter->{"created_${n}"} = $c->{$n};
-            }
-        }
+        push @res, map {; "created-range" => $_->{vis} } $c->@*;
     }
 
     for my $k (keys $filter->%*) {
@@ -228,9 +212,9 @@ sub filter_query( $filter ) {
 }
 
 sub render_notes($c) {
-    my $filter = fetch_filter($c);
     my $sidebar = $c->param('sidebar');
     my $session = get_session( $c );
+    my $filter = fetch_filter($c, $session->created_buckets);
     my @documents = get_documents($c, $session, $filter);
 
     my @templates = get_templates($c, $session);
@@ -263,7 +247,8 @@ sub render_index($c) {
     $c->stash( hydrated => 1 );
 
     # Why do we need to push the updated URL here?!
-    my $filter = fetch_filter( $c );
+    my $session = get_session( $c );
+    my $filter = fetch_filter($c, $session->created_buckets);
     my $u = $c->url_for("/")->query(filter_query( $filter ));
     $c->htmx->res->replace_url( $u );
 
@@ -274,7 +259,8 @@ sub render_filter($c) {
     return login_detour($c) unless $c->is_user_authenticated;
     render_notes( $c );
     # Set the filter URL so we can reload the page in the browser
-    my $filter = fetch_filter( $c );
+    my $session = get_session($c);
+    my $filter = fetch_filter($c, $session->created_buckets);
     my $u = $c->url_for("/")->query(filter_query( $filter ));
     $u->query( ["show-filter" => 1]);
     $c->htmx->res->replace_url( $u );
@@ -319,7 +305,8 @@ my $js = <<'JS' =~ s/\s+/ /gr;
 JS
     my $bookmarklet = sprintf $js, $url;
 
-    my $filter = fetch_filter( $c );
+    my $session = get_session($c);
+    my $filter = fetch_filter($c, $session->created_buckets);
     stash_filter( $c, $filter );
     $c->stash( show_filter => !!$c->param('show-filter') );
     $c->stash( bookmarklet => $bookmarklet);
@@ -373,14 +360,20 @@ sub match_username( $filter, $user ) {
     grep { ($_//'') =~ /\Q$filter\E/i } ([$user->{user}, $user->{name}])->@*
 }
 
-sub match_field_range( $filter, $field, $note ) {
+sub match_field_range( $filter_list, $field, $note, $created_buckets ) {
     my $val = $note->frontmatter->{ $field } // '';
-        (!$filter->{ start } || $filter->{ start } le $val)
-    and (!$filter->{ end }   || $filter->{ end } ge $val)
+    my %bucket = map { $_->{vis} => $_ } $created_buckets->@*;
+    for my $f ($filter_list->@*) {
+        my $filter = $bucket{ $f->{vis} } // {};
+        return 1 if (
+                (!$filter->{ start } || $filter->{ start } le $val)
+            and (!$filter->{ end }   || $filter->{ end } ge $val))
+    }
+    return;
 }
 
-sub match_range( $filter, $field, $note ) {
-    match_field_range( $filter->{$field}, $field, $note )
+sub match_range( $filter, $field, $note, $created_buckets ) {
+    match_field_range( $filter->{$field}, $field, $note, $created_buckets )
 }
 
 sub match_path( $filter, $note ) {
@@ -453,6 +446,7 @@ sub get_documents($c, $session, $filter={}) {
             if $c;
     };
 
+    my $created_buckets = $session->created_buckets;
     return
         grep {
                (match_path( $filter->{include}, $_ ))
@@ -460,8 +454,8 @@ sub get_documents($c, $session, $filter={}) {
             && ($filter->{text_or_label} && $filter->{text_or_label}->@* ? match_text_or_label( $filter->{text_or_label}, $_ )  : 1)
             && ($filter->{color} ? match_color( $filter->{color}, $_ ) : 1)
             && ($filter->{label} && $filter->{label}->@* ? match_label( $filter->{label}, $_ ) : 1)
-            && ($filter->{created} ? match_range( $filter, 'created', $_ ) : 1)
-            && ($filter->{updated} ? match_range( $filter, 'updated', $_ ) : 1)
+            && ($filter->{created} ? match_range( $filter, 'created', $_, $created_buckets ) : 1)
+            #&& ($filter->{updated_range} ? match_range( $filter, 'updated', $_ ) : 1)
         }
         @all_documents
 }
@@ -524,7 +518,7 @@ sub display_note( $c, $note ) {
     # Should we do that in the template instead?!
 
     my $session = get_session( $c );
-    my $filter = fetch_filter( $c );
+    my $filter = fetch_filter($c, $session->created_buckets);
 
     my $base = $c->url_for('/note/');
     my $html = as_html( $base, $note );
@@ -660,9 +654,9 @@ get  '/note/attachments/*fn' => \&serve_attachment;
 
 get '/note/*fn' => sub($c) {
     return login_detour($c) unless $c->is_user_authenticated;
-    my $filter = fetch_filter($c);
-
     my $session = get_session( $c );
+    my $filter = fetch_filter($c, $session->created_buckets);
+
     $c->stash( filter => $filter );
     my $note = find_note( $session, $c->param('fn'));
     if( $note ) {
@@ -1389,7 +1383,7 @@ sub select_filter( $c ) {
 
     my $session = get_session( $c );
 
-    my $filter = fetch_filter($c);
+    my $filter = fetch_filter($c, $session->created_buckets);
     stash_filter( $c, $filter );
     $c->stash( moniker => filter_moniker( $filter ));
     $c->render('select-filter' );
@@ -1399,7 +1393,7 @@ sub update_pinned( $c, $pinned, $inline ) {
     return login_detour($c) unless $c->is_user_authenticated;
 
     my $session = get_session( $c );
-    my $filter = fetch_filter($c);
+    my $filter = fetch_filter($c, $session->created_buckets);
     my $fn = $c->param('fn');
     my $note = find_or_create_note( $session, $fn );
 
@@ -1448,9 +1442,9 @@ sub export_archive( $c ) {
     return login_detour($c) unless $c->is_user_authenticated;
 
     my $session = get_session( $c );
-    my $f = fetch_filter( $c );
+    my $filter = fetch_filter($c, $session->created_buckets);
 
-    my @notes = get_documents( $c, $session, $f );
+    my @notes = get_documents( $c, $session, $filter );
 
     my $base = Mojo::File->new( $session->document_directory());
 
@@ -2643,14 +2637,16 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 % if( $all_created_buckets->@* ) {
 <div>
 <h2>Created</h2>
-%    for my $t ($all_created_buckets->@*) {
-    <a href="<%= url_with('/')->query({ 'created.start' => $t->{start}, 'created.end' => $t->{end} }) %>"
-       hx-disinherit="*"
-       hx-target="#body"
-       hx-get="<%= url_with('/')->query({ 'created.start' => $t->{start}, 'created.end' => $t->{end} }) %>"
-    ><%= $t->{vis} %></a>
+%    my %active = map {$_->{vis} => 1 } ($filter->{created} // [])->@*;
+%    for my $t ( $all_created_buckets->@* ) {
+%        my $val = "$t->{vis}";
+%        my $id = "date-".for_id($val);
+%        my $active = $active{ $val } ? "border: black solid 2px;" : "border: transparent solid 2px;";
+    <label for="<%= $id %>" id="date-<%=$id%>" style="<%= $active %>"><%= $t->{vis} %></label>
+    <input type="checkbox" name="created-range" value="<%= $val %>" id="<%= $id %>" <%== $active{$val} ? 'checked' : "" %> style="display:none"/>
 %    }
 </div>
+% }
 <div>
 <h2>Also search</h2>
 % my $include = $filter->{include} // [];
@@ -2665,7 +2661,6 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
     hx-trigger="change"
 />
 </div>
-%}
       </form>
 </div>
 
