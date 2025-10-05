@@ -1426,13 +1426,15 @@ sub generate_archive( $dir, @notes ) {
         my $fn = join "/", $dir, $note->path;
         my $ar_name = $note->path;
         next if $seen{ $fn }++;
-        $zip->addFile( $fn => $ar_name );
+        $zip->addFile( $fn => $ar_name )
+            or warn "Not a plain file: $fn";
 
         for my $asset ($note->assets->{files}->@*) {
             my $fn = join "/", $dir, $asset;
             my $ar_name = $asset;
             next if $seen{ $fn }++;
-            $zip->addFile( $fn => $ar_name );
+            $zip->addFile( $fn => $ar_name )
+                or warn "Not a plain file: $fn";
         }
     }
     return $zip
