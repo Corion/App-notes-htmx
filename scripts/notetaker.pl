@@ -453,13 +453,6 @@ sub get_documents($c, $session, $filter={}) {
             if $c;
     };
 
-    if( ! keys $filter->%*
-        or (keys $filter->%* == 2
-            and exists $filter->{text}  and $filter->{text}->@* == 0
-            and exists $filter->{label} and $filter->{label}->@* == 0)) {
-    }
-
-    #my $created_buckets = $session->created_buckets;
     return
         grep {
                (match_path( $filter->{include}, $_ ))
