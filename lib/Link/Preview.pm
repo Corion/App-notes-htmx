@@ -37,9 +37,19 @@ sub asset_filename( $class, $url ) {
         and return $1
 }
 
+# Might need one more layer of ->interpolate() ?!
+sub value( $self, $key, $values = $self->values, $assets = $self->assets ) {
+    my $res;
+    $res //= $values->{ $key };
+    if( $assets->{ $key } ) {
+        $res //= $assets->{ $key }->[1]
+    }
+    return $self->interpolate( [$res], $values )->[0]
+}
+
 sub interpolate( $self, $strings, $values=$self->values ) {
     return [map {
-        s!\{(\w+)\}!$values->{$1} // "{$1}"!gre
+        s!\{(\w+)\}!$self->value( $1, $values, $self->assets ) // "{$1}"!gre
     } ($strings->@*)]
 }
 
