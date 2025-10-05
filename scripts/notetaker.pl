@@ -383,6 +383,14 @@ sub match_range( $filter, $field, $note ) {
     match_field_range( $filter->{$field}, $field, $note )
 }
 
+sub match_path( $filter, $note ) {
+    $filter //= [];
+    my %allow = map { $_ => 1 } $filter->@*;
+       $note->deleted && $allow{ deleted }
+    || $note->archived && $allow{ archived }
+    || (!$note->archived && !$note->deleted)
+}
+
 sub _expand_label_hierarchy( $l ) {
     my @h = (split m!/!, $l);
     my $acc;
@@ -431,7 +439,7 @@ sub all_documents( $session, $labels, $colors ) {
                                   || timestamp((stat($_))[9]); # most-recent changed;
             $note
         }
-        $session->documents()
+        $session->documents( include => ['deleted','archived'])
 }
 
 sub get_documents($c, $session, $filter={}) {
@@ -453,7 +461,8 @@ sub get_documents($c, $session, $filter={}) {
     #my $created_buckets = $session->created_buckets;
     return
         grep {
-               ($filter->{text}  ? match_terms( $filter->{text}, $_ )  : 1)
+               (match_path( $filter->{include}, $_ ))
+            && ($filter->{text}  ? match_terms( $filter->{text}, $_ )  : 1)
             && ($filter->{text_or_label} && $filter->{text_or_label}->@* ? match_text_or_label( $filter->{text_or_label}, $_ )  : 1)
             && ($filter->{color} ? match_color( $filter->{color}, $_ ) : 1)
             && ($filter->{label} && $filter->{label}->@* ? match_label( $filter->{label}, $_ ) : 1)
