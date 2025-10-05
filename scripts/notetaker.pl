@@ -2239,9 +2239,9 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 
 @@editor-toolbar.html.ep
 % my $active = $editor eq 'markdown' ? ' btn-primary' : '';
-    <div class="nav-item jsonly"><a class="btn <%= $active %>" href="<%= url_with()->query({ editor => 'markdown' }) %>">MD</a></div>
+    <div class="nav-item jsonly"><a id="btn-switch-editor-md" class="btn <%= $active %>" href="<%= url_with()->query({ editor => 'markdown' }) %>">MD</a></div>
 %    $active = $editor eq 'html' ? ' btn-primary' : '';
-    <div class="nav-item jsonly"><a class="btn <%= $active %>" href="<%= url_with()->query({ editor => 'html' }) %>">HTML</a></div>
+    <div class="nav-item jsonly"><a id="btn-switch-editor-html" class="btn <%= $active %>" href="<%= url_with()->query({ editor => 'html' }) %>">HTML</a></div>
 %= include('edit-actions')
 % if( $editor eq 'html' ) {
       <!-- <div id="splitbar-html">|</div> -->
