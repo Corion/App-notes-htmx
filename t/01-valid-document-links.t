@@ -64,6 +64,12 @@ my %seen = (
     '#' => 1,
 );
 
+# URLs we only want to crawl explicitly
+my @dont_add = (
+    qr'^new',
+    qr'^/new',
+);
+
 my @errors;
 
 # Clean up all temporary notes our links might create
@@ -108,6 +114,7 @@ while (@queue) {
 
     push @queue,
         map { $_->{ found_on } = $info->{link}; $_ }
+        grep { $info->{link} =~ /$_/ } @dont_add }
         grep { ! $seen{ $_->{link} }}
         grep { $_->{link} !~ /^\s*javascript:/ }
         links( $page )
