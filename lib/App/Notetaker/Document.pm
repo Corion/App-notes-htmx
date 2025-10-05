@@ -139,4 +139,24 @@ sub title( $self ) {
     }
 }
 
+=head2 C<< ->assets >>
+
+    my $assets = $note->assets;
+    say for $assets->{files}->@*;
+    # attachments/foo.jpg
+
+Returns a hashref of assets in the markdown. Currently the hashref only has
+a single key, C<files>.
+
+=cut
+
+sub assets( $self ) {
+    my $md = $self->body // '';
+    my @linked = $md =~ m!\]\(((?:\\.|[^)])+)\)!g;
+    return +{
+        files => [ grep { m!\Aattachments/! } @linked ],
+        #links => [ grep { !m!\Aattachments/! } @linked ],
+    };
+}
+
 1;
