@@ -368,7 +368,21 @@ function hotkeyHandlerDocuments( evt ) {
 function hotkeyHandlerNote( evt ) {
     evt = evt || window.event;
 
-    if( evt.ctrlKey ) return;
+    if (evt.ctrlKey && evt.key == '1') {
+        let searchBox = htmx.find('#btn-switch-editor-md');
+        if( searchBox ) {
+            searchBox.click();
+            evt.stopPropagation();
+            return false;
+        };
+    } else if (evt.ctrlKey && evt.key == '2') {
+        let searchBox = htmx.find('#btn-switch-editor-html');
+        if( searchBox ) {
+            searchBox.click();
+            evt.stopPropagation();
+            return false;
+        }
+    };
     if( evt.altKey ) return;
     if( evt.metaKey ) return;
 
