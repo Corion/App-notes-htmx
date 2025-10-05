@@ -1836,9 +1836,9 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 % my %section_title = (qw(pinned Pinned default Notes deleted Deleted archived Archived));
 % for my $note ($documents->@*) {
 %     my $section = 'default';
-%     if( $note->frontmatter->{archived} ) {
+%     if( $note->archived ) {
 %         $section = 'archived';
-%     } elsif( $note->frontmatter->{deleted} ) {
+%     } elsif( $note->deleted ) {
 %         $section = 'deleted';
 %     } elsif( $note->frontmatter->{pinned} ) {
 %         $section = 'pinned';
