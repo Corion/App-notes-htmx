@@ -1418,16 +1418,26 @@ sub update_pinned( $c, $pinned, $inline ) {
 sub generate_archive( $dir, @notes ) {
     my $base = Mojo::File->new( $dir );
     my $zip = Archive::Zip->new();
+    my %seen;
     for my $note (@notes) {
         my $fn = join "/", $dir, $note->path;
         my $ar_name = $note->path;
+        next if $seen{ $fn }++;
         $zip->addFile( $fn => $ar_name );
+
+        for my $asset ($note->assets->{files}->@*) {
+            my $fn = join "/", $dir, $asset;
+            my $ar_name = $asset;
+            next if $seen{ $fn }++;
+            $zip->addFile( $fn => $ar_name );
+        }
     }
     return $zip
 }
 
 # We also want to export the current filter as an archive
-# so export_archive should take a list of documents/a filter
+# so export_archive should take a list of documents/a filter instead of the
+# implicit filter in $c.
 # Also, we currently don't export the attached files/images...
 sub export_archive( $c ) {
     return login_detour($c) unless $c->is_user_authenticated;
