@@ -172,6 +172,8 @@ sub fetch_preview( $ua, $url, $html=undef ) {
         html => $html,
     );
 
+    my $launched;
+
     my %already_checked;
     my @most_fitting = grep {
         $_->applies( \%prereqs ) or $already_checked{ $_ }++;
@@ -205,14 +207,16 @@ sub fetch_preview( $ua, $url, $html=undef ) {
             $done{ $url }->{status} = "error: $err";
         });
 
-        $pending{ $url } = {
+        $launched = $pending{ $url } = {
             url => $url,
             status => 'pending',
             preview => undef,
             id => sha256_b64u( $url ),
         }
     }
-    if( @most_fitting ) {
+    if( $launched ) {
+        return $launched
+    } elsif( @most_fitting ) {
         return { preview => $most_fitting[0]->generate( \%prereqs ) };
     } else {
         return undef
@@ -226,10 +230,7 @@ sub update_page( $c ) {
     my $ua = $c->ua; # Mojo::UserAgent->new();
     $ua->max_redirects(10);
 
-    #warn $c->req->param('links');
-
     $info{ links } = [ grep { /\S/ } map { s/\s*\z//; $_ } split /\ *\r?\n/, ($c->req->param('links') // 'https://example.com') ];
-    $info{ "link_data" } = [map { +{ url => $_, data => fetch_preview( $ua, $_ ) } } $info{ links }->@*];
     $info{ "link_preview" } = [map { +{ url => $_, fetch_preview( $ua, $_ )->%* } } $info{ links }->@*];
 
     # Also, async-fetch the page and retry with the page content if needed
@@ -249,9 +250,7 @@ sub render_index($c) {
 
 sub render_preview( $c ) {
     my $id  = $c->param('id');
-    use Data::Dumper; warn Dumper [values %pending, values %done];
     (my $req) = grep { $id eq $_->{id} } values %pending, values %done;
-warn "Preview for $id / $req";
     if( $req) {
         $c->stash( info => $req );
         return $c->render('link-preview-card');
@@ -261,9 +260,23 @@ warn "Preview for $id / $req";
     }
 }
 
+sub render_preview_data( $c ) {
+    my $id  = $c->param('id') // 'no-such-id';
+    (my $req) = grep { $id eq $_->{id} } values %pending, values %done;
+    if( $req) {
+        $c->stash( info => $req );
+        return $c->render('link-preview-data');
+    } else {
+        $c->res->code(286); # stop polling
+        $c->render( text => 'HTMX Stop polling' );
+    }
+}
+
+
 get '/' => \&render_index;
 post '/' => \&render_index;
 get  '/preview' => \&render_preview;
+get  '/preview-data' => \&render_preview_data;
 
 app->start;
 
@@ -326,14 +339,9 @@ textarea {
 </div>
 <h1>Link data</h1>
 <table id="link-data" hx-swap-oob="true">
-% for my $i (0..$link_data->@*-1) {
+% for my $i (0..$link_preview->@*-1) {
     <tr><td>
-% use Data::Dumper;
-<pre>
-% local $Data::Dumper::Sortkeys=1;
-% my $p = $link_data->[$i]->{data} // {};
-<%= Dumper $p->{preview} %>
-</pre>
+%= include "link-preview-data", info => $link_preview->[$i];
 </td>
 <td>
 %= include "link-preview-card", info => $link_preview->[$i];
@@ -342,6 +350,23 @@ textarea {
 </table>
 </body>
 </html>
+
+@@ link-preview-data.html.ep
+% my $poll = (!$info->{preview} and (($info->{status} // 'pending') eq 'pending' )) ? 'every 500ms' : '';
+<div class="preview-data" id="preview-data-<%= $info->{id} %>"
+% if( $poll ) {
+    hx-trigger="<%= $poll %>"
+    hx-get="<%= $c->url_with("/preview-data")->query( id => $info->{id} ) %>"
+    hx-swap="outerHTML"
+% }
+>
+% use Data::Dumper;
+<pre>
+% local $Data::Dumper::Sortkeys=1;
+% my $p = $info->{data} // {};
+<%= Dumper $info %>
+</pre>
+</div>
 
 @@ link-preview-card.html.ep
 % my $poll = (($info->{status} // '') eq 'pending' ) ? 'every 500ms' : '';
@@ -352,6 +377,8 @@ textarea {
     hx-trigger="<%= $poll %>"
     hx-get="<%= $c->url_with("/preview")->query( id => $info->{id} ) %>"
     hx-swap="outerHTML"
+% } else {
+% warn "$info->{id} done";
 % }
 >
 % if ( $info->{preview} ) {
