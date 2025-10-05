@@ -414,7 +414,8 @@ sub all_documents( $session, $labels, $colors ) {
 
             # While we're at it, also read in all labels
             # and expand the hierarchy
-            $labels->add( map { _expand_label_hierarchy($_) } $n->labels->labels->@* );
+            $labels->add( map { _expand_label_hierarchy($_) } $n->labels->labels->@* )
+                if (! $n->deleted);
 
             # While we're at it, also read in all used colors
             $colors->{ $n->frontmatter->{color} } = 1
