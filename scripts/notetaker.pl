@@ -2262,11 +2262,11 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
       <form action="<%= url_for( '/login' )%>" method="POST">
         <div class="form mb-3">
             <label for="username" class="form-label">Username</label>
-            <input class="form-control" type="text" autofocus name="username" value="" text="Username" id="username" required />
+            <input class="form-control" type="text" autofocus autocomplete="username" name="username" value="" text="Username" id="username" required />
         </div>
         <div class="mb-3">
             <label class="form-label" for="password" class="form-label">Password</label>
-            <input class="form-control" type="password" name="password" value="" text="Password" id="login-password"/>
+            <input class="form-control" type="password" autocomplete="password" name="password" value="" text="Password" id="login-password"/>
         </div>
         <button class="btn btn-primary btn-lg" type="submit">Log in</button>
       </form>
