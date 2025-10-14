@@ -783,7 +783,7 @@ sub save_note_body( $c ) {
     } elsif( exists $p->{'body-html'}) {
         my $turndown = Text::HTML::Turndown->new();
         $turndown->use('Text::HTML::Turndown::GFM');
-        $body = $turndown->turndown($c->param('body-html'));
+        $body = $turndown->turndown($p->{'body-html'});
     }
 
     $body =~ s/\A\s+//sm;
