@@ -574,8 +574,10 @@ sub display_note( $c, $note ) {
     $c->stash( htmx_update => $c->is_htmx_request() );
 
     my $editor = $c->param('editor') // $session->editor // 'markdown';
+    # Sanitize the editor parameter
+    ($editor) = grep { $_ eq $editor } (qw(html markdown));
+    $editor //= 'markdown';
     $session->editor( $editor );
-    # Sanitize
     $c->stash( editor => $editor );
 
     stash_filter( $c, $filter );
