@@ -1046,9 +1046,13 @@ sub edit_note_title( $c, $inline = 0 ) {
     if( $inline ) {
         return edit_field( $c, $note, 'title' );
     } else {
+        # We're rendering a full note here, so we need to pass through everything...
+        $c->stash( field_properties => $field_properties{ 'title' } // {} );
+        $c->stash( field_name => 'title' );
         $c->stash( edit_field => 'title' );
         $c->stash( note => $note );
-        $c->render('note');
+        $c->stash( show_filter => 0 );
+        display_note( $c, $note );
     }
 }
 
