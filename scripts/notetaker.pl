@@ -578,6 +578,9 @@ sub display_note( $c, $note ) {
     ($editor) = grep { $_ eq $editor } (qw(html markdown));
     $editor //= 'markdown';
     $session->editor( $editor );
+
+    $c->stash( selection_start => $c->param('selection-start') // 0 );
+    $c->stash( selection_end => $c->param('selection-end') // 0);
     $c->stash( editor => $editor );
 
     stash_filter( $c, $filter );
@@ -781,6 +784,14 @@ sub save_note_body( $c ) {
         $body = $p->{'body-markdown'};
 
     } elsif( exists $p->{'body-html'}) {
+        # Strip selection markers (and remember selection?)
+        if( exists $p->{'selection-start'}) {
+            $p->{'body-html'} =~ s/\Q$p->{'selection-start'}//g;
+        }
+        if( exists $p->{'selection-end'}) {
+            $p->{'body-html'} =~ s/\Q$p->{'selection-end'}//g;
+        }
+
         my $turndown = Text::HTML::Turndown->new();
         $turndown->use('Text::HTML::Turndown::GFM');
         $body = $turndown->turndown($p->{'body-html'});
@@ -1759,7 +1770,6 @@ sub as_html( $base, $doc, %options ) {
         }
     };
 
-
     return $html
 }
 
@@ -2178,6 +2188,8 @@ Asset: <%= $l %><br />
 <div class="note-container">
 % if( $editor eq 'markdown' ) {
 <textarea name="body-markdown" id="note-textarea" autofocus
+    data-selection-start="<%= $selection_start %>"
+    data-selection-end="<%= $selection_end %>"
     style="color: inherit; background-color: inherit;"
 ><%= $note->body %></textarea>
 % } elsif( $editor eq 'html' ) {
@@ -2276,9 +2288,13 @@ Asset: <%= $l %><br />
 
 @@editor-toolbar.html.ep
 % my $active = $editor eq 'markdown' ? ' btn-primary' : '';
-    <div class="nav-item jsonly"><a id="btn-switch-editor-md" class="btn <%= $active %>" href="<%= url_with()->query({ editor => 'markdown' }) %>">MD</a></div>
+    <div class="nav-item jsonly">
+    <a id="btn-switch-editor-md" class="btn <%= $active %>"
+       href="<%= url_for()->query({ editor => 'markdown' }) %>"
+       hx-vals='js:{...getUserCaret()}'
+    >MD</a></div>
 %    $active = $editor eq 'html' ? ' btn-primary' : '';
-    <div class="nav-item jsonly"><a id="btn-switch-editor-html" class="btn <%= $active %>" href="<%= url_with()->query({ editor => 'html' }) %>">HTML</a></div>
+    <div class="nav-item jsonly"><a id="btn-switch-editor-html" class="btn <%= $active %>" href="<%= url_for()->query({ editor => 'html' }) %>">HTML</a></div>
 %= include('edit-actions')
 % if( $editor eq 'html' ) {
       <!-- <div id="splitbar-html">|</div> -->

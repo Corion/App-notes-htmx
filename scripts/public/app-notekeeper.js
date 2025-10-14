@@ -441,10 +441,124 @@ function scrollToFragment() {
 function getUserContent() {
     const el = htmx.find('#usercontent');
 
+    const selectionStartMarker = "\u2039";
+    const selectionEndMarker = "\u203A";
+
     if( el ) {
-        return { "body-html" : el.innerHTML }
+        let sel;
+        // We assume we always have text nodes in the selection, and not
+        // other complete nodes like <img>...
+        const undo = [];
+        const innerHTML = el.innerHTML;
+
+        // Find the user selection, if any
+        let orgS,orgR;
+        if( sel = document.getSelection()) {
+            const r = sel.getRangeAt(0);
+            // copy selection range information so we can restore it after modifying stuff
+            orgR = { startContainer: r.startContainer,
+                     startOffset: r.startOffset,
+                     endContainer: r.endContainer,
+                     endOffset: r.endOffset };
+            orgS = { ...sel };
+
+            // This needs a fix - we might need to add a text node right
+            // before/after the element starts, for example |<img>
+            // If start and end are in the same container, edit it directly:
+            // XXX Check if the container is a text node!
+            if( sel.anchorNode === sel.focusNode ) {
+                // Swap direction if it is not "forward"
+                const text = sel.anchorNode.textContent;
+                sel.anchorNode.textContent = text.slice(0,sel.anchorOffset)
+                                                +selectionStartMarker
+                                                +text.slice(sel.anchorOffset, sel.focusOffset)
+                                                +selectionEndMarker
+                                                +text.slice(sel.focusOffset)
+                                                ;
+                undo.unshift( [sel.anchorNode,text]);
+            } else {
+                const sText = sel.anchorNode.textContent;
+                const eText = sel.focusNode.textContent;
+                sel.anchorNode.textContent = sText.slice(0,sel.anchorOffset)
+                                                +selectionStartMarker
+                                                +sText.slice(sel,anchorOffset);
+                sel.focusNode.textContent = eText.slice(0,sel.focusOffset)
+                                              +selectionEndMarker
+                                              +eText.slice(sel.focusOffset);
+                undo.unshift( [sel.anchorNode,sText]);
+                undo.unshift( [sel.focusNode,eText]);
+            }
+        }
+
+        const markerInnerHTML = el.innerHTML;
+        // Convert our markers to positions in the string
+        let selectionStart = markerInnerHTML.indexOf(selectionStartMarker);
+        let selectionEnd = markerInnerHTML.indexOf(selectionEndMarker);
+
+        if( selectionEnd > selectionStart ) selectionEnd -= selectionStartMarker.length;
+        if( selectionStart > selectionEnd ) selectionStart -= selectionStartMarker.length;
+
+        // Remove start/end unicode markers from the browser HTML again
+        for (let u of undo) {
+            let [e,t] = u;
+            e.textContent = t; // boom
+        }
+        //      restore original selection
+        if( orgR ) {
+            sel.removeAllRanges();
+            const newR = document.createRange();
+            console.log(orgR);
+            newR.setStart(orgR.startContainer, orgR.startOffset);
+            newR.setEnd(orgR.endContainer, orgR.endOffset);
+            sel.addRange(newR);
+        }
+        return { "body-html" : innerHTML,
+                 "focus-position": undefined,
+                 "selection-start": selectionStart,
+                 "selection-end": selectionEnd,
+               }
     } else {
         return { };
+    }
+}
+
+function getUserCaret() {
+    const c = getUserContent();
+    let res;
+    if( c ) {
+        res = {
+            "selection-start":c["selection-start"],
+            "selection-end":c["selection-end"],
+        }
+    }
+    return res
+}
+
+function getUserSelection() {
+    // If we are in the textarea, use textarea.selectionStart, textarea.selectionEnd
+    // and textarea.selectionDirection
+    // otherwise use document.getSelection()
+
+    // When clicking on an editor-switch button, we lost the active element...
+    const active = document.activeElement;
+    let u = htmx.find('#usercontent');
+    let t = htmx.find('#note-textarea');
+
+    if( u && u.contains(active)) {
+        // Ugh, shoudl check if we actually have a selection?
+        const s = document.getSelection().getRangeAt(0);
+        return {
+
+        }
+
+    } else if( t && t.contains(active)) {
+        return {
+            start: t.selectionStart,
+            end: t.selectionEnd,
+            dir: t.selectionDirection
+        }
+    } else {
+        return {}
     }
 }
 
@@ -454,7 +568,6 @@ let appInitialized;
 function setupApp() {
     // Setup for each page
     htmx.on("htmx:afterSettle", scrollToFragment);
-
 
     const singleNote = htmx.find('.note-container');
     const noteList   = htmx.find('#documents');
@@ -489,6 +602,19 @@ function setupApp() {
                 });
             }
         );
+
+        // Restore user selection and caret position
+        const a = htmx.find('#note-textarea');
+        if( a && a.dataset && a.dataset.selectionStart ) {
+            let start = a.dataset.selectionStart;
+            let end = a.dataset.selectionEnd;
+            let direction = 'forward';
+            if( end < start ) {
+                direction = 'backward';
+                [start,end] = [end,start];
+            }
+            a.setSelectionRange(start,end,direction);
+        }
     };
 
     if( noteList ) {
