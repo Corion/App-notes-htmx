@@ -2131,6 +2131,9 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 <%= $l->{url} %><br />
     % }
 % }
+% for my $l ($note->assets->{files}->@*) {
+Asset: <%= $l %><br />
+% }
 </div>
 
 @@ note.html.ep
