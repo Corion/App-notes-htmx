@@ -278,6 +278,8 @@ sub render_notes($c) {
     $c->stash( show_filter => !!$c->param('show-filter') );
 
     # How do we sort the templates? By name?!
+    @templates = sort { fc($a->title) cmp fc($b->title) } @templates;
+
     $c->stash( templates => \@templates );
     stash_filter( $c, $filter );
     $c->stash( sidebar => $sidebar );
