@@ -20,6 +20,7 @@ use Crypt::Passphrase::Argon2;
 
 use App::Notetaker::Document;
 use App::Notetaker::Session;
+use App::Notetaker::Label;
 use App::Notetaker::LabelSet;
 use App::Notetaker::Utils 'timestamp';
 
