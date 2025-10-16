@@ -621,7 +621,7 @@ any  '/new' => sub( $c ) {
     my $session = get_session( $c );
 
     # We'll create a file here, no matter whether there is content or not
-    my $note;
+    my ($note, $changed);
     my $fn;
     if( my $title = $c->param('title')) {
         # Save note to new title
@@ -633,6 +633,7 @@ any  '/new' => sub( $c ) {
 
         $note //= find_or_create_note( $session, $fn );
         $note->frontmatter->{title} = $title;
+        $changed = 1;
 
     } else {
         $fn = $session->tempnote();
@@ -655,32 +656,38 @@ any  '/new' => sub( $c ) {
                 $note->frontmatter->{$k} = $f->{$k};
             }
         }
+        $changed = 1;
     }
 
     if( my $c = $c->param('color')) {
         $note //= find_note( $session, $fn );
         $note->frontmatter->{color} = $c;
+        $changed = 1;
     }
-    if( my $c = $c->every_param('label')) {
-        if( $c->@* ) {
+    if( my $labels = $c->every_param('label')) {
+        if( $labels->@* ) {
             $note //= find_note( $session, $fn );
-            for my $l ($c->@*) {
+            for my $l ($labels->@*) {
                 $note->add_label( $l );
             }
+            $changed = 1;
         }
     }
     if( my $body = $c->param('body-markdown')) {
         $note //= find_note( $session, $fn );
         $note->body( $body );
+        $changed = 1;
     }
     if( my $image = $c->param('image')) {
         $note //= find_note( $session, $fn );
         my $image = $c->every_param('image');
         attach_image_impl( $session, $note, $image );
+        $changed = 1;
     }
     if( my $files = $c->every_param('file')) {
         $note //= find_note( $session, $fn );
         attach_files( $session, $note, $files );
+        $changed = 1;
     }
     if( my $body_html = $c->param('body-html')) {
         $note //= find_note( $session, $fn );
@@ -688,11 +695,10 @@ any  '/new' => sub( $c ) {
         $turndown->use('Text::HTML::Turndown::GFM');
         my $body = $turndown->turndown($body_html);
         $note->body( $body );
+        $changed = 1;
     }
     if( $note ) {
-        if(    ($note->body)
-            || ($note->frontmatter && $note->title)) {
-            warn "Saving note";
+        if( $changed ) {
             my $base = $c->url_for("/note/");
             save_note( $base, $session, $note, $fn );
         }
