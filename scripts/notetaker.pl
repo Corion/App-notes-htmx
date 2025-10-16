@@ -1857,7 +1857,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
         </form>
     </div>
     <a id="btn-new-note" class="btn btn-success btn-lg"
-       href="<%= url_with('/new' ) %>"
+       href="<%= url_with('/new' )->query( $filter->%* ) %>"
     ><i class="fa-solid fa-plus">+</i>
     </a>
     <button type="button"
