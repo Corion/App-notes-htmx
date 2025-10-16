@@ -564,8 +564,44 @@ function getUserSelection() {
 
 /* Called for every page/fragment loaded by HTMX */
 // Set up all listeners
-let appInitialized;
 function setupApp() {
+    // Global only-once setup
+    if ( window.matchMedia ) {
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-bs-theme', theme);
+        }
+        function updateTheme() {
+            const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            setTheme(theme);
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+            updateTheme()
+        })
+        updateTheme()
+    }
+
+    // Hide all nodes that have the 'nojs' class
+    const sheet = window.document.styleSheets[1];
+    let removeRules = [];
+    let index = 0;
+    for (let r of sheet.cssRules) {
+        if( r.selectorText === '.nojs' ) {
+            r.style.display = 'none';
+
+        } else if( r.selectorText === '.jsonly' ) {
+            // Reverse order so we can delete without shifting the array indices
+            removeRules.unshift( index );
+        }
+        index++;
+    };
+
+    for (let i of removeRules ) {
+        sheet.removeRule(i);
+    }
+    setupPage();
+}
+
+function setupPage() {
     // Setup for each page
     htmx.on("htmx:afterSettle", scrollToFragment);
 
@@ -636,43 +672,8 @@ function setupApp() {
         }
     }
 
-    if( appInitialized ) { return; };
-    appInitialized = true;
-
-    // Global only-once setup
-    if ( window.matchMedia ) {
-        function setTheme(theme) {
-            document.documentElement.setAttribute('data-bs-theme', theme);
-        }
-        function updateTheme() {
-            const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-            setTheme(theme);
-        }
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-            updateTheme()
-        })
-        updateTheme()
-    }
-
-    // Hide all nodes that have the 'nojs' class
-    const sheet = window.document.styleSheets[1];
-    let removeRules = [];
-    let index = 0;
-    for (let r of sheet.cssRules) {
-        if( r.selectorText === '.nojs' ) {
-            r.style.display = 'none';
-
-        } else if( r.selectorText === '.jsonly' ) {
-            // Reverse order so we can delete without shifting the array indices
-            removeRules.unshift( index );
-        }
-        index++;
-    };
-
-    for (let i of removeRules ) {
-        sheet.removeRule(i);
-    }
 }
-htmx.onLoad(setupApp);
-// per-page setup
-//htmx.onLoad(setupPage);
+
+htmx.onLoad((elt) => { if( elt === document.body ) setupApp() });
+htmx.on('htmx:afterSettle', (elt) => { setupPage() });
+
