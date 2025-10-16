@@ -614,6 +614,8 @@ function setupApp() {
                 [start,end] = [end,start];
             }
             a.setSelectionRange(start,end,direction);
+            a.removeAttribute('data-selection-start');
+            a.removeAttribute('data-selection-end');
         }
     };
 
