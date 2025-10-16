@@ -2228,6 +2228,7 @@ Asset: <%= $l %><br />
                    name="image" id="capture-image-image"
                    style="display: none"
                    capture="environment"
+                   multiple
             />
             <button type="submit" class="nojs">Upload</button>
         </form>
@@ -2245,6 +2246,7 @@ Asset: <%= $l %><br />
             <input id="upload-file" type="file" accept="*/*"
                    name="file" id="attach-file-file"
                    style="display: none"
+                   multiple
             />
             <button type="submit" class="nojs">Upload</button>
         </form>
