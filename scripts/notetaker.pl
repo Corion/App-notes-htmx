@@ -613,6 +613,36 @@ sub serve_attachment( $c ) {
     $c->reply->file( $session->document_directory . "/attachments/$fn" );
 }
 
+sub assign_template( $c ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
+    my $session = get_session( $c );
+    my $fn = $c->param('fn');
+    my $t = $c->param('template');
+    my $template = find_note($session, $t);
+
+    my $note = find_note( $session, $fn );
+    if( $template ) {
+        # Copy over the (relevant) attributes, or everything?!
+        $note->{body} //= $template->{body};
+        $note->labels->add(values $template->labels->as_set->%*);
+        $note->labels->remove('Template');
+
+        my $f = $template->{frontmatter};
+        for my $k (keys $f->%*) {
+            if(     $k ne 'created'
+                and $k ne 'updated'
+                and $k ne 'labels'
+                ) {
+                $note->frontmatter->{$k} = $f->{$k};
+            }
+        }
+        my $base = $c->url_for("/note/");
+        save_note( $base, $session, $note, $fn );
+    }
+    $c->redirect_to( $c->url_for("/note/$fn"));
+}
+
 get '/index.html' => \&render_index;
 get '/' => \&render_index;
 get '/documents' => \&render_filter;
@@ -708,6 +738,9 @@ any  '/new' => sub( $c ) {
 
     $c->redirect_to( $c->url_for("/note/$fn"));
 };
+
+# Yaah, this should be POST, but I'm lazy
+get '/assign-template/*fn' => \&assign_template;
 
 get  '/note/attachments/*fn' => \&serve_attachment;
 
@@ -2157,6 +2190,28 @@ Asset: <%= $l %><br />
 % }
 </div>
 
+@@ dropdown-assign-template.html.ep
+<div class="dropup">
+    <button type="button"
+        id="btn-assign-template-dropup"
+        class="btn btn-secondary dropdown-toggle dropdown-toggle-split hide-toggle"
+        data-bs-toggle="dropdown"
+        aria-expanded="false"
+        aria-haspopup="true"
+      ><span>Template</span>
+    </button>
+    <ul class="dropdown-menu">
+% for my $template ($templates->@*) {
+%     my $title = $template->title || '(untitled)';
+      <li>
+        <a class="dropdown-item"
+            href="<%= url_with( '/assign-template/'.$note->path )->query( template => $template->filename ) %>"
+        ><%= $title %></a>
+      </li>
+% }
+    </ul>
+</div>
+
 @@ note.html.ep
 <!DOCTYPE html>
 <html>
@@ -2263,6 +2318,9 @@ Asset: <%= $l %><br />
         <form action="<%= url_for('/copy/' . $note->path ) %>" method="POST"
         ><button class="btn btn-secondary" type="submit">&#xFE0E;⎘</button>
         </form>
+    </div>
+    <div id="action-template">
+%= include 'dropdown-assign-template', note => $note, templates => $templates
     </div>
     <div id="action-archive">
         <form action="<%= url_for('/archive/' . $note->path ) %>" method="POST"
