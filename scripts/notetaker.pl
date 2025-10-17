@@ -571,6 +571,8 @@ sub display_note( $c, $note ) {
     $c->stash( note_html => $html );
     $c->stash( moniker => filter_moniker( $filter ));
     $c->stash( show_filter => !!$c->param('show-filter') );
+    my @templates = get_templates($c, $session);
+    $c->stash( templates => \@templates);
 
     # Meh - we only want to set this to true if a request is coming from
     # this page during a field edit, not during generic page navigation
