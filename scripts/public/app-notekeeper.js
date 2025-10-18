@@ -453,7 +453,7 @@ function getUserContent() {
 
         // Find the user selection, if any
         let orgS,orgR;
-        if( sel = document.getSelection()) {
+        if( false && (sel = document.getSelection())) {
             const r = sel.getRangeAt(0);
             // copy selection range information so we can restore it after modifying stuff
             orgR = { startContainer: r.startContainer,
@@ -506,11 +506,16 @@ function getUserContent() {
         //      restore original selection
         if( orgR ) {
             sel.removeAllRanges();
-            const newR = document.createRange();
-            console.log(orgR);
-            newR.setStart(orgR.startContainer, orgR.startOffset);
-            newR.setEnd(orgR.endContainer, orgR.endOffset);
-            sel.addRange(newR);
+            try {
+                // If anything goes wrong here, we don't want to impede saving/editing
+                const newR = document.createRange();
+                console.log(orgR);
+                newR.setStart(orgR.startContainer, orgR.startOffset);
+                newR.setEnd(orgR.endContainer, orgR.endOffset);
+                sel.addRange(newR);
+            } catch(e) {
+                console.log(e);
+            }
         }
         return { "body-html" : innerHTML,
                  "focus-position": undefined,
