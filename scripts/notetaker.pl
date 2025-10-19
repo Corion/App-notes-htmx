@@ -2756,6 +2756,11 @@ Asset: <%= $l %><br />
 % if( $labels->labels->@* ) {
 <div class="filter-label">
 <h2>Labels</h2>
+    <label for="checkbox-no-label">
+    % my $class = $filter->{unlabeled} ? 'text-secondary-emphasis bg-secondary' : 'text-secondary bg-secondary-subtle';
+    <div class="label badge rounded-pill <%= $class %>" ><i>No label</i></div>
+    <input id="checkbox-no-label" type="checkbox" name="no-label" value="1" <%== $filter->{unlabeled} ? 'checked' : "" %> style="display:none"/>
+    </label>
 %    my %active = map { $_ => 1 } ($filter->{label} // [])->@*;
 %    for my $l ($labels->labels->@*) {
 %        my $id = "label-".for_id($l);
