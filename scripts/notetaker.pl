@@ -2047,6 +2047,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 %# Ideally, we don't want to swap out the above search element, because that leads to weird behaviour
 %# on slow connections, but such is life ...
         />
+        <a href="<%= url_with( "/" )->query({ "show-filter" => 1 }) %>">&#x1F50E;&#xFE0F;</a>
       </form>
 % }
       </div>
