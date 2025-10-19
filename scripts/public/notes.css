@@ -330,7 +330,7 @@ details[open].sidebar-details >summary:after {
     #toolbar button.toolbar-active,
     #toolbar label.toolbar-active,
     #toolbar select.toolbar-active {
-      background: #ddd;
+      background: light-dark(#d0d0d0,rgb(96,96,96));
       border-color: #aaa;
       border: 1px;
     }
@@ -338,6 +338,6 @@ details[open].sidebar-details >summary:after {
     #toolbar button:hover,
     #toolbar label:hover,
     #toolbar select:hover {
-      background: #f0f0f0;
+      background: light-dark(#f0f0f0,rgb(80,80,80));
       border-color: #bbb;
     }
