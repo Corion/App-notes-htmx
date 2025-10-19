@@ -124,14 +124,17 @@ sub fetch_filter( $c, $created_buckets ) {
         undef $lab;
     };
 
+    my $unlabeled = $c->param('no-label') ? 1 : undef;
+
     my $created = $c->every_param('created-range');
     my %bucket = map { $_->{vis} => $_ } $created_buckets->@*;
     $created = [map { $bucket{ $_ } } $created->@*];
 
     my $filter = {
-        maybe label => $lab,
-        maybe text  => $terms,
-        maybe text_as_typed  => $text,
+        maybe label         => $lab,
+        maybe unlabeled     => $unlabeled,
+        maybe text          => $terms,
+        maybe text_as_typed => $text,
         maybe color         => $col,
         maybe created       => ($created->@* ? $created : undef ),
         maybe include       => (@include ? \@include : () ),
@@ -162,6 +165,8 @@ sub filter_moniker( $filter ) {
     my ($attr, $location, $created);
     if( $filter->{label} && $filter->{label}->@* ) {
         $location = join ", ", map { "'$_'" } $filter->{label}->@*
+    } elsif( $filter->{unlabeled} ) {
+        $location = "unlabeled"
     }
     if( $filter->{color} and $filter->{color}->@* ) {
         $attr = qq{color notes};
@@ -189,6 +194,7 @@ sub filter_query( $filter ) {
         'text' => undef,
         'text_or_label' => undef,
         'include' => 'folder',
+        'unlabeled' => 'no-label',
     );
 
     my @res;
@@ -396,6 +402,10 @@ sub match_label( $labels, $note ) {
          } ($note->labels->labels)->@*
 }
 
+sub match_unlabeled( $filter, $note ) {
+    0 == ($note->labels->labels)->@*
+}
+
 # Match a label substring, case-insensitively
 sub match_label_substring( $label, $note ) {
     $label =~ s/^#//;
@@ -500,6 +510,7 @@ sub get_documents($c, $session, $filter={}) {
             && ($filter->{text_or_label} && $filter->{text_or_label}->@* ? match_text_or_label( $filter->{text_or_label}, $_ )  : 1)
             && ($filter->{color} ? match_color( $filter->{color}, $_ ) : 1)
             && ($filter->{label} && $filter->{label}->@* ? match_label( $filter->{label}, $_ ) : 1)
+            && ($filter->{unlabeled} ? match_unlabeled( $filter->{unlabeled}, $_ ) : 1)
             && ($filter->{created} ? match_range( $filter, 'created', $_, $created_buckets ) : 1)
             #&& ($filter->{updated_range} ? match_range( $filter, 'updated', $_ ) : 1)
         }
@@ -2099,7 +2110,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 % my $color = $label->color;
 % $color = (!$current_class and $color) ? sprintf 'style="background: %s;"', $color : '';
 % if( !$label->details->@* ) {
-    <a href="<%= url_with()->query({ label => $label->text, sidebar => 1 }) %>"
+    <a href="<%= url_with()->query({ "no-label" => undef, label => $label->text, sidebar => 1 }) %>"
        class="list-group-item border-end-0 d-inline-block <%= $current_class %>"
        data-bs-parent="#sidebar"
        <%== $color ? $color : '' %>
@@ -2109,7 +2120,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 %            || index( $current, $label->visual . "/" ) == 0;
 % $open = $open ? " open " : "";
     <details class="sidebar-details border-end-0 list-group-item" <%= $open %>>
-    <summary><a href="<%= url_with()->query({ label => $label->text, sidebar => 1 }) %>"
+    <summary><a href="<%= url_with()->query({ "no-label" => undef, label => $label->text, sidebar => 1 }) %>"
        class="<%= $current_class %>"
        data-bs-parent="#sidebar"
        <%== $color ? $color : '' %>
@@ -2127,10 +2138,14 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
     <div id="sidebar-nav" class="list-group border-0 rounded-0 text-sm-start"
     >
 % my $current = ($filter->{label} // [])->[0] // '';
-    <a href="<%= url_with()->query({ label => undef, sidebar => 1 }) %>"
+    <a href="<%= url_with()->query({ "no-label" => undef, label => undef, sidebar => 1 }) %>"
        class="list-group-item border-end-0 d-inline-block"
        data-bs-parent="#sidebar"
-    >All Notes</a>
+    >All notes</a>
+    <a href="<%= url_with()->query({ "no-label" => 1, label => undef, sidebar => 1 }) %>"
+       class="list-group-item border-end-0 d-inline-block"
+       data-bs-parent="#sidebar"
+    ><i>No label</i></a>
 % for my $key (sort { fc($label_hierarchy->{$a}->text) cmp fc($label_hierarchy->{$b}->text) } keys $label_hierarchy->%*) {
 %= include( "label-hierarchy-level", label => $label_hierarchy->{ $key }, current => $current );
 % }
