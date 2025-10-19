@@ -2739,7 +2739,7 @@ Asset: <%= $l %><br />
 </div>
 %}
 % if( $labels->labels->@* ) {
-<div>
+<div class="filter-label">
 <h2>Labels</h2>
 %    my %active = map { $_ => 1 } ($filter->{label} // [])->@*;
 %    for my $l ($labels->labels->@*) {
@@ -2752,7 +2752,7 @@ Asset: <%= $l %><br />
 %}
 <!-- things -->
 % if( $all_colors->@* ) {
-<div>
+<div class="filter-color">
 <h2>Colors</h2>
 %    my %active = map { $_ => 1 } ($filter->{color} // [])->@*;
 %    for my $l ($all_colors->@*) {
