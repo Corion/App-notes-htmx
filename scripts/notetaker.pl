@@ -644,6 +644,7 @@ sub assign_template( $c ) {
             if(     $k ne 'created'
                 and $k ne 'updated'
                 and $k ne 'labels'
+                and $k ne 'title'
                 ) {
                 $note->frontmatter->{$k} = $f->{$k};
             }
