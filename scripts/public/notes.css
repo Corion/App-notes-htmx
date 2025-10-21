@@ -287,6 +287,13 @@ details[open].sidebar-details >summary:after {
     cursor: pointer;
 }
 
+/* Bootstrap has a different idea from how <blockquote> should look than we have */
+blockquote {
+  border-left: 3px solid #ccc;
+  margin: 1.5em 10px;
+  padding: 0.5em 10px;
+}
+
 @media print {
     .noprint {
         display: none !important;
