@@ -1,138 +1,22 @@
 #!perl
-
-package Link::Preview::SiteInfo 0.01;
 use 5.020;
-use Moo 2;
-use experimental 'signatures';
-
-has 'moniker' => (
-    is => 'ro',
-    required => 1,
-);
-
-has 'prerequisites' => (
-    is => 'ro',
-    required => 1,
-);
-
-sub applies( $self, $info ) {
-    return undef
-}
-
-sub generate( $self, $info ) {
-    return undef
-}
-
-package Link::Preview::SiteInfo::YouTube;
-use 5.020;
-use Moo 2;
-use experimental 'signatures';
-extends 'Link::Preview::SiteInfo';
-
-use constant moniker => 'YouTube';
-use constant prerequisites => { url => 1 };
-
-around 'applies' => sub( $orig, $class, $info ) {
-    my $url = $info->{url} // '';
-       $url =~ m!\?v=([^;&]+)!
-    || $url =~ m!/embed/([^?]+)!
-    ;
-};
-
-around 'generate' => sub( $orig, $class, $info ) {
-    my $res = {};
-    my $url = ($info->{url} // '');
-    my $id;
-    if( $url =~ m!\=v=([^;&]+)! ) {
-        $id = $1;
-    } elsif( $url =~ m!/embed/([^/?]+)! ) {
-        $id = $1;
-    } else {
-        return
-    }
-
-    # XXX also handle youtu.be , youtube-nocookie
-    # XXX also fill "title", "type"
-
-    return Link::Preview->new(
-        markdown_template => <<'MARKDOWN',
-[![Linktext]({image})]({url})
-MARKDOWN
-        assets => { image => ['https://img.youtube.com/vi/{id}/0.jpg', 'thumbnail_{id}.jpg'] },
-        values => { id => $id, url => $url,
-            type => 'video',
-        },
-    );
-};
-
-package Link::Preview::SiteInfo::OpenGraph;
-use 5.020;
-use experimental 'signatures';
-use Moo 2;
-extends 'Link::Preview::SiteInfo';
-use Data::OpenGraph;
-
-use constant moniker => 'OpenGraph';
-use constant prerequisites => { url => 1, html => 1 }; # we want the URL so we can resolve relative attributes
-
-around 'applies' => sub( $orig, $class, $info ) {
-    my $og = Data::OpenGraph->parse_string( $info->{html} );
-    return $og->property("type");
-};
-
-around 'generate' => sub( $orig, $class, $info ) {
-    my $og = Data::OpenGraph->parse_string( $info->{html} );
-
-    if( $og->property("type")) {
-        # We found some (valid) OpenGraph entity
-
-        my $url = $og->property( "url" );
-        my $title = $og->property( "title" );
-        my $type  = $og->property( "type" );
-        my $image  = $og->property( "image" );
-        my $description  = $og->property( "description" );
-
-        # We need HTML escaping for everything here!
-        return Link::Preview->new(
-            assets => { image => $image },
-            values => {
-                title => $title,
-                description => $description,
-                url => $url,
-                type => $type,
-            },
-            markdown_template => <<'MARKDOWN',
-    <div class="opengraph">
-        <a href="{url}">
-            <div class="title">{title}</div>
-            <img src="{image}" />
-            <div class="description">{description}</div>
-        </a>
-    </div>
-MARKDOWN
-        );
-
-    } else {
-        return;
-    }
-};
-
-package main;
-use 5.020;
-use lib 'lib';
 use Mojolicious::Lite -signatures;
+use Mojo::UserAgent::Paranoid;
 use Mojo::UserAgent;
-use Link::Preview;
+#use Link::Preview;
 use Carp 'croak';
 use Future;
 use Crypt::Digest::SHA256 'sha256_b64u';
+
+# Maybe move that to Module::Pluggable instead
+use Link::Preview::SiteInfo::YouTube;
+use Link::Preview::SiteInfo::OpenGraph;
 
 no experimental 'signatures';
 sub first_defined( &;@ ) {
     my $cb = shift;
     map { my @res = $cb->(); scalar @res && defined $res[0] ? @res : () } @_
 }
-use experimental 'signatures';
 
 #my $ua = LWP::UserAgent::Paranoid->new();
 #$ua->protocols_allowed(["http", "https"]);
@@ -226,8 +110,7 @@ sub fetch_preview( $ua, $url, $html=undef ) {
 sub update_page( $c ) {
     my %info;
 
-    # XXX this should be Mojo::UserAgent::Paranoid, which we still have to write
-    my $ua = $c->ua; # Mojo::UserAgent->new();
+    my $ua = $c->ua;
     $ua->max_redirects(10);
 
     $info{ links } = [ grep { /\S/ } map { s/\s*\z//; $_ } split /\ *\r?\n/, ($c->req->param('links') // 'https://example.com') ];
@@ -272,6 +155,7 @@ sub render_preview_data( $c ) {
     }
 }
 
+app->ua( Mojo::UserAgent::Paranoid->new());
 
 get '/' => \&render_index;
 post '/' => \&render_index;
