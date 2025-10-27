@@ -1,124 +1,162 @@
 #!perl
 use 5.020;
-use Mojolicious::Lite -signatures;
+use Mojolicious::Lite;
 use Mojo::UserAgent::Paranoid;
 use Mojo::UserAgent;
-#use Link::Preview;
 use Carp 'croak';
-use Future;
-use Crypt::Digest::SHA256 'sha256_b64u';
+use experimental 'signatures';
+use LWP::UserAgent::Paranoid;
 
 # Maybe move that to Module::Pluggable instead
 use Link::Preview::SiteInfo::YouTube;
 use Link::Preview::SiteInfo::OpenGraph;
 
-no experimental 'signatures';
-sub first_defined( &;@ ) {
-    my $cb = shift;
-    map { my @res = $cb->(); scalar @res && defined $res[0] ? @res : () } @_
-}
-
-#my $ua = LWP::UserAgent::Paranoid->new();
-#$ua->protocols_allowed(["http", "https"]);
+my $ua = LWP::UserAgent::Paranoid->new();
+$ua->protocols_allowed(["http", "https"]);
 
 my @previewers = (qw(
     Link::Preview::SiteInfo::YouTube
     Link::Preview::SiteInfo::OpenGraph
 ));
 
-sub fetch_preview_set( $prereq_set, $exclude = {} ) {
-    my $have = join "\0", sort { $a cmp $b } grep { $prereq_set->{$_} } keys $prereq_set->%*;
-    my @res;
-    for my $p (grep { ! $exclude->{ $_ }} @previewers) {
-        my $need = join "\0", sort { $a cmp $b } keys $p->prerequisites->%*;
-        if( $need eq $have ) {
-            push @res, $p;
-        }
-    }
-    return @res
-}
+{
+    package App::Notetaker::PreviewFetcher 0.01;
+    use 5.020;
+    use experimental 'signatures';
+    use Moo 2;
+    use Mojo::UserAgent::Paranoid;
+    use Future;
+    use Crypt::Digest::SHA256 'sha256_b64u';
 
-my %pending = ();
-my %done = ();
+    with 'MooX::Role::EventEmitter';
 
-sub fetch_preview( $ua, $url, $html=undef ) {
-    if( $done{ $url }) {
-        return $done{ $url }
-    }
-    if( $pending{ $url }) {
-        return $pending{ $url }
-    }
+    # Should we maybe emit events whenever a preview is
+    # * Initialized
+    # * Has found a renderer
+    # * Is ready
+    # ?
 
-    # First, check with URL only, then (optionally) fetch HTML and check with
-    # that, if we have no candidate that works without fetching the HTML
-    my %prereqs = (
-        url => $url,
-        html => $html,
+    has 'ua' => (
+        is => 'lazy',
+        default => sub { Mojo::UserAgent::Paranoid->new() },
     );
 
-    my $launched;
+    has 'done' => (
+        is => 'lazy',
+        default => sub { {} },
+    );
 
-    my %already_checked;
-    my @most_fitting = grep {
-        $_->applies( \%prereqs ) or $already_checked{ $_ }++;
-    } fetch_preview_set( \%prereqs, \%already_checked );
+    has 'pending' => (
+        is => 'lazy',
+        default => sub { {} },
+    );
 
-    # Maybe push fetching the HTML one level upwards instead?!
-    # but that implies that the logic also has to live upwards?!
-    # What is then the result/aim of this subroutine at all?
-    if( ! @most_fitting and ! $html ) {
-        warn "Fetching <$url> for preview";
-        my $u = $url;
-        # For development, we should cache this a lot!
-        $ua->get_p( $u )->then(sub( $tx ) {
-            my $res = $tx->res;
-            warn sprintf "%s %d: <%s>", ($res->is_success ? '.' : '!'), $res->code, $tx->req->url;
-            my $html = $tx->res->body;
-            $prereqs{ html } = $html;
-
-            @most_fitting = grep {
-                $_->applies( \%prereqs );
-            } fetch_preview_set( \%prereqs, \%already_checked );
-            if( $most_fitting[0] ) {
-                $pending{ $url }->{preview} = $most_fitting[0]->generate(\%prereqs);
+    sub fetch_preview_set( $self, $prereq_set, $exclude = {} ) {
+        my $have = join "\0", sort { $a cmp $b } grep { $prereq_set->{$_} } keys $prereq_set->%*;
+        my @res;
+        for my $p (grep { ! $exclude->{ $_ }} @previewers) {
+            my $need = join "\0", sort { $a cmp $b } keys $p->prerequisites->%*;
+            if( $need eq $have ) {
+                push @res, $p;
             }
-            $done{ $url } = delete $pending{ $url };
-            $done{ $url }->{status} = 'done';
-        })
-        ->catch(sub( $err ) {
-            warn "** $u: $err";
-            $done{ $url } = delete $pending{ $url };
-            $done{ $url }->{status} = "error: $err";
-        });
+        }
+        return @res
+    }
 
-        $launched = $pending{ $url } = {
+    sub fetch_preview( $self, $ua, $url, $html=undef ) {
+        my $done = $self->done;
+        my $pending = $self->pending;
+        if( $done->{ $url }) {
+            return $done->{ $url }
+        }
+        if( $pending->{ $url }) {
+            return $pending->{ $url }
+        }
+
+        # First, check with URL only, then (optionally) fetch HTML and check with
+        # that, if we have no candidate that works without fetching the HTML
+        my %prereqs = (
             url => $url,
-            status => 'pending',
-            preview => undef,
-            id => sha256_b64u( $url ),
+            html => $html,
+        );
+
+        my $launched;
+
+        my %already_checked;
+        my @most_fitting = grep {
+            $_->applies( \%prereqs ) or $already_checked{ $_ }++;
+        } $self->fetch_preview_set( \%prereqs, \%already_checked );
+
+        # Maybe push fetching the HTML one level upwards instead?!
+        # but that implies that the logic also has to live upwards?!
+        # What is then the result/aim of this subroutine at all?
+        if( ! @most_fitting and ! $html ) {
+            #warn "Fetching <$url> for preview";
+            my $u = $url;
+            # For development, we should cache this a lot!
+            $ua->get_p( $u )->then(sub( $tx ) {
+                my $res = $tx->res;
+                #warn sprintf "%s %d: <%s>", ($res->is_success ? '.' : '!'), $res->code, $tx->req->url;
+                my $html = $tx->res->body;
+                $prereqs{ html } = $html;
+
+                @most_fitting = grep {
+                    $_->applies( \%prereqs );
+                } $self->fetch_preview_set( \%prereqs, \%already_checked );
+                if( $most_fitting[0] ) {
+                    $pending->{ $url }->{preview} = $most_fitting[0]->generate(\%prereqs);
+                }
+                $done->{ $url } = delete $pending->{ $url };
+                $done->{ $url }->{status} = 'done';
+            })
+            ->catch(sub( $err ) {
+                warn "** $u: $err";
+                $done->{ $url } = delete $pending->{ $url };
+                $done->{ $url }->{status} = "error: $err";
+            });
+
+            $launched = $pending->{ $url } = {
+                url => $url,
+                status => 'pending',
+                preview => undef,
+                id => sha256_b64u( $url ),
+            }
+        }
+        if( $launched ) {
+            return $launched
+        } elsif( @most_fitting ) {
+            return { preview => $most_fitting[0]->generate( \%prereqs ) };
+        } else {
+            return undef
         }
     }
-    if( $launched ) {
-        return $launched
-    } elsif( @most_fitting ) {
-        return { preview => $most_fitting[0]->generate( \%prereqs ) };
-    } else {
-        return undef
+
+
+    # Adds a list of links to the previews to be fetched
+    sub fetch_previews( $self, $c, $links, $ua = $c->ua ) {
+        $ua->max_redirects(10);
+
+        my @res = map { +{ url => $_, $self->fetch_preview( $ua, $_ )->%* } } $links->@*;
+
+        return \@res
     }
 }
 
+my $fetcher;
 sub update_page( $c ) {
     my %info;
 
-    my $ua = $c->ua;
-    $ua->max_redirects(10);
+    $fetcher //= App::Notetaker::PreviewFetcher->new(
+        ua => $ua,
+    );
 
     $info{ links } = [ grep { /\S/ } map { s/\s*\z//; $_ } split /\ *\r?\n/, ($c->req->param('links') // 'https://example.com') ];
-    $info{ "link_preview" } = [map { +{ url => $_, fetch_preview( $ua, $_ )->%* } } $info{ links }->@*];
+    $info{ "link_preview" } = $fetcher->fetch_previews( $c, $info{ links } );
 
     # Also, async-fetch the page and retry with the page content if needed
-    for (sort keys %pending) {
-        warn sprintf "% 10s - %s", $pending{$_}->{status}, $_;
+    my $pending = $fetcher->pending;
+    for (sort keys $pending->%*) {
+        warn sprintf "% 10s - %s", $pending->{$_}->{status}, $_;
     }
 
     for my $k (sort keys %info) {
@@ -133,7 +171,7 @@ sub render_index($c) {
 
 sub render_preview( $c ) {
     my $id  = $c->param('id');
-    (my $req) = grep { $id eq $_->{id} } values %pending, values %done;
+    (my $req) = grep { $id eq $_->{id} } values $fetcher->pending->%*, values $fetcher->done->%*;
     if( $req) {
         $c->stash( info => $req );
         return $c->render('link-preview-card');
@@ -145,7 +183,7 @@ sub render_preview( $c ) {
 
 sub render_preview_data( $c ) {
     my $id  = $c->param('id') // 'no-such-id';
-    (my $req) = grep { $id eq $_->{id} } values %pending, values %done;
+    (my $req) = grep { $id eq $_->{id} } values $fetcher->pending->%*, values $fetcher->done->%*;
     if( $req) {
         $c->stash( info => $req );
         return $c->render('link-preview-data');
