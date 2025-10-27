@@ -2248,7 +2248,7 @@ Asset: <%= $l %><br />
 >
 %=include('navbar', type => 'note', show_filter => $show_filter );
 
-<div id="note-container" class="container-flex">
+<main id="note-container" class="container-flex">
 % my ($_bgcolor, $_bgcolor_dark) = light_dark($note->frontmatter->{color}  // '#cccccc');
 % my $textcolor = sprintf q{ color: light-dark(%s, %s)}, contrast_bw( $_bgcolor ), contrast_bw( $_bgcolor_dark );
 % my $bgcolor   = sprintf q{ background-color: light-dark( %s, %s )}, $_bgcolor, $_bgcolor_dark ;
@@ -2290,7 +2290,7 @@ Asset: <%= $l %><br />
 </form>
     <div id="edited-date" class="edited-date"><%= $note->frontmatter->{updated} %></div>
 </div>
-</div>
+</main>
 <div id="actionbar" class="navbar bg-body-tertiary mt-auto fixed-bottom noprint">
     <div id="action-attach-image">
         <form action="<%= url_for( "/upload-image/" . $note->path ) %>" method="POST"
@@ -2404,7 +2404,7 @@ Asset: <%= $l %><br />
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
 >
-  <div class="container" id="container" hx-history-elt>
+  <main class="container" id="container" hx-history-elt>
       <h1>Log into notekeeper</h1>
       <form action="<%= url_for( '/login' )%>" method="POST">
         <div class="form mb-3">
@@ -2417,7 +2417,7 @@ Asset: <%= $l %><br />
         </div>
         <button class="btn btn-primary btn-lg" type="submit">Log in</button>
       </form>
-  </div>
+  </main>
 </body>
 </html>
 
