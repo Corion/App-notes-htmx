@@ -14,11 +14,6 @@ use Link::Preview::SiteInfo::OpenGraph;
 my $ua = LWP::UserAgent::Paranoid->new();
 $ua->protocols_allowed(["http", "https"]);
 
-my @previewers = (qw(
-    Link::Preview::SiteInfo::YouTube
-    Link::Preview::SiteInfo::OpenGraph
-));
-
 {
     package App::Notetaker::PreviewFetcher 0.01;
     use 5.020;
@@ -51,10 +46,15 @@ my @previewers = (qw(
         default => sub { {} },
     );
 
+    has 'previewers' => (
+        is => 'lazy',
+        default => sub { [] },
+    );
+
     sub fetch_preview_set( $self, $prereq_set, $exclude = {} ) {
         my $have = join "\0", sort { $a cmp $b } grep { $prereq_set->{$_} } keys $prereq_set->%*;
         my @res;
-        for my $p (grep { ! $exclude->{ $_ }} @previewers) {
+        for my $p (grep { ! $exclude->{ $_ }} $self->previewers->@*) {
             my $need = join "\0", sort { $a cmp $b } keys $p->prerequisites->%*;
             if( $need eq $have ) {
                 push @res, $p;
@@ -142,12 +142,18 @@ my @previewers = (qw(
     }
 }
 
+my @previewers = (qw(
+    Link::Preview::SiteInfo::YouTube
+    Link::Preview::SiteInfo::OpenGraph
+));
+
 my $fetcher;
 sub update_page( $c ) {
     my %info;
 
     $fetcher //= App::Notetaker::PreviewFetcher->new(
         ua => $ua,
+        previewers => \@previewers
     );
 
     $info{ links } = [ grep { /\S/ } map { s/\s*\z//; $_ } split /\ *\r?\n/, ($c->req->param('links') // 'https://example.com') ];
