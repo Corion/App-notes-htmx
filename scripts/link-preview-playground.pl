@@ -91,12 +91,10 @@ $ua->protocols_allowed(["http", "https"]);
         # but that implies that the logic also has to live upwards?!
         # What is then the result/aim of this subroutine at all?
         if( ! @most_fitting and ! $html ) {
-            #warn "Fetching <$url> for preview";
             my $u = $url;
             # For development, we should cache this a lot!
             $ua->get_p( $u )->then(sub( $tx ) {
                 my $res = $tx->res;
-                #warn sprintf "%s %d: <%s>", ($res->is_success ? '.' : '!'), $res->code, $tx->req->url;
                 my $html = $tx->res->body;
                 $prereqs{ html } = $html;
 
@@ -108,11 +106,13 @@ $ua->protocols_allowed(["http", "https"]);
                 }
                 $done->{ $url } = delete $pending->{ $url };
                 $done->{ $url }->{status} = 'done';
+                $self->emit(done => $done->{$url});
             })
             ->catch(sub( $err ) {
-                warn "** $u: $err";
+                #warn "** $u: $err";
                 $done->{ $url } = delete $pending->{ $url };
                 $done->{ $url }->{status} = "error: $err";
+                $self->emit(error => $url, $err);
             });
 
             $launched = $pending->{ $url } = {
@@ -120,12 +120,15 @@ $ua->protocols_allowed(["http", "https"]);
                 status => 'pending',
                 preview => undef,
                 id => sha256_b64u( $url ),
-            }
+            };
+            $self->emit(pending => $url);
         }
         if( $launched ) {
             return $launched
         } elsif( @most_fitting ) {
-            return { preview => $most_fitting[0]->generate( \%prereqs ) };
+            my $res = { preview => $most_fitting[0]->generate( \%prereqs ), status => 'done' };
+            $self->emit( done => $res );
+            return $res;
         } else {
             return undef
         }
