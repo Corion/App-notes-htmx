@@ -23,6 +23,7 @@ use App::Notetaker::Session;
 use App::Notetaker::Label;
 use App::Notetaker::LabelSet;
 use App::Notetaker::Utils 'timestamp';
+use App::Notetaker::PreviewFetcher;
 
 use Markdown::Perl;
 use Text::HTML::Turndown;
@@ -772,15 +773,46 @@ get '/note/*fn' => sub($c) {
     }
 };
 
-sub update_links( $base, $session, $note ) {
-    my %known_links = map { $_->{url} => $_ } $note->links->@*;
+my @previewers = (qw(
+    Link::Preview::SiteInfo::YouTube
+    Link::Preview::SiteInfo::OpenGraph
+    Link::Preview::SiteInfo::HTML
+));
 
-    my %seen;
-    $note->links->@* = map {
-        $seen{ $_ }++
-        ? ()
-        : $known_links{ $_ } // +{ url => $_, status => 'pending' }
-    } (as_html($base, $note, strip_links => 0 ) =~ m!<a[^>]+href="([^"]+)"!g);
+require Link::Preview::SiteInfo::YouTube;
+require Link::Preview::SiteInfo::OpenGraph;
+require Link::Preview::SiteInfo::HTML;
+
+
+sub setup_fetcher {
+    my $fetcher //= App::Notetaker::PreviewFetcher->new(
+        previewers => \@previewers,
+    );
+    #$fetcher->on('pending' => sub($fetcher,$item) {
+    #    use Data::Dumper;
+    #    warn "pending:".Dumper $item;
+    #});
+    #$fetcher->on('error' => sub($fetcher,$item,$error) {
+    #    use Data::Dumper;
+    #    warn "error: $error:" . Dumper $item;
+    #});
+    #$fetcher->on('done' => sub($fetcher,$item) {
+    #    use Data::Dumper;
+    #    warn "done.".Dumper $item;
+    #});
+    return $fetcher;
+}
+our $fetcher = setup_fetcher();
+
+sub update_links( $base, $session, $note ) {
+    my @current_links = as_html($base, $note, strip_links => 0 ) =~ m!<a[^>]+href="([^"]+)"!g;
+    my $previews = $fetcher->fetch_previews( \@current_links );
+
+    $note->links->@* = sort { $a->{url} cmp $b->{url} } ($previews->@*);
+    for my $l ($note->links->@*) {
+        $l->{preview} = $l->{preview}->markdown
+            if ref $l->{preview};
+    }
 }
 
 sub save_note( $base, $session, $note, $fn ) {
@@ -812,7 +844,7 @@ sub save_note( $base, $session, $note, $fn ) {
         $note->frontmatter->{"content-edited"} = timestamp(time());
 
     }
-
+use Data::Dumper; warn Dumper $note->frontmatter;
     $note->save_to( $target );
 }
 
@@ -1478,6 +1510,9 @@ sub link_preview( $c, $inline ) {
 
     $c->stash( note => $note );
 
+    my $base = $c->url_for("/note/");
+    update_links( $base, $session, $note );
+
     if( $inline ) {
         $c->render('link-preview');
 
@@ -1652,6 +1687,7 @@ if ( my $path = $ENV{MOJO_REVERSE_PROXY} ) {
 
     # Set the path for our cookie to (only) our app
     $path =~ s!/$!!;
+    warn "Cookie path is [$path]";
     app->sessions->cookie_path( $path );
 
     my @path_parts = grep /\S/, split m{/}, $path_uri->path;
@@ -2191,7 +2227,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 
 @@link-preview.html.ep
 % my @links = $note->links->@*;
-% if( grep { ($_->{status} //'' ) ne 'done' } @links ) { # we still want to poll
+% if( my @pending = grep { ($_->{status} //'' ) ne 'done' } @links ) { # we still want to poll
 <div id="link-preview" hx-get="/link-preview/<%= $note->path %>"
     hx-trigger="load delay:1s"
     hx-swap="outerHTML">
@@ -2200,7 +2236,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 % }
 % for my $l (@links) {
     % if( ($l->{status} //'') eq 'done' ) {
-<%== $l->{html} // '' %><br />
+<%== $l->{preview} // '' %><br />
     % } else {
 <%= $l->{url} %><br />
     % }

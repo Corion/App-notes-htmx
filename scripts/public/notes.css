@@ -294,6 +294,11 @@ blockquote {
   padding: 0.5em 10px;
 }
 
+#link-preview img {
+    max-width: 160px;
+    max-height: 160px;
+}
+
 @media print {
     .noprint {
         display: none !important;
