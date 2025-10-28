@@ -51,3 +51,10 @@ MARKDOWN
 };
 
 1;
+
+
+=head1 SEE ALSO
+
+L<https://ogp.me/>
+
+=cut
