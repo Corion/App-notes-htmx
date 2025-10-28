@@ -775,8 +775,11 @@ get '/note/*fn' => sub($c) {
 sub update_links( $base, $session, $note ) {
     my %known_links = map { $_->{url} => $_ } $note->links->@*;
 
+    my %seen;
     $note->links->@* = map {
-        $known_links{ $_ } // +{ url => $_, status => 'pending' }
+        $seen{ $_ }++
+        ? ()
+        : $known_links{ $_ } // +{ url => $_, status => 'pending' }
     } (as_html($base, $note, strip_links => 0 ) =~ m!<a[^>]+href="([^"]+)"!g);
 }
 
