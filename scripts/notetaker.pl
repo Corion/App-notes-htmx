@@ -2236,9 +2236,12 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 % }
 % for my $l (@links) {
     % if( ($l->{status} //'') eq 'done' ) {
-<%== $l->{preview} // '' %><br />
+<%== $l->{preview} // '' %>
     % } else {
-<%= $l->{url} %><br />
+        <div class="link-preview">
+        <!-- This should be a 'domain'-style link-->
+<%= $l->{url} %>
+        </div>
     % }
 % }
 % for my $l ($note->assets->{files}->@*) {
