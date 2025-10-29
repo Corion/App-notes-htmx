@@ -101,3 +101,11 @@ sub fetched( $self, $asset, $target ) {
 }
 
 1;
+
+=head1 SEE ALSO
+
+We should support different types of preview cards
+
+L<https://developer.x.com/en/docs/x-for-websites/cards/overview/abouts-cards>
+
+=cut

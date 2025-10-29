@@ -49,6 +49,8 @@ MARKDOWN
 
 =head1 SEE ALSO
 
-L<https://ogp.me/>
+L<https://andrejgajdos.com/how-to-create-a-link-preview/>
+
+L<https://medium.com/slack-developer-blog/everything-you-ever-wanted-to-know-about-unfurling-but-were-afraid-to-ask-or-how-to-make-your-e64b4bb9254>
 
 =cut
