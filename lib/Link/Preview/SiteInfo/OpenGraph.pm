@@ -19,7 +19,9 @@ around 'generate' => sub( $orig, $class, $info ) {
     if( $og->property("type")) {
         # We found some (valid) OpenGraph entity
 
-        my $url = $og->property( "url" );
+        my $url = $og->property( "url" )
+                  // $info->{url};
+        my $domain = Mojo::URL->new($url)->host;
         my $title = $og->property( "title" );
         my $type  = $og->property( "type" );
         my $image  = $og->property( "image" );
@@ -32,15 +34,15 @@ around 'generate' => sub( $orig, $class, $info ) {
                 title => $title,
                 description => $description,
                 url => $url,
+                domain => $domain,
                 type => $type,
             },
             markdown_template => <<'MARKDOWN',
-    <div class="opengraph">
-        <a href="{url}">
-            <div class="title">{title}</div>
-            <img src="{image}" />
-            <div class="description">{description}</div>
-        </a>
+    <div class="link-preview link-preview-opengraph">
+        <div class="title"><a href="{url}">{title}</a></div>
+        <a class="image" href="{url}"><img src="{image}" /></a>
+        <div class="description">{description}</div>
+        <div class="domain"><a href="{url}">{domain}</a></div>
     </div>
 MARKDOWN
         );
