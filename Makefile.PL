@@ -65,7 +65,6 @@ my %module = (
         'Mojolicious::Plugin::HTMX' => 0,
         'Mojolicious::Plugin::Authentication' => 0,
         'Mojolicious::Static::Role::Compressed' => 0,
-        'MooX::Role::EventEmitter' => 0,
         #'Mojolicious::Plugin::Gzip' => 0,
         'Net::DNS::Native' => 0, # for native/async name resolution
         'Net::DNS::Paranoid' => 0, # for our link preview fetcher
@@ -86,7 +85,10 @@ my %module = (
         'Crypt::Passphrase::Argon2' => 0,
         'Crypt::URandom' => 0,
 
+        # Link preview fetcher
         'Crypt::Digest::SHA256' => 0, # for generating URL ids
+        'MooX::Role::EventEmitter' => 0,
+        'Data::OpenGraph' => 0,
 
         'Archive::Zip'              => 0,
     },
