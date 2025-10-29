@@ -85,6 +85,8 @@ my %module = (
         'Crypt::Passphrase::Argon2' => 0,
         'Crypt::URandom' => 0,
 
+        'Crypt::Digest::SHA256' => 0, # for generating URL ids
+
         'Archive::Zip'              => 0,
     },
     TEST_REQUIRES => {
