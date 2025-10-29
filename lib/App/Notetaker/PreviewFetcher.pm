@@ -3,7 +3,6 @@ use 5.020;
 use experimental 'signatures';
 use Moo 2;
 use Mojo::UserAgent::Paranoid;
-use Future;
 use Crypt::Digest::SHA256 'sha256_b64u';
 
 with 'MooX::Role::EventEmitter';
