@@ -12,8 +12,11 @@ use POSIX 'strftime';
 use PerlX::Maybe;
 use charnames ':full';
 use YAML::PP::LibYAML 'LoadFile', 'DumpFile';
-use Text::ParseWords 'shellwords';
 use List::Util 'first', 'reduce';
+
+# For search
+use Text::ParseWords 'shellwords';
+use Text::Unidecode 'unidecode';
 
 use Crypt::Passphrase;
 use Crypt::Passphrase::Argon2;
@@ -370,8 +373,10 @@ JS
 }
 
 sub match_text( $filter, $note ) {
-       ( $note->body // '' ) =~ /\Q$filter\E/i
-    || ( $note->title // '' ) =~ /\Q$filter\E/i
+                ( $note->body // '' ) =~ /\Q$filter\E/i
+    || unidecode( $note->body // '' ) =~ /\Q$filter\E/i
+    ||          ( $note->title // '' ) =~ /\Q$filter\E/i
+    || unidecode( $note->title // '' ) =~ /\Q$filter\E/i
 }
 
 # Does an AND match

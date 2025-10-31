@@ -70,6 +70,10 @@ my %module = (
         'Net::DNS::Paranoid' => 0, # for our link preview fetcher
         'Text::CleanFragment' => 0,
 
+        # For searching the text
+        'Text::ParseWords' => 0,
+        'Text::Unidecode'  => 0,
+
         # Convert from and to HTML
         'Markdown::Perl'       => 0,
         'Text::HTML::Turndown'    => '0.09',
