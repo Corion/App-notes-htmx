@@ -79,7 +79,6 @@ my %module = (
         'Text::HTML::Turndown'    => '0.09',
         'Text::FrontMatter::YAML' => '0.07',
         'Date::Period::Human' => 0,
-        'Unicode::CaseFold' => 0,
 
         'Moo'                       => 2, # for some hashes-as-objects
 
