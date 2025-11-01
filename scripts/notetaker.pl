@@ -2233,7 +2233,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 @@link-preview.html.ep
 % my @links = $note->links->@*;
 % if( my @pending = grep { ($_->{status} //'' ) ne 'done' } @links ) { # we still want to poll
-<div id="link-preview" hx-get="/link-preview/<%= $note->path %>"
+<div id="link-preview" hx-get="<%= url_for( "/link-preview/" ) . $note->path %>"
     hx-trigger="load delay:1s"
     hx-swap="outerHTML">
 % } else {
