@@ -47,7 +47,7 @@ around 'generate' => sub( $orig, $class, $info ) {
         </a>
     </div>
 MARKDOWN
-        assets => { image => ['https://img.youtube-nocookie.com/vi/{id}/0.jpg', 'thumbnail_{id}.jpg'] },
+        assets => { image => ['https://img.youtube.com/vi/{id}/0.jpg', 'thumbnail_{id}.jpg'] },
         values => {
             id => $id,
             url => $url,
