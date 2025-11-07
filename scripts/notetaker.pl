@@ -1717,6 +1717,7 @@ if ( my $path = $ENV{MOJO_REVERSE_PROXY} ) {
         } else {
             #$url->host($path_uri->host);
             $base->host($path_uri->host);
+            $base->port($path_uri->port);
         }
 
         warn "Base is     <$base>";
