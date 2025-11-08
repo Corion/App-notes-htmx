@@ -1696,7 +1696,11 @@ if ( my $path = $ENV{MOJO_REVERSE_PROXY} ) {
     my $path_uri = Mojo::URL->new($path);
 
     # Set the path for our cookie to (only) our app
-    $path =~ s!/$!!;
+    # Make it end with a slash, so that the cookie is only sent below our
+    # path (despite what https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie
+    # suggests
+    $path .= "/"
+       unless $path =~ m!/\z!;
     warn "Cookie path is [$path]";
     app->sessions->cookie_path( $path );
 
