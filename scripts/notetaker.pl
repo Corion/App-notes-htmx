@@ -1686,6 +1686,10 @@ app->hook(
     },
 );
 
+# Set our session cookie name to something app-specific, so we can host
+# multiple Mojolicious apps without their cookies interfering
+app->sessions->cookie_name('notekeeper-session');
+
 # If we are behind a reverse proxy, prepend our path
 if ( my $path = $ENV{MOJO_REVERSE_PROXY} ) {
     my $path_uri = Mojo::URL->new($path);
