@@ -76,6 +76,20 @@ nav ul li {
     }
 }
 
+.expanded-content {
+/*
+    @supports (-webkit-line-clamp: 10) {
+      overflow: hidden;    /* XXX need reset */
+      text-overflow: auto; /* XXX need reset */
+      white-space: initial;
+      display: -webkit-box;
+      -webkit-line-clamp: initial;
+      -webkit-box-orient: vertical;
+    }
+*/
+    -webkit-line-clamp: initial;
+}
+
 /* Make links within a note directly clickable */
 .content a {
     position: relative;
@@ -204,6 +218,19 @@ a.pop-out {
   width: 16px;
   height: 16px;
   text-decoration: inherit;
+}
+
+.note-bottom-ui {
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+    width: 100%;
+    z-index: 2;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    padding-left: 16px;
+    padding-top: 4px;
 }
 
 .label:not(:hover) .delete-label {

@@ -679,6 +679,12 @@ function setupPage() {
 
 }
 
+function toggleEnlarge(id) {
+    const el = document.getElementById(id);
+    const content = htmx.find(el, '.content');
+    htmx.toggleClass(content, 'expanded-content');
+}
+
 htmx.onLoad((elt) => { if( elt === document.body ) setupApp() });
 htmx.on('htmx:afterSettle', (elt) => { setupPage() });
 
