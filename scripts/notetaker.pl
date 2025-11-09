@@ -2016,7 +2016,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 % my $id = for_id( clean_fragment($note->path) =~ s/\.markdown$//r);
 <div class="grid-item note position-relative"<%== $style %>
        id="note-<%= $id %>">
-    <div class="note-ui">
+    <div class="note-top-ui">
     <a href="<%= url_for( "/note/" . $note->path ) %>" class="title">
     <div class="title-text"><%= $note->title %></div>
     </a>

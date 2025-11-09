@@ -142,7 +142,7 @@ a.editable {
     border-radius: 50%;
 }
 
-.note-ui {
+.note-top-ui {
     position: absolute;
     top: 0px;
     left: 0px;
@@ -155,7 +155,7 @@ a.editable {
     padding-top: 4px;
 }
 
-.note-ui a.title {
+.note-top-ui a.title {
     font-size: 12pt;
     font-weight: bold;
     position: static;
