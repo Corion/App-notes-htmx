@@ -2035,7 +2035,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
     </a>
 %=include 'display-labels', note => $note, oob => undef
     <div class="note-bottom-ui">
-      <div onclick="javascript:toggleEnlarge('note-<%= $id %>')">&#x2921;</div>
+      <div class="ui-enlarge-note" onclick="javascript:toggleEnlarge('note-<%= $id %>')">&#x2921;</div>
     </div>
 </div>
 %         }

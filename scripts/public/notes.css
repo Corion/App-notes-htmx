@@ -233,6 +233,10 @@ a.pop-out {
     padding-top: 4px;
 }
 
+.ui-enlarge-note {
+    cursor: nwse-resize
+}
+
 .label:not(:hover) .delete-label {
     visibility: hidden;
 }
