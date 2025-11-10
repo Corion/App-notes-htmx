@@ -1701,8 +1701,8 @@ if ( my $path = $ENV{MOJO_REVERSE_PROXY} ) {
     # suggests
     $path .= "/"
        unless $path =~ m!/\z!;
-    warn "Cookie path is [$path]";
-    app->sessions->cookie_path( $path );
+    warn sprintf "Cookie path is [%s]", $path_uri->path;
+    app->sessions->cookie_path( $path_uri->path );
 
     my @path_parts = grep /\S/, split m{/}, $path_uri->path;
     app->hook( before_dispatch => sub( $c ) {
