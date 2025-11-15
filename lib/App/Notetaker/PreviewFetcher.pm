@@ -4,6 +4,7 @@ use experimental 'signatures';
 use Moo 2;
 use Mojo::UserAgent::Paranoid;
 use Crypt::Digest::SHA256 'sha256_b64u';
+use Encode 'decode';
 
 with 'MooX::Role::EventEmitter';
 
@@ -99,7 +100,11 @@ sub fetch_preview( $self, $ua, $url, $html=undef ) {
         # For development, we should cache this a lot!
         $ua->get_p( $u )->then(sub( $tx ) {
             my $res = $tx->res;
-            my $html = $tx->res->body;
+
+            # Properly decode the content
+            my $charset = $res->content->charset || $res->default_charset;
+            warn "Charset: $charset";
+            my $html = $charset ? decode($charset, $tx->res->body) // $tx->res->body : $tx->res->body;
             $prereqs{ html } = $html;
 
             @most_fitting = grep {
