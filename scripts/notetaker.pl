@@ -849,7 +849,6 @@ sub save_note( $base, $session, $note, $fn ) {
         $note->frontmatter->{"content-edited"} = timestamp(time());
 
     }
-use Data::Dumper; warn Dumper $note->frontmatter;
     $note->save_to( $target );
 }
 
