@@ -41,8 +41,9 @@ around 'BUILDARGS' => sub( $orig, $class, %args ) {
 };
 
 sub asset_filename( $class, $url ) {
-    $url =~ m!.*/([^/?\0]+)(?:\z|\?)!
-        and return $1
+        $url
+    and ($url =~ m!.*/([^/?\0]+)(?:\z|\?)!)
+    and return $1
 }
 
 # Might need one more layer of ->interpolate() ?!
@@ -74,7 +75,9 @@ sub value( $self, $key, $values = $self->values, $assets = $self->assets ) {
 
 sub interpolate( $self, $strings, $values=$self->values ) {
     return [map {
-        1 while s!\{(\w+)\}!$self->value( $1, $values, $self->assets )!ge;
+        if( $_ ) {
+            1 while s!\{(\w+)\}!$self->value( $1, $values, $self->assets ) // ''!ge;
+        }
         $_
     } ($strings->@*)]
 }
