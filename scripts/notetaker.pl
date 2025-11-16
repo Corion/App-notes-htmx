@@ -897,16 +897,27 @@ sub save_note_body( $c ) {
 
     $note->body($body);
 
+    # Check if we have new links:
+    my %seen = map { $_->{url} => 1 } $note->links->@*;
+
     my $base = $c->url_for("/note/");
     save_note( $base, $session, $note, $fn );
 
-    # XXX If the name has changed, we need to replace the HTMX URL!
+    for my $l ($note->links->@*) {
+        delete $seen{ $l->{url} };
+    }
+
 
     if( $c->is_htmx_request ) {
-        # Simply update author/version on the client
+    # XXX If the note name has changed, we need to replace the HTMX URL!
         $c->stash(note => $note);
         $c->stash(oob => 1);
-        $c->render('note-version')
+        my $parts = {
+            "note-version" => 1,
+            "link-preview" => 0+ keys %seen,
+        };
+        $c->stash(parts => $parts);
+        $c->render('note-ui-update');
 
     } else {
         $c->redirect_to($c->url_for( '/note/'. $fn ));
@@ -1518,6 +1529,7 @@ sub link_preview( $c, $inline ) {
     update_links( $base, $session, $note );
 
     if( $inline ) {
+        $c->stash( "oob" => undef );
         $c->render('link-preview');
 
     } else {
@@ -2229,6 +2241,14 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 % }
     </div>
 
+@@ note-ui-update.html.ep
+% if( $parts->{"note-version"}) {
+%=include( 'note-version', oob => $oob, note => $note );
+% };
+% if( $parts->{"link-preview"} ) {
+%=include( 'link-preview', oob => $oob, note => $note );
+% }
+
 @@ note-version.html.ep
 <input id="note-version" type="hidden" name="version" value="<%= $note->frontmatter->{version} %>"
 % if( $oob ) {
@@ -2249,10 +2269,14 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 % if( my @pending = grep { ($_->{status} //'' ) ne 'done' } @links ) { # we still want to poll
 <div id="link-preview" hx-get="<%= url_for( "/link-preview/" ) . $note->path %>"
     hx-trigger="load delay:1s"
-    hx-swap="outerHTML">
+    hx-swap="outerHTML"
 % } else {
-<div id="link-preview">
+<div id="link-preview"
 % }
+% if( $oob ) {
+    hx-swap-oob="true"
+% }
+>
 % for my $l (@links) {
     % if( ($l->{status} //'') eq 'done' ) {
 <%== $l->{preview} // '' %>
@@ -2346,7 +2370,7 @@ Asset: <%= $l %><br />
         contentEditable="true"><%== $note_html %></div>
 </div>
 % }
-%=include("link-preview", note => $note);
+%=include("link-preview", note => $note, oob => undef,);
 </div>
 </form>
     <div id="edited-date" class="edited-date"><%= $note->frontmatter->{updated} %></div>
