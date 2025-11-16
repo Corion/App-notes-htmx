@@ -103,7 +103,6 @@ sub fetch_preview( $self, $ua, $url, $html=undef ) {
 
             # Properly decode the content
             my $charset = $res->content->charset || $res->default_charset;
-            warn "Charset: $charset";
             my $html = $charset ? decode($charset, $tx->res->body) // $tx->res->body : $tx->res->body;
             $prereqs{ html } = $html;
 
