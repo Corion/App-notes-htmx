@@ -74,20 +74,13 @@ nav ul li {
       -webkit-line-clamp: 10;
       -webkit-box-orient: vertical;
     }
+    /* For notes that consist mainly of images*/
+    max-height: 100vh;
 }
 
 .expanded-content {
-/*
-    @supports (-webkit-line-clamp: 10) {
-      overflow: hidden;    /* XXX need reset */
-      text-overflow: auto; /* XXX need reset */
-      white-space: initial;
-      display: -webkit-box;
-      -webkit-line-clamp: initial;
-      -webkit-box-orient: vertical;
-    }
-*/
-    -webkit-line-clamp: initial;
+  max-height: initial;
+  -webkit-line-clamp: initial;
 }
 
 /* Make links within a note directly clickable */
