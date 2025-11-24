@@ -1517,6 +1517,29 @@ sub edit_share( $c, $inline ) {
     }
 }
 
+sub link_delete( $c ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
+    my $session = get_session( $c );
+    my $fn = $c->param('fn');
+    my $note = find_note( $session, $fn );
+
+    if( my $l = $note->links ) {
+        my $id = $c->param('id');
+        for my $link ($l->@*) {
+            if( $link->{id} eq $id ) {
+                $link->{hidden} = 1;
+            }
+        }
+    }
+    my $base = $c->url_for("/note/");
+    save_note($base,$session,$note, $fn);
+
+    $c->stash( note => $note );
+    $c->stash( "oob" => undef );
+    $c->render('link-preview');
+}
+
 sub link_preview( $c, $inline ) {
     return login_detour($c) unless $c->is_user_authenticated;
 
@@ -1801,6 +1824,7 @@ post '/htmx-edit-share/*fn' => sub( $c ) { edit_share( $c, 1 ) };
 
 # Fragments
 get  '/link-preview/*fn' => sub( $c ) { link_preview( $c, 1 ) };
+get  '/link-delete/*fn' => \&link_delete;
 
 post '/pin/*fn'   => sub($c) { update_pinned( $c, 1, 0 ) };
 post '/unpin/*fn' => sub($c) { update_pinned( $c, 0, 0 ) };
@@ -2280,6 +2304,12 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
     % next if $l->{hidden};
     % if( ($l->{status} //'') eq 'done' ) {
 <%== $l->{preview} // '' %>
+%# XXX this should be a POST thing instead ...
+        <a href="<%= url_with("/link-delete/". $note->path)->query(id=>$l->{id}) %>"
+           hx-target="#link-preview"
+           hx-swap="outerHTML"
+           hx-get="<%= url_with("/link-delete/". $note->path)->query(id=>$l->{id}) %>"
+        >x</a>
     % } else {
         <div class="link-preview">
         <!-- This should be a 'domain'-style link-->
