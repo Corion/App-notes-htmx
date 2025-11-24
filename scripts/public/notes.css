@@ -132,6 +132,7 @@ a.editable {
 
 .note-container {
     min-height: 400px;
+    padding-bottom: 4vh; /* so stuff gets pushed up from below the bottom UI bar */
 }
 
 .note-container > textarea {
