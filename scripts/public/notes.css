@@ -113,8 +113,8 @@ nav ul li {
 .single-note {
   display: flex;
   flex-direction: column;
-  width: 100vw;
-  height: 100vh;
+  min-width: 100vw;
+  min-height: 100vh;
  }
 
 .single-note .title {
