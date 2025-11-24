@@ -2277,6 +2277,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 % }
 >
 % for my $l (@links) {
+    % next if $l->{hidden};
     % if( ($l->{status} //'') eq 'done' ) {
 <%== $l->{preview} // '' %>
     % } else {
