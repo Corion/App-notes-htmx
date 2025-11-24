@@ -1802,10 +1802,10 @@ post '/htmx-edit-share/*fn' => sub( $c ) { edit_share( $c, 1 ) };
 # Fragments
 get  '/link-preview/*fn' => sub( $c ) { link_preview( $c, 1 ) };
 
-post '/pin/*fn'   => sub($c) { \&update_pinned( $c, 1, 0 ) };
-post '/unpin/*fn' => sub($c) { \&update_pinned( $c, 0, 0 ) };
-post '/htmx-pin/*fn'   => sub($c) { \&update_pinned( $c, 1, 1 ) };
-post '/htmx-unpin/*fn' => sub($c) { \&update_pinned( $c, 0, 1 ) };
+post '/pin/*fn'   => sub($c) { update_pinned( $c, 1, 0 ) };
+post '/unpin/*fn' => sub($c) { update_pinned( $c, 0, 0 ) };
+post '/htmx-pin/*fn'   => sub($c) { update_pinned( $c, 1, 1 ) };
+post '/htmx-unpin/*fn' => sub($c) { update_pinned( $c, 0, 1 ) };
 
 get  '/export-archive' => \&export_archive;
 get '/setup' => \&render_setup;
