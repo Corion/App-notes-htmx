@@ -811,9 +811,33 @@ our $fetcher = setup_fetcher();
 
 sub update_links( $base, $session, $note ) {
     my @current_links = as_html($base, $note, strip_links => 0 ) =~ m!<a[^>]+href="([^"]+)"!g;
-    my $previews = $fetcher->fetch_previews( \@current_links );
+    my %current_urls = map { $_ => 1 } @current_links;
 
-    $note->links->@* = sort { $a->{url} cmp $b->{url} } ($previews->@*);
+    my @known_links = grep { $current_urls{ $_->{url} } } $note->links->@*;
+    my %old_urls         = map { $_->{url} => $_ } @known_links;
+
+    # We do want to keep these but not update them anymore
+    my @hidden  = grep { $_->{hidden} } @known_links;
+    my @visible = grep { !$_->{hidden} } @known_links;
+
+    # First, find the really new URLs:
+    my $pending_links    = [grep { ! $old_urls{ $_ } } @current_links];
+
+    # Now, add all the links that we already knew but that haven't been fetched fully
+    push $pending_links->@*, map { $_->{url} }
+                             grep { $_->{status} ne 'done' } @visible;
+
+    my @done_links =         grep { $_->{status} eq 'done' } @visible;
+
+    # Fetch these
+    my $previews = $fetcher->fetch_previews( $pending_links );
+
+    # Sort the URLs and make them unique
+    my %seen;
+    $note->links->@* = sort { $a->{url} cmp $b->{url} }
+                       grep { ! $seen{ $_->{url} }++ }
+                       (@hidden, @done_links, $previews->@*)
+                       ;
     for my $l ($note->links->@*) {
         $l->{preview} = $l->{preview}->markdown
             if ref $l->{preview};
@@ -1544,12 +1568,13 @@ sub link_preview( $c, $inline ) {
     return login_detour($c) unless $c->is_user_authenticated;
 
     my $session = get_session( $c );
-    my $note = find_note( $session, $c->param('fn') );
+    my $fn = $c->param('fn');
+    my $note = find_note( $session, $fn );
 
     $c->stash( note => $note );
 
     my $base = $c->url_for("/note/");
-    update_links( $base, $session, $note );
+    save_note($base,$session,$note, $fn); # implicitly also updates the links
 
     if( $inline ) {
         $c->stash( "oob" => undef );
