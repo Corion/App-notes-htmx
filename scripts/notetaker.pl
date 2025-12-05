@@ -916,7 +916,6 @@ sub save_note_body( $c ) {
         $body = $turndown->turndown($p->{'body-html'});
     }
 
-    $body =~ s/\A\s+//sm;
     $body =~ s/\s+\z//sm;
 
     $note->body($body);
