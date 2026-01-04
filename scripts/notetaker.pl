@@ -25,6 +25,7 @@ use App::Notetaker::Document;
 use App::Notetaker::Session;
 use App::Notetaker::Label;
 use App::Notetaker::LabelSet;
+use App::Notetaker::User;
 use App::Notetaker::Utils 'timestamp';
 use App::Notetaker::PreviewFetcher;
 
@@ -1685,32 +1686,18 @@ sub export_archive( $c ) {
         validators => [ \&plaintext ],
     );
     sub load_account ($u) {
-        $u =~ s![\\/]!!g;
-        opendir my $dh, $user_directory
-            or die "Couldn't read user directory '$user_directory': $!";
-        # Search case-insensitively for the login name/file in $user_directory
-        (my $fn) = grep { (fc $_) eq ((fc $u).'.yaml') } readdir $dh;
-        try {
-            $fn = "$user_directory/$fn";
-            if( -f $fn and -r $fn ) {
-                # libyaml still calls exit() in random situations
-                return LoadFile( $fn );
-            }
-        } catch ($e) {
-            warn "Got exception: $e";
-            return undef
-        }
+        return App::Notetaker::User->load( $u, $user_directory );
     };
     sub validate ($u, $p) {
         my $account = load_account($u) or return;
-        if( !$passphrase->verify_password( $p, $account->{pass} )) {
+        if( !$passphrase->verify_password( $p, $account->pass )) {
             return undef;
 
         } elsif( $passphrase->needs_rehash($account->{pass})) {
             say "Upgrading password hash for <$u>";
             my $new_hash = $passphrase->hash_password( $p );
-            $account->{pass} = $new_hash;
-            DumpFile( "$user_directory/$u.yaml", $account )
+            $account->pass( $new_hash );
+            $account->save;
         };
 
         return 1
