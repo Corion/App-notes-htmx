@@ -994,7 +994,8 @@ sub archive_note( $c ) {
 sub move_note( $source_name, $target_name ) {
     $target_name = find_name( $target_name );
     warn "We want to rename from '$source_name' to '$target_name'";
-    rename $source_name => $target_name;
+    rename $source_name => $target_name
+        or warn "Couldn't move '$source_name' to '$target_name': $!";
 
     return $target_name
 }
