@@ -970,6 +970,28 @@ sub delete_note( $c ) {
     $c->redirect_to($c->url_for('/'));
 }
 
+sub undelete_note( $c ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
+    my $session = get_session( $c );
+    my $fn = $c->param('fn');
+    my $note = find_note( $session, $fn );
+
+    if( $note ) {
+        # Save undo data?!
+        $c->stash( undo => '/delete/' . $note->path );
+        delete $note->frontmatter->{deleted};
+        my $base = $c->url_for("/note/");
+        save_note( $base, $session, $note, $fn );
+        move_note( $session->document_directory . "/" . $note->path  => $session->document_directory . "/" . $note->filename );
+        $c->redirect_to($base."/".$note->filename);
+
+
+    } else {
+        $c->redirect_to($c->url_for('/'));
+    }
+}
+
 sub archive_note( $c ) {
     return login_detour($c) unless $c->is_user_authenticated;
 
@@ -989,6 +1011,26 @@ sub archive_note( $c ) {
     # Can we keep track of current filters and restore them here?
 
     $c->redirect_to($c->url_for('/'));
+}
+
+sub unarchive_note( $c ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
+    my $session = get_session( $c );
+    my $fn = $c->param('fn');
+    my $note = find_note( $session, $fn );
+
+    if( $note ) {
+        # Save undo data?!
+        $c->stash( undo => '/archive/' . $note->path );
+        delete $note->frontmatter->{archived};
+        my $base = $c->url_for("/note/");
+        save_note( $base, $session, $note, $fn );
+        move_note( $session->document_directory . "/" . $note->path  => $session->document_directory . "/" . $note->filename );
+        $c->redirect_to($base."/".$note->filename);
+    } else {
+        $c->redirect_to($c->url_for('/'));
+    }
 }
 
 sub move_note( $source_name, $target_name ) {
@@ -1146,7 +1188,9 @@ sub share_note( $c, $inline=0 ) {
 post '/note/*fn' => \&save_note_body;
 post '/note/' => \&save_note_body; # we make up a filename then
 post '/delete/*fn' => \&delete_note;
+post '/undelete/*fn' => \&undelete_note;
 post '/archive/*fn' => \&archive_note;
+post '/unarchive/*fn' => \&unarchive_note;
 post '/copy/*fn' => \&copy_note;
 post '/htmx-update-share/*fn' => sub( $c ) { share_note( $c, 0 ) };
 post '/update-share/*fn' => sub( $c ) { share_note( $c, 0 ) };
@@ -2467,14 +2511,30 @@ Asset: <%= $l %><br />
 %= include 'dropdown-assign-template', note => $note, templates => $templates
     </div>
     <div id="action-archive">
-        <form action="<%= url_for('/archive/' . $note->path ) %>" method="POST"
-        ><button class="btn btn-secondary" type="submit">&#xFE0E;&#x1f5c3;</button>
+% {
+% my $action;
+% if( $note->archived ) {
+%    $action = 'unarchive';
+% } else {
+%    $action = 'archive';
+% }
+        <form action="<%= url_for("/$action/" . $note->path ) %>" method="POST"
+        ><button class="btn btn-secondary" type="submit" title="<%= $action %>">&#xFE0E;&#x1f5c3;</button>
         </form>
+% }
     </div>
     <div id="action-delete">
-        <form action="<%= url_for('/delete/' . $note->path ) %>" method="POST"
-        ><button class="btn btn-secondary" type="submit">&#xFE0E;&#x1F5D1;</button>
+% {
+% my $action;
+% if( $note->deleted ) {
+%    $action = 'undelete';
+% } else {
+%    $action = 'delete';
+% }
+        <form action="<%= url_for("/$action/" . $note->path ) %>" method="POST"
+        ><button class="btn btn-secondary" type="submit" title="<%= $action %>">&#xFE0E;&#x1F5D1;</button>
         </form>
+% }
     </div>
 </div>
 </body>
