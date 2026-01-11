@@ -13,6 +13,7 @@ use PerlX::Maybe;
 use charnames ':full';
 use YAML::PP::LibYAML 'LoadFile', 'DumpFile';
 use List::Util 'first', 'reduce';
+use Time::Piece;
 
 # For search
 use Text::ParseWords 'shellwords';
@@ -619,8 +620,15 @@ sub display_note( $c, $note ) {
     $c->stash( all_users => \@users );
     $c->stash( shared_with => \%shared_with );
 
-    my @info = stat ($session->document_directory . "/" . $note->filename);
-    $c->res->headers->last_modified(Mojo::Date->new($info[9])->to_string);
+    my $last_modified = $note->frontmatter->{'content-edited'};
+    if( $last_modified ) {
+        $last_modified = Mojo::Date->new( Time::Piece->strptime($last_modified, '%Y-%m-%dT%H:%M:%SZ')->epoch);
+
+    } else {
+        my @info = stat ($session->document_directory . "/" . $note->filename);
+        $last_modified = Mojo::Date->new($info[9])->to_string;
+    }
+    $c->res->headers->last_modified($last_modified);
 
     $c->render('note');
 };
