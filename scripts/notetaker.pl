@@ -2504,7 +2504,7 @@ Asset: <%= $l %><br />
     </div>
     <div id="action-copy">
         <form action="<%= url_for('/copy/' . $note->path ) %>" method="POST"
-        ><button class="btn btn-secondary" type="submit">&#xFE0E;⎘</button>
+        ><button class="btn btn-secondary" type="submit" title="Copy">&#xFE0E;⎘</button>
         </form>
     </div>
     <div id="action-template">
