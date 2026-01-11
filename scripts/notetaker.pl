@@ -2416,11 +2416,15 @@ Asset: <%= $l %><br />
 <html>
 <head>
 <meta charset="utf-8">
-%=include 'htmx-header'
-
 % my $title = $note->title // '';
 % $title = 'untitled' if length $title == 0;
+<meta property="og:title" content="<%= $title %>" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="<%= url_for( "/note/" . $note->path ) %>" />
+<meta property="og:site_name" content="Notekeeper" />
 <title><%= $title %> - notekeeper</title>
+%=include 'htmx-header'
+
 </head>
 <body
     hx-boost="true"
