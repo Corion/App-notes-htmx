@@ -619,6 +619,9 @@ sub display_note( $c, $note ) {
     $c->stash( all_users => \@users );
     $c->stash( shared_with => \%shared_with );
 
+    my @info = stat ($session->document_directory . "/" . $note->filename);
+    $c->res->headers->last_modified(Mojo::Date->new($info[9])->to_string);
+
     $c->render('note');
 };
 
