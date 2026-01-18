@@ -1753,7 +1753,7 @@ sub export_archive( $c ) {
             say "Upgrading password hash for <$u>";
             my $new_hash = $passphrase->hash_password( $p );
             $account->pass( $new_hash );
-            $account->save;
+            $account->save( $user_directory );
         };
 
         return 1
