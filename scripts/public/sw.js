@@ -4,19 +4,19 @@ const NOTES_CACHE = 'notekeeper-notes-' + CACHE_VERSION;
 
 // App shell files to cache on install
 const STATIC_FILES = [
-  '/',
-  '/bootstrap.5.3.3.min.css',
-  '/bootstrap.5.3.3.min.js',
-  '/htmx.2.0.7.min.js',
-  '/ws.2.0.1.js',
-  '/debug.2.0.1.js',
-  '/loading-states.2.0.1.js',
-  '/morphdom-esm.2.7.4.js',
-  '/app-notekeeper.js',
-  '/notes.css',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
-  '/manifest.json'
+  './',
+  './bootstrap.5.3.3.min.css',
+  './bootstrap.5.3.3.min.js',
+  './htmx.2.0.7.min.js',
+  './ws.2.0.1.js',
+  './debug.2.0.1.js',
+  './loading-states.2.0.1.js',
+  './morphdom-esm.2.7.4.js',
+  './app-notekeeper.js',
+  './notes.css',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
+  './manifest.json'
 ];
 
 // Install: cache static assets
