@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Paper balloon body -->
+  <ellipse cx="256" cy="200" rx="160" ry="180" fill="#fbbf24"/>
+  <!-- Paper fold lines -->
+  <path d="M 256 20 L 256 380" stroke="#f59e0b" stroke-width="3" fill="none"/>
+  <path d="M 96 200 Q 256 100 416 200" stroke="#f59e0b" stroke-width="2" fill="none"/>
+  <path d="M 120 280 Q 256 180 392 280" stroke="#f59e0b" stroke-width="2" fill="none"/>
+  <!-- Balloon tie/knot -->
+  <ellipse cx="256" cy="385" rx="20" ry="15" fill="#f59e0b"/>
+  <!-- String -->
+  <path d="M 256 400 Q 230 450 256 480 Q 282 510 256 512" stroke="#78716c" stroke-width="4" fill="none"/>
+  <!-- Highlight -->
+  <ellipse cx="180" cy="120" rx="30" ry="40" fill="#fcd34d" opacity="0.6"/>
+</svg>

@@ -2013,6 +2013,12 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 <html>
 <head>
 <meta charset="utf-8">
+<link rel="icon" href="<%= url_for("/icons/icon-16x16.png" )%>" type="image/png" sizes="16x16">
+<link rel="icon" href="<%= url_for("/icons/icon-32.png" )%>" type="image/png" sizes="32x32">
+<link rel="icon" href="<%= url_for("/icons/icon-192.png") %>" type="image/png" sizes="192x192">
+<link rel="icon" href="<%= url_for("/icons/icon-512.png") %>" type="image/png" sizes="512x512">
+<link rel="icon" href="<%= url_for("/icons/icon.svg") %>" type="image/svg+xml" sizes="any">
+
 %=include 'htmx-header'
 
 <title>Notes</title>
