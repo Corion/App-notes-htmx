@@ -52,6 +52,9 @@ self.addEventListener('fetch', (event) => {
 
   // Block mutations when offline
   if (!navigator.onLine && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(event.request.method)) {
+    // We should store the request in our local storage here, keyed by the
+    // resource key (uri) -> (parameters)
+    // for later replay once we go online again
     event.respondWith(
       new Response(
         '<div class="alert alert-warning">You are offline. Changes cannot be saved.</div>',
