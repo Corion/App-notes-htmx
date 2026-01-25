@@ -1913,25 +1913,49 @@ get '/pwa' => sub( $c ) {
 get '/manifest.json' => sub( $c ) {
     $c->render( json =>
         {
-          "name"=> "Notekeeper",
-          "short_name"=> "Notes",
-          "description"=> "A markdown notetaker",
-          "start_url"=> $c->url_for("/"), # maybe we can use /pwa here?!
-          "display"=> "standalone",
-          "background_color"=> "#ffffff",
-          "theme_color"=> "#fbbf24",
-          "icons"=> [
+          "name" => "Notekeeper",
+          "short_name" => "Notes",
+          "description" => "A markdown notetaker",
+          "start_url" => $c->url_for("/"), # maybe we can use /pwa here?!
+          "display" => "standalone",
+          "background_color" => "#ffffff",
+          "theme_color" => "#fbbf24",
+          "icons" => [
             {
-              "src"=> $c->url_for( "/icons/icon-192.png" ),
-              "sizes"=> "192x192",
-              "type"=> "image/png"
+              "src" => $c->url_for( "/icons/icon-192.png" ),
+              "sizes" => "192x192",
+              "type" => "image/png"
             },
             {
-              "src"=> $c->url_for( "/icons/icon-512.png" ),
-              "sizes"=> "512x512",
-              "type"=> "image/png"
-            }
-          ]
+              "src" => $c->url_for( "/icons/icon-512.png" ),
+              "sizes" => "512x512",
+              "type" => "image/png"
+            },
+          ],
+          # https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest/Reference/note_taking#browser_compatibility
+          "note_taking" => { # wtf?!
+            "new_note_url" => $c->url_for( "/new" ),
+          },
+          # https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest/Reference/share_target
+          "share_target" => {
+              "action"   => $c->url_for( 'new' ),
+              "method"   => 'POST',
+              "enctype"  => 'multipart/form-data',
+              "files" => [
+                    {
+                      "name"   => "image",
+                      "accept" => ["image/svg+xml", ".svg",
+                                   'image/jpeg', '.jpg', '.jpeg',
+                                   'image/png', '.png',
+                      ]
+                    }
+              ],
+              "params" => {
+                  title => 'title',
+                  text => 'body-html',
+                  url => 'url',
+              }
+          },
         }
     );
 };
@@ -3079,7 +3103,7 @@ Asset: <%= $l %><br />
     <meta name="theme-color" content="#000000">
 
     <!-- don't forget a manifest ! -->
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="<%= url_for( '/manifest.json' ) %>">
 
     <!-- apple touch icon ! -->
     <link rel="apple-touch-icon" href="/example.png">
