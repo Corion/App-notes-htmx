@@ -1908,6 +1908,32 @@ get '/pwa' => sub( $c ) {
     $c->render('index');
 };
 
+get '/manifest.json' => sub( $c ) {
+    $c->render( json =>
+        {
+          "name"=> "Notekeeper",
+          "short_name"=> "Notes",
+          "description"=> "A markdown notetaker",
+          "start_url"=> $c->url_for("/"),
+          "display"=> "standalone",
+          "background_color"=> "#ffffff",
+          "theme_color"=> "#fbbf24",
+          "icons"=> [
+            {
+              "src"=> $c->url_for( "/icons/icon-192.png" ),
+              "sizes"=> "192x192",
+              "type"=> "image/png"
+            },
+            {
+              "src"=> $c->url_for( "/icons/icon-512.png" ),
+              "sizes"=> "512x512",
+              "type"=> "image/png"
+            }
+          ]
+        }
+    );
+};
+
 # Session handling
 get '/login' => sub ($c) { $c->render(template => 'login') };
 post '/login' => sub ($c) {
