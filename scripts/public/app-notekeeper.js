@@ -580,6 +580,8 @@ function updateOnlineStatus() {
   // connection
 }
 
+const scriptUrl = new URL(document.currentScript.src);
+
 /* Called for every page/fragment loaded by HTMX */
 // Set up all listeners
 function setupApp() {
@@ -604,8 +606,11 @@ function setupApp() {
 
     // Register service worker for PWA
     if ('serviceWorker' in navigator) {
+        const path = scriptUrl.pathname.split('/');
+        path.pop();
+        const appScope = new URL(scriptUrl.origin + path.join("/"));
       // Watch out - the service worker needs to be at or above the URLs it governs!
-      navigator.serviceWorker.register('./sw.js', { scope: '.' })
+      navigator.serviceWorker.register(appScope+'/sw.js', { scope: appScope })
         .then((reg) => console.log('SW registered:', reg.scope))
         .catch((err) => console.log('SW registration failed:', err));
     }
