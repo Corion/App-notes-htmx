@@ -1900,6 +1900,8 @@ post '/htmx-unpin/*fn' => sub($c) { update_pinned( $c, 0, 1 ) };
 
 get  '/export-archive' => \&export_archive;
 get '/setup' => \&render_setup;
+
+# This is a more dynamic PWA than what we currently use
 get '/pwa' => sub( $c ) {
     return login_detour($c) unless $c->is_user_authenticated;
     $c->session(expiration => 86400);
@@ -1914,7 +1916,7 @@ get '/manifest.json' => sub( $c ) {
           "name"=> "Notekeeper",
           "short_name"=> "Notes",
           "description"=> "A markdown notetaker",
-          "start_url"=> $c->url_for("/"),
+          "start_url"=> $c->url_for("/"), # maybe we can use /pwa here?!
           "display"=> "standalone",
           "background_color"=> "#ffffff",
           "theme_color"=> "#fbbf24",
@@ -2036,18 +2038,6 @@ __DATA__
 // We still don't know what attribute, but that's close enough
 htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 </script>
-<script>
-// Register service worker for PWA
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js')
-    .then((reg) => console.log('SW registered:', reg.scope))
-    .catch((err) => console.log('SW registration failed:', err));
-}
-
-// Track standalone mode
-window.IS_STANDALONE = window.matchMedia('(display-mode: standalone)').matches
-  || window.navigator.standalone === true;
-</script>
 
 @@ index.html.ep
 <!DOCTYPE html>
@@ -2070,6 +2060,7 @@ window.IS_STANDALONE = window.matchMedia('(display-mode: standalone)').matches
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
 >
+<div class="offline-banner">You're offline - viewing cached notes</div>
 %=include('navbar', type => 'documents', colors => $all_colors, labels => $all_labels, show_filter => $show_filter, note => undef, editor => undef, all_users => undef, shared_with => undef, );
 <div class="container-fluid" id="container">
 <div class="row flex-nowrap">
@@ -2479,6 +2470,7 @@ Asset: <%= $l %><br />
     hx-ext="morphdom-swap"
     hx-swap="morphdom"
 >
+<div class="offline-banner">You're offline - offline edits are not yet there</div>
 %=include('navbar', type => 'note', show_filter => $show_filter );
 
 <main id="note-container" class="container-flex">

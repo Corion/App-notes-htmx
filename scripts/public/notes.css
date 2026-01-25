@@ -414,3 +414,35 @@ blockquote {
       background: light-dark(#f0f0f0,rgb(80,80,80));
       border-color: #bbb;
     }
+
+/* PWA Offline States */
+.offline-banner {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: #fbbf24;
+  color: #78350f;
+  text-align: center;
+  padding: 0.5rem;
+  z-index: 9999;
+  font-weight: 500;
+}
+
+body.offline .offline-banner {
+  display: block;
+}
+
+body.offline #btn-new {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+body.offline .note-bottom-ui button,
+body.offline form[action*="/save"],
+body.offline form[action*="/delete"],
+body.offline form[action*="/archive"] {
+  opacity: 0.5;
+  pointer-events: none;
+}

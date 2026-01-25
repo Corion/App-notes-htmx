@@ -567,6 +567,15 @@ function getUserSelection() {
     }
 }
 
+// Online / offline detection
+function updateOnlineStatus() {
+  if (navigator.onLine) {
+    document.body.classList.remove('offline');
+  } else {
+    document.body.classList.add('offline');
+  }
+}
+
 /* Called for every page/fragment loaded by HTMX */
 // Set up all listeners
 function setupApp() {
@@ -582,8 +591,23 @@ function setupApp() {
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
             updateTheme()
         })
+        window.IS_STANDALONE = window.matchMedia('(display-mode: standalone)').matches;
         updateTheme()
     }
+
+    // Track standalone mode for PWA
+    window.IS_STANDALONE ||= window.navigator.standalone === true;
+
+    // Register service worker for PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then((reg) => console.log('SW registered:', reg.scope))
+        .catch((err) => console.log('SW registration failed:', err));
+    }
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
 
     // Hide all nodes that have the 'nojs' class
     const sheet = window.document.styleSheets[1];
