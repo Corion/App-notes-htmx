@@ -574,6 +574,10 @@ function updateOnlineStatus() {
   } else {
     document.body.classList.add('offline');
   }
+
+  // Check if we have pending note updates and send them to the mothership
+  // but also check if we already tried to send these, in case of a spotty
+  // connection
 }
 
 /* Called for every page/fragment loaded by HTMX */
