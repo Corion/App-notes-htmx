@@ -1957,6 +1957,19 @@ get '/manifest.json' => sub( $c ) {
                   url => 'url',
               }
           },
+          "shortcuts" => [
+            { "name" => "New note",
+              "short_name" => "New",
+              "description" => "Create new note",
+              "url" => "/new",
+              "icons" => [
+                {
+                  "src" => $c->url_for( "/icons/icon-192.png" ),
+                  "sizes" => "192x192"
+                  }
+              ]
+            },
+          ]
         }
     );
 };
