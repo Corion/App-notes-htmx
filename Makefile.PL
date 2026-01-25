@@ -69,6 +69,7 @@ my %module = (
         'Net::DNS::Native' => 0, # for native/async name resolution
         'Net::DNS::Paranoid' => 0, # for our link preview fetcher
         'Text::CleanFragment' => 0,
+        'Time::Local' => 0,
 
         # For searching the text
         'Text::ParseWords' => 0,
