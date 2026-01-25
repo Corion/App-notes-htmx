@@ -1991,6 +1991,9 @@ __DATA__
 @@ htmx-header.html.ep
 <meta htmx.config.allowScriptTags="true">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
+<link rel="manifest" href="<%= url_for('/manifest.json') %>">
+<meta name="theme-color" content="#fbbf24">
+<link rel="apple-touch-icon" href="<%= url_for('/icons/icon-192.png') %>">
 <link rel="stylesheet" href="<%= url_for( "/bootstrap.5.3.3.min.css" ) %>" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 <link rel="stylesheet" href="<%= url_for( "/notes.css" )%>" />
 <script src="<%= url_for( "/bootstrap.5.3.3.min.js")%>"></script>
@@ -2006,6 +2009,18 @@ __DATA__
 // Hack to show us what element caused the syntax error
 // We still don't know what attribute, but that's close enough
 htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
+</script>
+<script>
+// Register service worker for PWA
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js')
+    .then((reg) => console.log('SW registered:', reg.scope))
+    .catch((err) => console.log('SW registration failed:', err));
+}
+
+// Track standalone mode
+window.IS_STANDALONE = window.matchMedia('(display-mode: standalone)').matches
+  || window.navigator.standalone === true;
 </script>
 
 @@ index.html.ep
