@@ -600,7 +600,8 @@ function setupApp() {
 
     // Register service worker for PWA
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js')
+      // Watch out - the service worker needs to be at or above the URLs it governs!
+      navigator.serviceWorker.register('./sw.js', { scope: '.' })
         .then((reg) => console.log('SW registered:', reg.scope))
         .catch((err) => console.log('SW registration failed:', err));
     }
