@@ -4,6 +4,19 @@ use experimental 'signatures';
 use Moo;
 use Mojo::File;
 
+=head1 NAME
+
+App::Notetaker::Document - a note
+
+=head1 SYNOPSIS
+
+  my $note = App::Notetaker::Document->from_file(
+      $filename,
+      $note_directory,
+  );
+
+=cut
+
 has 'frontmatter' => (
     is => 'lazy',
     default => sub($args) {
