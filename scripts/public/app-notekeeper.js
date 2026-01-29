@@ -610,10 +610,11 @@ function setupApp() {
         const path = scriptUrl.pathname.split('/');
         path.pop();
         const appScope = new URL(scriptUrl.origin + path.join("/")) + "/";
-      // Watch out - the service worker needs to be at or above the URLs it governs!
-      navigator.serviceWorker.register(appScope+'sw.js', { scope: appScope })
-        .then((reg) => console.log('SW registered:', reg.scope))
-        .catch((err) => console.log('SW registration failed:', { scope: appScope }, err));
+        // Watch out - the service worker needs to be at or above the URLs it governs!
+        navigator.serviceWorker.register(appScope+'sw.js', { scope: appScope })
+          .then((reg) => console.log('SW registered:', reg.scope))
+          .catch((err) => console.log('SW registration failed:', { scope: appScope }, err));
+        // store the appScope in local storage so the serviceWorker can also access it
     }
 
     window.addEventListener('online', updateOnlineStatus);
