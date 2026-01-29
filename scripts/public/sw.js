@@ -19,6 +19,8 @@ const STATIC_FILES = [
   './manifest.json'
 ];
 
+const baseURL = location.href.replace('/sw.js','/');
+
 // Install: cache static assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -68,7 +70,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   // For note pages: network-first, cache on success
-  if (url.pathname.startsWith('/note/')) {
+  if (url.pathname.startsWith(baseURL+'note/')) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
@@ -85,7 +87,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   // For documents list: network-first, cache fallback
-  if (url.pathname === '/documents' || url.pathname === '/') {
+  if (url.pathname === baseURL+'documents' || url.pathname === baseURL) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
