@@ -43,6 +43,7 @@ plugin 'HTMX';
 #plugin 'Gzip'; # fails since Mojolicious 9.23
 
 my %sessions;
+my $session_expiry = 86400 * 3; # a session is valid for three days per device
 
 my $base_directory = $ENV{ TEST_NOTES_BASE } // '.';
 my $user_directory = "$base_directory/users";
@@ -300,7 +301,7 @@ sub render_notes($c) {
 
 sub render_index($c) {
     return login_detour($c) unless $c->is_user_authenticated;
-    $c->session(expiration => 86400);
+    $c->session(expiration => $session_expiry);
     render_notes( $c );
     $c->stash( hydrated => 1 );
 
@@ -327,7 +328,7 @@ sub render_filter($c) {
 
 sub render_setup($c) {
     return login_detour($c) unless $c->is_user_authenticated;
-    $c->session(expiration => 86400);
+    $c->session(expiration => $session_expiry);
 
     my $url = $c->url_for('/new')->to_abs;
     # Consider using the fetch API
