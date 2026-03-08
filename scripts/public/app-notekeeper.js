@@ -581,6 +581,7 @@ function updateOnlineStatus() {
 }
 
 const scriptUrl = new URL(document.currentScript.src);
+let pwaServiceWorker;
 
 /* Called for every page/fragment loaded by HTMX */
 // Set up all listeners
@@ -607,14 +608,20 @@ function setupApp() {
     // Register service worker for PWA
     if ('serviceWorker' in navigator) {
         // Make sure our app scope ends with a slash, from the current script:
-        const path = scriptUrl.pathname.split('/');
-        path.pop();
-        const appScope = new URL(scriptUrl.origin + path.join("/")) + "/";
+        const appScope = scriptUrl.origin + scriptUrl.pathname.replace(/\/[^/]+$/,'/');
         // Watch out - the service worker needs to be at or above the URLs it governs!
         navigator.serviceWorker.register(appScope+'sw.js', { scope: appScope })
-          .then((reg) => console.log('SW registered:', reg.scope))
+          .then((reg) => console.log('SW registered:', reg.scope) )
           .catch((err) => console.log('SW registration failed:', { scope: appScope }, err));
         // store the appScope in local storage so the serviceWorker can also access it
+        navigator.serviceWorker.ready.then((registration) => {
+            pwaServiceWorker = registration.active;
+        });
+
+        const swListener = new BroadcastChannel('swConsole');
+        swListener.onmessage = function(e) {
+            console.log('sw', e.data);
+        };
     }
 
     window.addEventListener('online', updateOnlineStatus);
