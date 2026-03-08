@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const STATIC_CACHE = 'notekeeper-static-' + CACHE_VERSION;
 const NOTES_CACHE = 'notekeeper-notes-' + CACHE_VERSION;
 
@@ -120,3 +120,28 @@ function offlineFallback(type) {
     headers: { 'Content-Type': 'text/html' }
   });
 }
+
+const swConsole = new BroadcastChannel('swConsole');
+
+// Respond to notices from the app
+self.addEventListener('message', function (evt) {
+  swConsole.postMessage({ message: 'postMessage received', event: evt });
+  swConsole.postMessage({ message: 'postMessage received', caches });
+  if( evt.data.command === 'updateApp' ) {
+    swConsole.postMessage("Updating PWA");
+        evt.waitUntil(
+            caches.open(STATIC_CACHE).then( (cache) => {
+              swConsole.postMessage("Looking at caches");
+              return Promise.all(
+                cache.keys()
+                  .map((key) => {     try {
+swConsole.postMessage("Uncaching " + key );    } catch(e) {
+      swConsole.postMessage({ message: "Caught error", error:e });
+    }
+ return cache.delete(key) })
+              );
+            })
+          );
+  }
+})
+

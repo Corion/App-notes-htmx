@@ -649,9 +649,46 @@ function setupApp() {
     setupPage();
 }
 
+function serializeFormdata( f ) {
+    const obj = {};
+    f.forEach((value, key) => {
+        // Reflect.has in favor of: object.hasOwnProperty(key)
+        if(!Reflect.has(obj, key)){
+            obj[key] = value;
+            return;
+        }
+        if(!Array.isArray(obj[key])){
+            obj[key] = [obj[key]];
+        }
+        obj[key].push(value);
+    });
+    return JSON.stringify(obj);
+}
+
 function setupPage() {
     // Setup for each page
     htmx.on("htmx:afterSettle", scrollToFragment);
+
+    // If there is an error (mainly because we are offline), save the request
+    // payload for later
+    htmx.on("htmx:sendError", ( evt ) => {
+        // return if method is GET, as there is nothing to save
+        const r = evt.detail.requestConfig;
+        if( r.verb !== 'post' ) {
+            console.log("Could not send request", evt);
+            return;
+        }
+
+        // detail.elt - the element that triggered the request, must be our contentEditable
+        // detail.xhr - contains our request body somewhere, which we want to store
+        // localStorage.setItem( xhr.requestUrl, xhr.body );
+        //const key = evt.detail.xhr.requestUrl;
+        const key = evt.detail.pathInfo;
+        const payload = evt.detail.requestConfig.formData;
+        console.log("Could not send request for "+key, payload);
+        // Overwrite the latest version:
+        // localStorage.store( key, serializeFormdata(f));
+    });
 
     const singleNote = htmx.find('.note-container');
     const noteList   = htmx.find('#documents');
