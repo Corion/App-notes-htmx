@@ -2185,9 +2185,12 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 %     $sections{ $section } //= [];
 %     push $sections{ $section }->@*, $note;
 % };
+% my $only_default = (keys %sections == 1) and exists $sections{ default };
 % for my $section (qw(pinned default archived deleted)) {
 %     if( $sections{ $section }) {
+%         if( ! $only_default ) {
     <h5><%= $section_title{ $section } %></h5>
+%         }
     <div class="documents grid-layout">
 %         for my $note ($sections{$section}->@*) {
 % my ($_bgcolor, $_bgcolor_dark) = light_dark($note->frontmatter->{color} // '#cccccc');
