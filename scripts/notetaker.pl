@@ -2314,6 +2314,12 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
       <a href="<%= url_for('/setup') %>"
           class="btn btn-secondary" id="setup">⚙ Setup</a>
     </div>
+    <div class="dropdown-item">
+      <button class="btn btn-secondary" id="update"
+          onclick="javascript: pwaServiceWorker.postMessage({'command':'updateApp'})"
+      >Update
+      </button>
+    </div>
 % if( $type eq 'note' ) {
     <div class="dropdown-item" id="action-copy">
         <form action="<%= url_for('/copy/' . $note->path ) %>" method="POST"
