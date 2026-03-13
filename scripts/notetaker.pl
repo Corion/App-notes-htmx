@@ -1341,6 +1341,11 @@ sub update_note_title( $c, $autosave=0 ) {
     my $new_fn = clean_fragment( $title ) # derive a filename from the title
                  || 'untitled'; # we can't title a note "0", but such is life
 
+    if( length $new_fn > 128 ) { # some filesystems cannot cope with long filenames
+        warn "Shortening filename from '$new_fn'";
+        $new_fn = substr( $new_fn, 0, 124 ); # leave some room for deduplication
+    };
+
     # First, save the new information to the old, existing file
     $fn //= $new_fn;
     if( ! $fn) {
@@ -1366,7 +1371,7 @@ sub update_note_title( $c, $autosave=0 ) {
 
         my $final_name = move_note( $session->clean_filename( $fn ) => $session->document_directory . "/$new_fn.markdown");
         $fn = basename($final_name);
-        $note->filename( $fn );
+        $note->filename( $new_fn );
         $note->path( $final_name );
     }
 
