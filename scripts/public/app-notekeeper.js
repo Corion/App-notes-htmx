@@ -382,6 +382,13 @@ function hotkeyHandlerNote( evt ) {
             evt.stopPropagation();
             return false;
         }
+    } else if (evt.ctrlKey && evt.key == '#') {
+        const target = htmx.find('#btn-dropdown-labels');
+        if( target ) {
+            target.click();
+            evt.stopPropagation();
+            return false;
+        }
     };
     if( evt.altKey ) return;
     if( evt.metaKey ) return;

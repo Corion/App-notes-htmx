@@ -2824,7 +2824,10 @@ Asset: <%= $l %><br />
   hx-target="find .dropdown-menu"
   hx-disinherit="hx-target"
   >
-    <button type="button" class="btn btn-secondary dropdown-toggle hide-toggle"
+    <button
+      id="btn-dropdown-labels"
+      type="button"
+            class="btn btn-secondary dropdown-toggle hide-toggle"
             data-bs-toggle="dropdown"
             aria-expanded="false"
             aria-haspopup="true"
