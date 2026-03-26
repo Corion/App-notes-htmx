@@ -2543,7 +2543,7 @@ Asset: <%= $l %><br />
 <form action="<%= url_for( $doc_url ) %>" method="POST"
     hx-trigger="input from:#note_html delay:200ms, keyup from:#note-textarea delay:200ms changed"
     hx-vals='js:{...getUserContent()}'
-    hx-swap="none"
+    hx-swap="none show:unset"
 >
 %=include "note-version", note => $note, oob => undef
 <button class="nojs" name="save" type="submit">Save</button>
