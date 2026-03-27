@@ -225,7 +225,7 @@ sub filter_query( $filter ) {
     return \@res;
 }
 
-sub render_notes($c) {
+sub render_notes($c, $view) {
     my $sidebar = $c->param('sidebar');
     my $session = get_session( $c );
     my $filter = fetch_filter($c, $session->created_buckets);
@@ -287,7 +287,31 @@ sub render_notes($c) {
 
     $c->stash( label_hierarchy => \%hierarchy );
 
-    $c->stash( documents => \@documents );
+    # Partition the notes into their respective section
+    my @sections = ({ name => 'pinned', title => 'Pinned' },
+                    { name => 'default', title => 'Notes' },
+                    { name => 'archived', title => 'Archived' },
+                    { name => 'deleted', title => 'Deleted' },
+                   );
+    my %section_notes;
+    for my $note (@documents) {
+        my $section = 'default';
+        if( $note->archived ) {
+            $section = 'archived';
+        } elsif( $note->deleted ) {
+            $section = 'deleted';
+        } elsif( $note->frontmatter->{pinned} ) {
+            $section = 'pinned';
+        }
+        $section_notes{ $section } //= [];
+        push $section_notes{ $section }->@*, $note;
+    };
+    for my $s (@sections) {
+        $s->{ notes } = $section_notes{ $s->{name} } // [];
+    }
+    $c->stash( sections => \@sections );
+
+    $c->stash( view => $view );
     $c->stash( show_filter => !!$c->param('show-filter') );
 
     # How do we sort the templates? By name?!
@@ -296,17 +320,21 @@ sub render_notes($c) {
     $c->stash( templates => \@templates );
     stash_filter( $c, $filter );
     $c->stash( sidebar => $sidebar );
+    $c->stash( sidebar_label_filter => '' );
     $c->stash( moniker => filter_moniker( $filter ));
 }
 
 sub render_index($c) {
     return login_detour($c) unless $c->is_user_authenticated;
     $c->session(expiration => $session_expiry);
-    render_notes( $c );
+
+    my $session = get_session($c);
+    my $view = $session->get_view('list');
+
+    render_notes( $c, $view );
     $c->stash( hydrated => 1 );
 
     # Why do we need to push the updated URL here?!
-    my $session = get_session( $c );
     my $filter = fetch_filter($c, $session->created_buckets);
     my $u = $c->url_for("/")->query(filter_query( $filter ));
     $c->htmx->res->replace_url( $u );
@@ -316,9 +344,10 @@ sub render_index($c) {
 
 sub render_filter($c) {
     return login_detour($c) unless $c->is_user_authenticated;
-    render_notes( $c );
-    # Set the filter URL so we can reload the page in the browser
     my $session = get_session($c);
+    my $view = $session->get_view('list');
+    render_notes( $c, $view );
+    # Set the filter URL so we can reload the page in the browser
     my $filter = fetch_filter($c, $session->created_buckets);
     my $u = $c->url_for("/")->query(filter_query( $filter ));
     $u->query( ["show-filter" => 1]);
@@ -1681,7 +1710,9 @@ sub update_pinned( $c, $pinned, $inline ) {
     $note->save_to( $session->clean_filename( $fn ));
 
     if( $inline ) {
-        render_notes( $c );
+        my $session = get_session($c);
+        my $view = $session->get_view( 'list' );
+        render_notes( $c, $view );
         $c->render('documents');
 
     } else {
@@ -1911,7 +1942,9 @@ get '/setup' => \&render_setup;
 get '/pwa' => sub( $c ) {
     return login_detour($c) unless $c->is_user_authenticated;
     $c->session(expiration => 86400);
-    render_notes( $c );
+    my $session = get_session($c);
+    my $view = $session->get_view('list');
+    render_notes( $c, $view );
     $c->stash( hydrated => 0 );
     $c->render('index');
 };
@@ -2096,7 +2129,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 
 %=include 'htmx-header'
 
-<title>Notes</title>
+<title><%= $view->{title} %></title>
 </head>
 <body
     hx-boost="true"
@@ -2114,7 +2147,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 
     <main class="col">
 % if( $hydrated ) {
-%=include "documents", documents => $documents
+%=include "documents", sections => $sections
 % } else {
     <script>
     window.addEventListener('load', function() {
@@ -2176,32 +2209,15 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 
 @@documents.html.ep
 <div id="documents" class="">
-% my @sections = ({ name => 'pinned', title => 'Pinned' },
-%                 { name => 'default', title => 'Notes' },
-%                 { name => 'archived', title => 'Archived' },
-%                 { name => 'deleted', title => 'Deleted' },
-%                );
-% my %sections;
-% for my $note ($documents->@*) {
-%     my $section = 'default';
-%     if( $note->archived ) {
-%         $section = 'archived';
-%     } elsif( $note->deleted ) {
-%         $section = 'deleted';
-%     } elsif( $note->frontmatter->{pinned} ) {
-%         $section = 'pinned';
-%     }
-%     $sections{ $section } //= [];
-%     push $sections{ $section }->@*, $note;
-% };
-% my $only_default = (keys %sections == 1) and exists $sections{ default };
-% for my $section (@sections) {
-%     if( $sections{ $section->{name} }) {
+% #my $only_default = (keys %sections == 1) and exists $sections{ default };
+% my $only_default = 0;
+% for my $section ($sections->@*) {
+%     if( $section->{notes}->@*) {
 %         if( ! $only_default ) {
     <h5><%= $section->{title} %></h5>
 %         }
     <div class="documents grid-layout">
-%         for my $note ($sections{$section->{name}}->@*) {
+%         for my $note ($section->{notes}->@*) {
 % my ($_bgcolor, $_bgcolor_dark) = light_dark($note->frontmatter->{color} // '#cccccc');
 % my $textcolor = sprintf q{ color: light-dark(%s, %s)}, contrast_bw( $_bgcolor ), contrast_bw( $_bgcolor_dark );
 % my $bgcolor   = sprintf q{ background-color: light-dark( %s, %s )}, $_bgcolor, $_bgcolor_dark ;

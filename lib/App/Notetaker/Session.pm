@@ -27,6 +27,19 @@ has 'colors' => (
     default => sub { {} },
 );
 
+has 'views' => (
+    is => 'ro',
+    default => sub {
+        [ {
+            name  => 'list',
+            title => 'Notizen',
+            type  => 'notes',
+            tag   => undef,
+        },
+        ]
+    },
+);
+
 sub _make_bucket( $start, $end, $name=undef ) {
     my $d = Date::Period::Human->new({ lang => 'en' });
     return +{
@@ -89,6 +102,12 @@ sub all_labels( $self, $filter=undef ) {
     my $all_labels = App::Notetaker::LabelSet->new();
     $all_labels->add( grep { defined $filter ? /\Q$filter/i : 1 } $self->labels->labels->@* );
     return $all_labels
+}
+
+sub get_view( $self, $name ) {
+    (my $res) =
+        grep { $_->{name} eq $name } $self->views->@*;
+    return $res
 }
 
 1;
