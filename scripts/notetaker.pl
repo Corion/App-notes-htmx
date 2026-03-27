@@ -2176,8 +2176,12 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 
 @@documents.html.ep
 <div id="documents" class="">
+% my @sections = ({ name => 'pinned', title => 'Pinned' },
+%                 { name => 'default', title => 'Notes' },
+%                 { name => 'archived', title => 'Archived' },
+%                 { name => 'deleted', title => 'Deleted' },
+%                );
 % my %sections;
-% my %section_title = (qw(pinned Pinned default Notes deleted Deleted archived Archived));
 % for my $note ($documents->@*) {
 %     my $section = 'default';
 %     if( $note->archived ) {
@@ -2191,13 +2195,13 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 %     push $sections{ $section }->@*, $note;
 % };
 % my $only_default = (keys %sections == 1) and exists $sections{ default };
-% for my $section (qw(pinned default archived deleted)) {
-%     if( $sections{ $section }) {
+% for my $section (@sections) {
+%     if( $sections{ $section->{name} }) {
 %         if( ! $only_default ) {
-    <h5><%= $section_title{ $section } %></h5>
+    <h5><%= $section->{title} %></h5>
 %         }
     <div class="documents grid-layout">
-%         for my $note ($sections{$section}->@*) {
+%         for my $note ($sections{$section->{name}}->@*) {
 % my ($_bgcolor, $_bgcolor_dark) = light_dark($note->frontmatter->{color} // '#cccccc');
 % my $textcolor = sprintf q{ color: light-dark(%s, %s)}, contrast_bw( $_bgcolor ), contrast_bw( $_bgcolor_dark );
 % my $bgcolor   = sprintf q{ background-color: light-dark( %s, %s )}, $_bgcolor, $_bgcolor_dark ;
