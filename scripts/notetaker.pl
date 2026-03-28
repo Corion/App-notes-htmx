@@ -229,6 +229,15 @@ sub render_notes($c, $view) {
     my $sidebar = $c->param('sidebar');
     my $session = get_session( $c );
     my $filter = fetch_filter($c, $session->created_buckets);
+
+    if( my $t = $view->{tag} ) {
+        if( ref $t ne 'ARRAY' ) {
+            $t = [$t];
+        }
+        $filter->{label} //= [];
+        push $filter->{label}->@*, $t->@*;
+    }
+
     my @documents = get_documents($c, $session, $filter);
 
     my @templates = get_templates($c, $session);
