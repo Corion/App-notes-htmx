@@ -225,6 +225,36 @@ sub filter_query( $filter ) {
     return \@res;
 }
 
+my %view_partition = (
+    'list' => \&partition_by_status,
+);
+
+sub partition_by_status( $documents ) {
+    # Partition the notes into their respective section
+    my @sections = ({ name => 'pinned', title => 'Pinned' },
+                    { name => 'default', title => 'Notes' },
+                    { name => 'archived', title => 'Archived' },
+                    { name => 'deleted', title => 'Deleted' },
+                   );
+    my %section_notes;
+    for my $note ($documents->@*) {
+        my $section = 'default';
+        if( $note->archived ) {
+            $section = 'archived';
+        } elsif( $note->deleted ) {
+            $section = 'deleted';
+        } elsif( $note->frontmatter->{pinned} ) {
+            $section = 'pinned';
+        }
+        $section_notes{ $section } //= [];
+        push $section_notes{ $section }->@*, $note;
+    };
+    for my $s (@sections) {
+        $s->{ notes } = $section_notes{ $s->{name} } // [];
+    }
+    return \@sections
+}
+
 sub render_notes($c, $view) {
     my $sidebar = $c->param('sidebar');
     my $session = get_session( $c );
@@ -296,29 +326,8 @@ sub render_notes($c, $view) {
 
     $c->stash( label_hierarchy => \%hierarchy );
 
-    # Partition the notes into their respective section
-    my @sections = ({ name => 'pinned', title => 'Pinned' },
-                    { name => 'default', title => 'Notes' },
-                    { name => 'archived', title => 'Archived' },
-                    { name => 'deleted', title => 'Deleted' },
-                   );
-    my %section_notes;
-    for my $note (@documents) {
-        my $section = 'default';
-        if( $note->archived ) {
-            $section = 'archived';
-        } elsif( $note->deleted ) {
-            $section = 'deleted';
-        } elsif( $note->frontmatter->{pinned} ) {
-            $section = 'pinned';
-        }
-        $section_notes{ $section } //= [];
-        push $section_notes{ $section }->@*, $note;
-    };
-    for my $s (@sections) {
-        $s->{ notes } = $section_notes{ $s->{name} } // [];
-    }
-    $c->stash( sections => \@sections );
+    my $sections = partition_by_status( \@documents );
+    $c->stash( sections => $sections );
 
     $c->stash( view => $view );
     $c->stash( show_filter => !!$c->param('show-filter') );
