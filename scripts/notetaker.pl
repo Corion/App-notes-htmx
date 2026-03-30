@@ -260,7 +260,7 @@ sub render_notes($c, $view) {
     my $session = get_session( $c );
     my $filter = fetch_filter($c, $session->created_buckets);
 
-    if( my $t = $view->{tag} ) {
+    if( my $t = $view->{label} ) {
         if( ref $t ne 'ARRAY' ) {
             $t = [$t];
         }

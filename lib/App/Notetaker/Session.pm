@@ -34,7 +34,6 @@ has 'views' => (
             name  => 'list',
             title => 'Notizen',
             type  => 'notes',
-            tag   => undef,
         },
         ]
     },
