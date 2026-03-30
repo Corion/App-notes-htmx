@@ -289,8 +289,9 @@ details.sidebar-details {
 .sidebar-details summary::after {
   content: ' +';
 }
-details[open].sidebar-details >summary:after {
-  content: " -";
+
+details[open].sidebar-details >summary::after {
+  content: ' -';
 }
 
 .svg_icon {
