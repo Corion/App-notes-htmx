@@ -342,12 +342,13 @@ sub render_notes($c, $view) {
     $c->stash( moniker => filter_moniker( $filter ));
 }
 
-sub render_index($c) {
+sub render_index($c, $viewname=$c->param('view')) {
     return login_detour($c) unless $c->is_user_authenticated;
+    my $session = get_session($c);
     $c->session(expiration => $session_expiry);
 
-    my $session = get_session($c);
-    my $view = $session->get_view('list');
+    $viewname //= 'list';
+    my $view = $session->get_view($viewname);
 
     render_notes( $c, $view );
     $c->stash( hydrated => 1 );
@@ -1955,6 +1956,7 @@ post '/htmx-unpin/*fn' => sub($c) { update_pinned( $c, 0, 1 ) };
 
 get  '/export-archive' => \&export_archive;
 get '/setup' => \&render_setup;
+get '/view/:view' => \&render_index;
 
 # This is a more dynamic PWA than what we currently use
 get '/pwa' => sub( $c ) {
