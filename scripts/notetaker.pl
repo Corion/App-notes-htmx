@@ -255,6 +255,33 @@ sub partition_by_status( $documents ) {
     return \@sections
 }
 
+sub partition_by_labels( $documents, $sections ) {
+    # Partition the notes into their respective section
+    my %section_notes;
+    for my $note ($documents->@*) {
+        # Is "eq" really the partial matching?
+        # we want kanban/todo to match kanban
+        my $l = $note->labels->labels;
+        (my $section) = first { my $s = $_;
+                                grep { $_ eq $s->{label} } $l->@*
+                              } $sections->@*;
+
+        if( $section ) {
+            $section_notes{ $section->{label} } //= [];
+            push $section_notes{ $section->{label} }->@*, $note;
+        }
+    };
+
+    # Return a copy so the original sections remain constant
+    my @res = map {
+        { %$_,
+          notes => $section_notes{ $_->{label} } // []
+        }
+    } $sections->@*;
+    return \@res
+}
+
+
 sub render_notes($c, $view) {
     my $sidebar = $c->param('sidebar');
     my $session = get_session( $c );
@@ -325,8 +352,13 @@ sub render_notes($c, $view) {
     }
 
     $c->stash( label_hierarchy => \%hierarchy );
+    my $sections;
+    if( $view->{type} eq 'kanban' ) {
+        $sections = partition_by_labels( \@documents, $view->{lanes} );
+    } else {
+        $sections = partition_by_status( \@documents );
+    }
 
-    my $sections = partition_by_status( \@documents );
     $c->stash( sections => $sections );
 
     $c->stash( view => $view );
@@ -1625,6 +1657,30 @@ sub delete_label( $c, $inline ) {
     }
 }
 
+sub modify_labels( $c, $inline ) {
+    return login_detour($c) unless $c->is_user_authenticated;
+
+    my $session = get_session( $c );
+    my $fn = $c->param('fn');
+    my $note = find_or_create_note( $session, $fn );
+    my $remove = $c->every_param('delete');
+    my $add = $c->every_param('add');
+
+    $note->remove_label( $remove->@* );
+    $note->add_label( $add->@* );
+    $note->save_to( $session->clean_filename( $fn ));
+
+    if( $inline ) {
+        $c->stash( note => $note );
+        $c->stash( oob => 1 );
+        $c->render('display-labels');
+
+    } else {
+        # Assume that nothing is to be done?!
+        # Or maybe just update the label list of a note
+    }
+}
+
 sub edit_share( $c, $inline ) {
     return login_detour($c) unless $c->is_user_authenticated;
 
@@ -1938,6 +1994,7 @@ get  '/add-label/*fn' => sub($c) { add_label($c, 0 ); };
 post '/htmx-add-label/*fn' => sub($c) { add_label( $c, 1 ); };
 get  '/delete-label/*fn' => sub( $c ) { delete_label( $c, 0 ); };
 get  '/htmx-delete-label/*fn' => sub( $c ) { delete_label( $c, 1 ); };
+post '/modify-labels/*fn' => sub( $c ) { modify_labels( $c, 1 ); };
 get  '/select-filter' => \&select_filter;
 
 get  '/htmx-share-menu/*fn' => sub( $c ) { edit_share( $c, 0 ) };
@@ -2126,6 +2183,7 @@ __DATA__
 <script src="<%= url_for( "/ws.2.0.1.js")%>"></script>
 <script src="<%= url_for( "/debug.2.0.1.js")%>"></script>
 <script src="<%= url_for( "/loading-states.2.0.1.js")%>"></script>
+<script src="<%= url_for( "/Sortable-1.15.7.min.js")%>"></script>
 <script type="module" src="<%= url_for( "/morphdom-esm.2.7.4.js")%>"></script>
 <script src="<%= url_for( "/app-notekeeper.js" )%>"></script>
 <script>
@@ -2232,7 +2290,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 % #my $only_default = (keys %sections == 1) and exists $sections{ default };
 % my $only_default = 0;
 % for my $section ($sections->@*) {
-%     if( $section->{notes}->@*) {
+%#     if( $section->{notes}->@*) {
 %         if( ! $only_default ) {
 %         }
     <div class="documents <%= $view->{type} %>-section"
@@ -2246,6 +2304,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 % my $style     = sprintf q{ style="%s; %s;"}, $bgcolor, $textcolor;
 % my $id = for_id( clean_fragment($note->path) =~ s/\.markdown$//r);
 <div class="grid-item note position-relative"<%== $style %>
+       data-update-url="<%= url_for('/modify-labels/' . $note->path) %>"
        id="note-<%= $id %>">
     <div class="note-top-ui">
     <a href="<%= url_for( "/note/" . $note->path ) %>" class="title">
@@ -2269,7 +2328,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 </div>
 %         }
 </div>
-%     }
+%#     }
 % }
 </div>
 

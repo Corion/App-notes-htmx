@@ -34,7 +34,26 @@ has 'views' => (
             name  => 'list',
             title => 'Notizen',
             type  => 'notes',
-        },
+          },
+          {
+            name  => 'kanban',
+            type  => 'kanban',
+            title => 'Kanban orga',
+            label => 'kanban',
+            lanes => [
+                { label => 'kanban/todo',
+                  title => "To do", },
+                { label => 'kanban/doing',
+                  title => 'In progress', },
+                { label => 'kanban/done',
+                  title => 'Done', },
+                { label => 'kanban/parked',
+                  title => 'Parked', },
+                # Maybe this should be added by default if missing
+                { label => 'kanban',
+                  title => 'Unassigned', },
+                ],
+          },
         ]
     },
 );

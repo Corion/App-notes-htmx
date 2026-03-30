@@ -768,8 +768,49 @@ function setupPage() {
                 e.preventDefault();
             });
         }
-    }
 
+        // Make notes on Kanban lanes draggable
+        const sortables = document.querySelectorAll(".kanban-section");
+        for (let sortable of sortables) {
+            const sortableInstance = new Sortable(sortable, {
+                animation: 150,
+                ghostClass: 'dragging',
+                handle: ".title-text",
+
+                group: "kanban",
+
+                // Make the `.htmx-indicator` unsortable
+                filter: ".htmx-indicator",
+                onMove: function (evt) {
+                    return evt.related.className.indexOf('htmx-indicator') === -1;
+                },
+
+                // Disable sorting on the `end` event so we can send
+                // the info to the server
+                onEnd: function (evt) {
+                    //console.log("Dropped from",evt.from.dataset.label);
+                    //console.log("Dropped into",evt.to.dataset.label);
+                    //console.log("Dropped note",evt.item.dataset.updateUrl);
+                    this.option("disabled", true);
+                    htmx.ajax( 'POST',
+                                evt.item.dataset.updateUrl,
+                                { values: {
+                                        add: evt.to.dataset.label,
+                                        "delete": evt.from.dataset.label,
+                                    },
+                                  target: "#" + evt.item.id + " .labels",
+                                }
+                              );
+                }
+            });
+
+            // Re-enable sorting on the `htmx:afterSwap` event
+            // after we've updated the label server-side
+            sortable.addEventListener("htmx:afterSwap", function() {
+                sortableInstance.option("disabled", false);
+            });
+        }
+    }
 }
 
 function toggleEnlarge(id) {

@@ -29,7 +29,7 @@ nav ul li {
     /* 480px looks good on desktop, maybe 240px for mobile?! */
     grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
     grid-template-rows: masonry; /* Still experimental on FF */
-    grid-gap: 1px;
+    grid-gap: 4px;
     /*
     grid-auto-rows: minmax(180px, auto);
     grid-auto-flow: dense;
@@ -50,10 +50,43 @@ nav ul li {
     width: 100%;
 }
 
+.kanban-container {
+  display: grid;
+  grid-auto-columns: 272px;
+  grid-auto-flow: column;
+  grid-gap: 8px;
+  height: 100vh;
+  overflow: auto;
+}
+
+.kanban-section {
+	background: #EBECF0;
+	border-radius: 3px;
+	display: grid;
+	grid-auto-rows: max-content;
+	grid-gap: 10px;
+	padding: 10px;
+}
+
+.kanban-section h5 {
+	font-size: 16px;
+	margin: 0 0 12px 0;
+}
+
+.kanban-section .note {
+	background: #FFF;
+	box-shadow: 0 1px 0 rgba(9,30,66,.25);
+	border-radius: 3px;
+	padding: 10px;
 }
 
 .note {
     border: solid 1px black;
+}
+
+.dragging {
+    /* background-color: blue; */
+    opacity: 0.4;
 }
 
 /* Limit the maximum display size of a single note to ~20 lines */
