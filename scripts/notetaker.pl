@@ -2226,7 +2226,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 </html>
 
 @@documents.html.ep
-<div id="documents" class="">
+<div id="documents" class="<%= $view->{type} %>-container">
 % #my $only_default = (keys %sections == 1) and exists $sections{ default };
 % my $only_default = 0;
 % for my $section ($sections->@*) {
