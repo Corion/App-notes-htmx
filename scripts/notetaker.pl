@@ -2232,9 +2232,11 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 % for my $section ($sections->@*) {
 %     if( $section->{notes}->@*) {
 %         if( ! $only_default ) {
-    <h5><%= $section->{title} %></h5>
 %         }
-    <div class="documents grid-layout">
+    <div class="documents <%= $view->{type} %>-section"
+         data-label="<%= $section->{label} %>"
+    >
+    <h5><%= $section->{title} %></h5>
 %         for my $note ($section->{notes}->@*) {
 % my ($_bgcolor, $_bgcolor_dark) = light_dark($note->frontmatter->{color} // '#cccccc');
 % my $textcolor = sprintf q{ color: light-dark(%s, %s)}, contrast_bw( $_bgcolor ), contrast_bw( $_bgcolor_dark );

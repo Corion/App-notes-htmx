@@ -24,7 +24,7 @@ nav ul li {
   list-style-type: none;
 }
 
-.grid-layout {
+.notes-section {
     display: grid;
     /* 480px looks good on desktop, maybe 240px for mobile?! */
     grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
