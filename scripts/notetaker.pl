@@ -2306,11 +2306,11 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 </html>
 
 @@documents.html.ep
-% my %sections = map { $_->{name} => $_ }
+% my %sections = map { $_->{name} // $_->{label} => $_ }
 %                grep { $view->{show_empty} ? 1 : scalar $_->{notes}->@* }
 %                $sections->@*;
 <div id="documents" class="<%= $view->{type} %>-container">
-% my $single_section = keys %sections == 1 and exists $sections{ default };
+% my $single_section = keys %sections == 1 and exists $sections{ default } and ! $view->{show_empty};
 % for my $section ($sections->@*) {
 %     if( $view->{show_empty} or $section->{notes}->@*) {
     <div class="documents <%= $view->{type} %>-section"
