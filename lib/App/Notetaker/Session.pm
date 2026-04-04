@@ -36,10 +36,11 @@ has 'views' => (
             type  => 'notes',
           },
           {
-            name  => 'kanban',
-            type  => 'kanban',
-            title => 'Kanban orga',
-            label => 'kanban',
+            name       => 'kanban',
+            type       => 'kanban',
+            show_empty => 1,
+            title      => 'Kanban orga',
+            label      => 'kanban',
             lanes => [
                 { label => 'kanban/todo',
                   title => "To do", },

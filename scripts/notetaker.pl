@@ -2286,17 +2286,21 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 </html>
 
 @@documents.html.ep
+% my %sections = map { $_->{name} => $_ }
+%                grep { $view->{show_empty} ? 1 : scalar $_->{notes}->@* }
+%                $sections->@*;
 <div id="documents" class="<%= $view->{type} %>-container">
-% #my $only_default = (keys %sections == 1) and exists $sections{ default };
-% my $only_default = 0;
+% my $single_section = keys %sections == 1 and exists $sections{ default };
 % for my $section ($sections->@*) {
-%#     if( $section->{notes}->@*) {
-%         if( ! $only_default ) {
-%         }
+%     if( $view->{show_empty} or $section->{notes}->@*) {
     <div class="documents <%= $view->{type} %>-section"
+%     if( exists $section->{label} ) {
          data-label="<%= $section->{label} %>"
+%     }
     >
-    <h5><%= $section->{title} %></h5>
+%         if( ! $single_section ) {
+    <h5 class="section-title"><%= $section->{title} %></h5>
+%         }
 %         for my $note ($section->{notes}->@*) {
 % my ($_bgcolor, $_bgcolor_dark) = light_dark($note->frontmatter->{color} // '#cccccc');
 % my $textcolor = sprintf q{ color: light-dark(%s, %s)}, contrast_bw( $_bgcolor ), contrast_bw( $_bgcolor_dark );
@@ -2328,7 +2332,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 </div>
 %         }
 </div>
-%#     }
+%     }
 % }
 </div>
 
