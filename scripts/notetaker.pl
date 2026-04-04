@@ -283,9 +283,8 @@ sub partition_by_labels( $documents, $sections ) {
 }
 
 
-sub render_notes($c, $view) {
+sub render_notes($c, $view, $session ) {
     my $sidebar = $c->param('sidebar');
-    my $session = get_session( $c );
     my $filter = fetch_filter($c, $session->created_buckets);
 
     if( my $t = $view->{label} ) {
@@ -393,7 +392,7 @@ sub render_index($c, $viewname=$c->param('view')) {
     my $view = $session->get_view($viewname);
 
     push @statistics, (stats('render notes'));
-    render_notes( $c, $view );
+    render_notes( $c, $view, $session );
     $c->stash( hydrated => 1 );
 
     push @statistics, (stats('filter notes'));
@@ -418,7 +417,7 @@ sub render_filter($c) {
     return login_detour($c) unless $c->is_user_authenticated;
     my $session = get_session($c);
     my $view = $session->get_view('list');
-    render_notes( $c, $view );
+    render_notes( $c, $view, $session );
     # Set the filter URL so we can reload the page in the browser
     my $filter = fetch_filter($c, $session->created_buckets);
     my $u = $c->url_for("/")->query(filter_query( $filter ));
@@ -1808,7 +1807,7 @@ sub update_pinned( $c, $pinned, $inline ) {
     if( $inline ) {
         my $session = get_session($c);
         my $view = $session->get_view( 'list' );
-        render_notes( $c, $view );
+        render_notes( $c, $view, $session );
         $c->render('documents');
 
     } else {
@@ -2042,7 +2041,7 @@ get '/pwa' => sub( $c ) {
     $c->session(expiration => 86400);
     my $session = get_session($c);
     my $view = $session->get_view('list');
-    render_notes( $c, $view );
+    render_notes( $c, $view, $session );
     $c->stash( hydrated => 0 );
     $c->render('index');
 };
