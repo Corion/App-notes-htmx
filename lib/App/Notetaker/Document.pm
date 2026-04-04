@@ -116,6 +116,9 @@ sub save_to( $self, $fn ) {
     my $f = Mojo::File->new($fn);
 
     $self->frontmatter->{labels} = $self->labels->labels;
+    if( ! $self->frontmatter->{labels}->@* ) {
+        delete $self->frontmatter->{labels};
+    }
 
     my $tfm = Text::FrontMatter::YAML->new(
         data_text => $self->body,
