@@ -3,6 +3,8 @@ use 5.020;
 use experimental 'signatures';
 use Moo;
 use Mojo::File;
+use Text::FrontMatter::YAML;
+use App::Notetaker::LabelSet;
 
 =head1 NAME
 
