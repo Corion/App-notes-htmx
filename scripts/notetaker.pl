@@ -362,6 +362,7 @@ sub render_notes($c, $view, $session ) {
     $c->stash( sections => $sections );
 
     $c->stash( view => $view );
+    $c->stash( views => $session->views );
     $c->stash( show_filter => !!$c->param('show-filter') );
 
     # How do we sort the templates? By name?!
@@ -396,9 +397,15 @@ sub render_index($c, $viewname=$c->param('view')) {
     $c->stash( hydrated => 1 );
 
     push @statistics, (stats('filter notes'));
-    # Why do we need to push the updated URL here?!
     my $filter = fetch_filter($c, $session->created_buckets);
-    my $u = $c->url_for("/")->query(filter_query( $filter ));
+    # Why do we need to push the updated URL here?!
+    my $base_url;
+    if( $viewname eq 'list' ) {
+        $base_url = '/'
+    } else {
+        $base_url = sprintf '/view/%s.html', $viewname;
+    }
+    my $u = $c->url_for($base_url)->query(filter_query( $filter ));
     $c->htmx->res->replace_url( $u );
 
     push @statistics, (stats('rendering note page'));
@@ -472,6 +479,7 @@ JS
     $c->stash( moniker => filter_moniker( $filter ));
     my $sidebar = $c->param('sidebar');
     $c->stash( sidebar => $sidebar );
+    $c->stash( views => $session->views );
     $c->render('setup');
 }
 
@@ -691,6 +699,7 @@ sub display_note( $c, $note ) {
     $c->stash( note_html => $html );
     $c->stash( moniker => filter_moniker( $filter ));
     $c->stash( show_filter => !!$c->param('show-filter') );
+    $c->stash( views => $session->views );
     my @templates = get_templates($c, $session);
     $c->stash( templates => \@templates);
 
@@ -2033,7 +2042,7 @@ post '/htmx-unpin/*fn' => sub($c) { update_pinned( $c, 0, 1 ) };
 
 get  '/export-archive' => \&export_archive;
 get '/setup' => \&render_setup;
-get '/view/:view' => \&render_index;
+get '/view/<:view>.html' => \&render_index;
 
 # This is a more dynamic PWA than what we currently use
 get '/pwa' => sub( $c ) {
@@ -2236,7 +2245,7 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
     hx-swap="morphdom"
 >
 <div class="offline-banner">You're offline - viewing cached notes</div>
-%=include('navbar', type => 'documents', colors => $all_colors, labels => $all_labels, show_filter => $show_filter, note => undef, editor => undef, all_users => undef, shared_with => undef, );
+%=include('navbar', type => 'documents', colors => $all_colors, labels => $all_labels, show_filter => $show_filter, note => undef, editor => undef, all_users => undef, shared_with => undef, views => $views );
 <div class="container-fluid" id="container">
 <div class="row flex-nowrap">
     <div class="col-auto px-0">
@@ -2445,6 +2454,14 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
         data-bs-toggle="dropdown">☰</div>
 
     <div class="dropdown-menu dropdown-menu-end dropdown-menu-right">
+%#
+% for my $view ($views->@*) {
+    <div class="dropdown-item">
+      <a href="<%= url_for(sprintf '/view/%s.html', $view->{name} ) %>"
+          class="btn btn-secondary" id="view-<%= $view->{name} %>"><%= $view->{title} %></a>
+    </div>
+% }
+%#
     <div class="dropdown-item">
       <a href="<%= url_for('/setup') %>"
           class="btn btn-secondary" id="setup">⚙ Setup</a>
@@ -2650,7 +2667,7 @@ Asset: <%= $l %><br />
     hx-swap="morphdom"
 >
 <div class="offline-banner">You're offline - offline edits are not yet there</div>
-%=include('navbar', type => 'note', show_filter => $show_filter );
+%=include('navbar', type => 'note', show_filter => $show_filter, views => $views );
 
 <main id="note-container" class="container-flex">
 % my ($_bgcolor, $_bgcolor_dark) = light_dark($note->frontmatter->{color}  // '#cccccc');
