@@ -82,9 +82,10 @@ sub shared( $self ) {
     return $self->frontmatter->{shared} //= {}
 }
 
-sub from_file( $class, $fn, $document_directory ) {
-    my $f = Mojo::File->new($fn);
-    my $body = $f->slurp('UTF-8');
+sub from_string( $class, $body, $f, $document_directory ) {
+    if( ! ref $f ) {
+        $f = Mojo::File->new( $f );
+    };
     my $tfm = Text::FrontMatter::YAML->new(
         document_string => $body,
     );
@@ -104,7 +105,7 @@ sub from_file( $class, $fn, $document_directory ) {
 
     my $path = $f->abs2rel( $document_directory );
 
-    $class->new( {
+    return $class->new( {
         (path => $path),
         (filename => $f->basename),
         (links => $tfm->frontmatter_hashref->{links} // []),
@@ -114,9 +115,13 @@ sub from_file( $class, $fn, $document_directory ) {
     } );
 }
 
-sub save_to( $self, $fn ) {
+sub from_file( $class, $fn, $document_directory ) {
     my $f = Mojo::File->new($fn);
+    my $body = $f->slurp('UTF-8');
+    return $class->from_string( $body, $f, $document_directory )
+}
 
+sub as_string( $self ) {
     $self->frontmatter->{labels} = $self->labels->labels;
     if( ! $self->frontmatter->{labels}->@* ) {
         delete $self->frontmatter->{labels};
@@ -135,7 +140,12 @@ sub save_to( $self, $fn ) {
             if ! $s->%*;
     }
 
-    $f->spew( $tfm->document_string, 'UTF-8' );
+    return $tfm->document_string
+}
+
+sub save_to( $self, $fn ) {
+    my $f = Mojo::File->new($fn);
+    $f->spew( $self->as_string, 'UTF-8' );
 }
 
 sub add_label( $self, @labels ) {
