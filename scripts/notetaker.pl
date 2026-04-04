@@ -14,6 +14,7 @@ use charnames ':full';
 use YAML::PP::LibYAML 'LoadFile', 'DumpFile';
 use List::Util 'first', 'reduce';
 use Time::Piece;
+use Time::HiRes 'time';
 
 # For search
 use Text::ParseWords 'shellwords';
@@ -374,22 +375,42 @@ sub render_notes($c, $view) {
     $c->stash( moniker => filter_moniker( $filter ));
 }
 
+sub stats( $action ) {
+    my( $package, $fn, $line, $sub ) = caller(1);
+    return { location => join( "#", $package, $sub, $line), start => time(), action => $action },
+}
+
 sub render_index($c, $viewname=$c->param('view')) {
     return login_detour($c) unless $c->is_user_authenticated;
+
+    my @statistics = (stats('request'));
+    push @statistics, (stats('session'));
     my $session = get_session($c);
     $c->session(expiration => $session_expiry);
 
+    push @statistics, (stats('fetch view'));;
     $viewname //= 'list';
     my $view = $session->get_view($viewname);
 
+    push @statistics, (stats('render notes'));
     render_notes( $c, $view );
     $c->stash( hydrated => 1 );
 
+    push @statistics, (stats('filter notes'));
     # Why do we need to push the updated URL here?!
     my $filter = fetch_filter($c, $session->created_buckets);
     my $u = $c->url_for("/")->query(filter_query( $filter ));
     $c->htmx->res->replace_url( $u );
 
+    push @statistics, (stats('rendering note page'));
+    my $prev;
+    for (@statistics) {
+        if( $prev ) {
+            $prev->{taken} = sprintf '%2.05f', $_->{start}-$prev->{start};
+        }
+        $prev = $_;
+    }
+    use Data::Dumper; warn Dumper \@statistics;
     $c->render('index');
 }
 
