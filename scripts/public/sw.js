@@ -12,6 +12,7 @@ const STATIC_FILES = [
   './debug.2.0.1.js',
   './loading-states.2.0.1.js',
   './morphdom-esm.2.7.4.js',
+  './Sortable-1.15.7.min.js',
   './app-notekeeper.js',
   './notes.css',
   './icons/icon-192.png',
