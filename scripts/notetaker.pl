@@ -771,6 +771,7 @@ sub assign_template( $c ) {
         for my $k (keys $f->%*) {
             if(     $k ne 'created'
                 and $k ne 'updated'
+                and $k ne 'content-edited'
                 and $k ne 'labels'
                 and $k ne 'title'
                 ) {
