@@ -57,7 +57,7 @@ nav ul li {
 .kanban-container {
   display: grid;
   grid-auto-columns: 272px;
-  --grid-auto-flow: column;
+  grid-auto-flow: column;
   grid-gap: 8px;
   height: 100vh;
   overflow-x: scroll;
