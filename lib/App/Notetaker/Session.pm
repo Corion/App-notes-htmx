@@ -55,6 +55,26 @@ has 'views' => (
                   title => 'Unassigned', },
                 ],
           },
+          {
+            name       => 'Perlmongers e.V.',
+            type       => 'kanban',
+            show_empty => 1,
+            title      => 'Perlmongers',
+            label      => 'Perlmongers e.V.',
+            lanes => [
+                { label => 'Perlmongers e.V./todo',
+                  title => "To do", },
+                { label => 'Perlmongers e.V./doing',
+                  title => 'In progress', },
+                { label => 'Perlmongers e.V./done',
+                  title => 'Done', },
+                { label => 'Perlmongers e.V./parked',
+                  title => 'Parked', },
+                # Maybe this should be added by default if missing
+                { label => 'Perlmongers e.V.',
+                  title => 'Unassigned', },
+                ],
+          },
         ]
     },
 );
