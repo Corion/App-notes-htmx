@@ -49,7 +49,9 @@ sub process_file( $filename ) {
                 warn $_;
 
             } elsif( $url =~ m!^https://! ) {
+                # maybe use a proper URL parser?!
                 (my $filename) = ($url =~ m!/([^/]+)\z!);
+                $filename =~ s!\?.*!!;
                 mirror_image( $url => "$dir/$filename" );
                 s{!\[(.*?)\]\((.*?)\)}{![$1]($filename)};
             }
