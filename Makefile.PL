@@ -212,8 +212,8 @@ INSTALL
 
 ![Firefox mobile](screenshots/firefox-mobile-nomasonry.png)
 
+<!-- SCREENSHOT: / click=#btn-new-from-template selector=.dropdown-menu-show padding=40px -->
 ![Chromium](screenshots/chrome-new-from-template.png)
-
 
 STATUS
         update_file( 'README.mkdn', $readme_mkdn );
