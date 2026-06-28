@@ -2735,6 +2735,7 @@ Asset: <%= $l %><br />
                    multiple
             />
             <button type="submit" class="nojs">Upload</button>
+            <img class="htmx-indicator" src="/icons/bars.svg" alt="Uploading...">
         </form>
     </div>
     <div id="action-attach-file">
