@@ -565,6 +565,8 @@ sub _expand_label_hierarchy( $l ) {
 
 # If we had a real database, this would be the interface ...
 # We cache the list of all documents per-request
+# Actually we cache this permanently
+our @documents;
 sub all_documents( $session, $labels, $colors ) {
     # We are reading the full document list, so we can recreate the list of
     # labels and colors, purging labels that were since deleted
@@ -573,6 +575,17 @@ sub all_documents( $session, $labels, $colors ) {
     $colors->%* = ();
 
     my %last_edit;
+
+    if( !@documents ) {
+        @documents =
+        map {
+            my $note = App::Notetaker::Document->from_file( $_, $session->document_directory );
+            $last_edit{ $note } =    $note->frontmatter->{"content-edited"}
+                                  || timestamp((stat($_))[9]); # most-recent changed;
+            $note
+        }
+        $session->documents( include => ['deleted','archived'])
+    };
 
     return
         map {
@@ -600,13 +613,7 @@ sub all_documents( $session, $labels, $colors ) {
             ||
             $last_edit{ $b } cmp $last_edit{ $a }
         }
-        map {
-            my $note = App::Notetaker::Document->from_file( $_, $session->document_directory );
-            $last_edit{ $note } =    $note->frontmatter->{"content-edited"}
-                                  || timestamp((stat($_))[9]); # most-recent changed;
-            $note
-        }
-        $session->documents( include => ['deleted','archived'])
+        @documents
 }
 
 sub get_documents($c, $session, $filter={}) {
@@ -1499,6 +1506,7 @@ sub attach_file_impl( $session, $note, $file, $markdown ) {
     my $filename = "attachments/" . clean_fragment( $file->filename );
     $file->move_to($session->document_directory . "/$filename");
     $note->body( $note->body . "\n$markdown\n" );
+    @documents = (); # we need to bust the cache here...
 }
 
 sub attach_files( $session, $note, $files ) {
