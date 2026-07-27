@@ -2043,7 +2043,7 @@ post '/htmx-unpin/*fn' => sub($c) { update_pinned( $c, 0, 1 ) };
 
 get  '/export-archive' => \&export_archive;
 get '/setup' => \&render_setup;
-get '/view/<:view>.html' => \&render_index;
+get '/view/<*view>.html' => \&render_index;
 
 # This is a more dynamic PWA than what we currently use
 get '/pwa' => sub( $c ) {
