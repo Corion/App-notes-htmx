@@ -300,22 +300,21 @@ sub render_notes($c, $view, $session ) {
     my @templates = get_templates($c, $session);
 
     # Now that we have the templates, we can assign colors to the labels:
-    my %count;
-    my %color = map {
-        my $n = $_;
+    my %tag_colors;
+    for my $n (@templates) {
         my $c = $n->frontmatter->{color};
-        my @res;
         if( $c ) {
-            @res = map { $count{$_}++; $_ => $c } $n->labels->labels->@*
+            $tag_colors{ $_ }->{ $c } = 1
+                for $n->labels->labels->@*;
         }
-        @res
-    } @templates;
+    };
+    use Data::Dumper; warn Dumper \%tag_colors;
     my $labels = $session->labels->labels;
     $labels->@* = map {
         my $l = $_;
-        if( ($count{ $l } // 0) == 1 ) {
-            # We have a single template with a color
-            $l = App::Notetaker::Label->new( text => $l, color => $color{ $l } );
+        if( (my @k = keys $tag_colors{ $l }->%*) == 1 ) {
+            # We have a tag that is only used with a single color
+            $l = App::Notetaker::Label->new( text => $l, color => $k[0] );
         } else {
             $l = App::Notetaker::Label->new( text => $l );
         }
