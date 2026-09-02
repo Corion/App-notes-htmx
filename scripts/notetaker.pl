@@ -2517,10 +2517,11 @@ htmx.on("htmx:syntax:error", (elt) => { console.log("htmx.syntax.error",elt)});
 %            || index( $current, $label->visual . "/" ) == 0;
 % $open = $open ? " open " : "";
     <details class="sidebar-details border-end-0 list-group-item" <%= $open %>>
-    <summary><a href="<%= url_with()->query({ "no-label" => undef, label => $label->text, sidebar => 1 }) %>"
+    <summary
+       <%== $color ? $color : '' %>
+    ><a href="<%= url_with()->query({ "no-label" => undef, label => $label->text, sidebar => 1 }) %>"
        class="<%= $current_class %>"
        data-bs-parent="#sidebar"
-       <%== $color ? $color : '' %>
     ><%= $label->visual %> &#x1F3F7;</a>
     </summary>
     <div class="sidebar-details-sublabel">
